@@ -255,6 +255,7 @@ void Game::render() {
         { { LEVEL_PLAYING, DEFAULT }, [this]() { level->render(); } },
         { { LEVEL_PAUSE, DEFAULT }, [this]() { level->render(); } },
         { { LEVEL_END, DEFAULT }, [this]() { level->render(); } },
+        { { LEVEL_DEAD, DEFAULT }, [this]() { level->render(); } },
     };
 
     for (RenderInstruction u : renderInstructions) {

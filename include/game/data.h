@@ -21,7 +21,7 @@ struct GameData {
     struct Sizes {
         LevelSize background = { 19.0f, 19.0f };
         LevelSize ground = { 4.0f, 4.0f };
-        LevelSize line = { 15.0f, 0.04 }; // replace => 15.0f(more accurate value)
+        LevelSize line = { 15.0f, 0.05 }; // replace => 15.0f(more accurate value)
         LevelSize checkpoint = { 1.0f, 1.0f };
         float levelHeight = 80.0f;
         float cameraPaddingTop = 3.0f; // replace => 3.0f(more accurate value)
@@ -56,7 +56,7 @@ struct GameData {
     };
 
     struct Offsets {
-        LevelOffset botLine = { 2.0f, 3.96f };
+        LevelOffset botLine = { 2.0f, 3.95f };
         LevelOffset topLine = { 2.0f, 0.0f };
         std::unordered_map<Gamemode, std::unordered_map<Size, LevelOffset>> iconOffsets;
         std::unordered_map<Gamemode, std::unordered_map<Size, LevelOffset>> redHitboxOffsets;

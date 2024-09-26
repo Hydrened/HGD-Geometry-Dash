@@ -1,3 +1,7 @@
+## HGD-1.0.1
+### ADDED
+- deaths
+
 ## HGD-1.0.0
 ### ADDED
 - playing level

@@ -96,13 +96,14 @@ void Player::checkGroundCollisions() {
 }
 
 void Player::checkItemCollisions() {
-    GameData* gameData = game->getData();
+    static GameData* gameData = game->getData();
+    static Camera* camera = game->getCamera();
     Level* level = game->getLevel();
     std::vector<Item*>* items = level->getItems();
-    LevelPos camPos = game->getCamera()->getPos();
+    LevelPos camPos = camera->getPos();
 
     Rect redPlayerRect = { pos.x + gameData->offsets->redHitboxOffsets[gamemode][size].x, pos.y + gameData->offsets->redHitboxOffsets[gamemode][size].y, gameData->sizes->redHitboxSizes[gamemode][size].w, gameData->sizes->redHitboxSizes[gamemode][size].h };
-    Rect bluePlayerRect = { pos.x + gameData->offsets->blueHitboxOffsets[gamemode][size].x, pos.y + gameData->offsets->blueHitboxOffsets[gamemode][size].y, gameData->sizes->blueHitboxSizes[gamemode][size].w, gameData->sizes->blueHitboxSizes[gamemode][size].h };
+    Rect bluePlayerRect = { pos.x + gameData->offsets->blueHitboxOffsets[gamemode][size].x, pos.y - gameData->offsets->blueHitboxOffsets[gamemode][size].y, gameData->sizes->blueHitboxSizes[gamemode][size].w, gameData->sizes->blueHitboxSizes[gamemode][size].h };
     
     for (int i = startingItem; i < items->size(); i++) {
         Item* item = items->at(i);
@@ -111,7 +112,7 @@ void Player::checkItemCollisions() {
         if (!block) continue;
 
         BufferedBlock* blockData = block->getData();
-        if (blockData->type != SOLID && blockData->type != SPECIAL && blockData->type != OBSTACLE) continue;
+        if (blockData->type == DECORATION) continue;
 
         if (blockData->pos.x + blockData->textureOffset.x + blockData->textureSize.w < camPos.x) {
             startingItem = i + 1;
@@ -122,40 +123,70 @@ void Player::checkItemCollisions() {
         LevelPos blockPos = blockData->pos;
         LevelSize blockSize = blockData->hitboxSize;
         LevelOffset blockOffset = blockData->hitboxOffset;
-        Rect blockRect = (blockData->type != SPECIAL) ?
-            Rect{ blockPos.x + blockOffset.x, blockPos.y + blockOffset.y, blockSize.w, blockSize.h } :
-            Rect{ blockPos.x + blockOffset.x - 0.01f, blockPos.y + blockOffset.y - 0.01f, blockSize.w + 0.01f, blockSize.h + 0.01f };
+        Rect blockRect = (blockData->type == SPECIAL) ?
+            Rect{ blockPos.x + blockOffset.x - 0.01f, blockPos.y + blockOffset.y - 0.01f, blockSize.w + 0.01f, blockSize.h + 0.01f } :
+            Rect{ blockPos.x + blockOffset.x, blockPos.y + blockOffset.y, blockSize.w, blockSize.h };
 
-        if (Rect::intersect(&redPlayerRect, &blockRect)) {
-            bool canHitTop = gameData->physics->canHitTop[gamemode];
-            bool canHitBottom = gameData->physics->canHitBottom[gamemode];
+        if (blockData->type != OBSTACLE) {
+            if (Rect::intersect(&redPlayerRect, &blockRect)) {
+                bool canHitTop = gameData->physics->canHitTop[gamemode];
+                bool canHitBottom = gameData->physics->canHitBottom[gamemode];
 
-            switch (blockData->type) {
-                case SOLID: switch (Rect::getCollidedFace(&redPlayerRect, &blockRect)) {
-                    case TOP: if ((gravity == RIGHT_SIDE_UP && canHitTop) || (gravity == UPSIDE_DOWN && canHitBottom)) {
-                        onSolid = true;
-                        velocity.y = 0;
-                        pos.y = blockData->pos.y - gameData->sizes->redHitboxSizes[gamemode][size].h;
+                switch (blockData->type) {
+                    case SOLID: switch (Rect::getCollidedFace(&redPlayerRect, &blockRect)) {
+                        case TOP: if ((gravity == RIGHT_SIDE_UP && canHitTop) || (gravity == UPSIDE_DOWN && canHitBottom)) {
+                            onSolid = true;
+                            velocity.y = 0;
+                            pos.y = blockData->pos.y - gameData->sizes->redHitboxSizes[gamemode][size].h;
+                        } break;
+                        case BOTTOM: if ((gravity == RIGHT_SIDE_UP && canHitBottom) || (gravity == UPSIDE_DOWN && canHitTop)) {
+                            onSolid = true;
+                            velocity.y = 0;
+                            pos.y = blockData->pos.y + blockData->hitboxSize.h + blockData->hitboxOffset.y;
+                        } break;
                     } break;
-                    case BOTTOM: if ((gravity == RIGHT_SIDE_UP && canHitBottom) || (gravity == UPSIDE_DOWN && canHitTop)) {
-                        onSolid = true;
-                        velocity.y = 0;
-                        pos.y = blockData->pos.y + blockData->hitboxSize.h + blockData->hitboxOffset.y;
-                    } break;
-                } break;
-                // case SPECIAL: if (!item->entered()) {
-                //     item->enter();
-                //     switch (itemData->specialData.type) {
-                //         case COIN: break;
-                //         case PORTAL: 
-                //             if (itemData->specialData.gamemode.has_value()) {
-                //                 setGamemode(itemData->specialData.gamemode.value(), itemPos.y);
-                //             }
-                //             break;
-                //         case ORB: break;
-                //         case PAD: break;
-                //     }
-                // } break;
+                    // case SPECIAL: if (!item->entered()) {
+                    //     item->enter();
+                    //     switch (itemData->specialData.type) {
+                    //         case COIN: break;
+                    //         case PORTAL: 
+                    //             if (itemData->specialData.gamemode.has_value()) {
+                    //                 setGamemode(itemData->specialData.gamemode.value(), itemPos.y);
+                    //             }
+                    //             break;
+                    //         case ORB: break;
+                    //         case PAD: break;
+                    //     }
+                    // } break;
+                    redPlayerRect = { pos.x + gameData->offsets->redHitboxOffsets[gamemode][size].x, pos.y + gameData->offsets->redHitboxOffsets[gamemode][size].y, gameData->sizes->redHitboxSizes[gamemode][size].w, gameData->sizes->redHitboxSizes[gamemode][size].h };
+                    bluePlayerRect = { pos.x + gameData->offsets->blueHitboxOffsets[gamemode][size].x, pos.y - gameData->offsets->blueHitboxOffsets[gamemode][size].y, gameData->sizes->blueHitboxSizes[gamemode][size].w, gameData->sizes->blueHitboxSizes[gamemode][size].h };
+                }
+            }
+        }
+
+        if (blockData->type != SPECIAL) {
+            Rect playerRect = (blockData->type == SOLID) ? bluePlayerRect : redPlayerRect;
+
+            if (Rect::intersect(&playerRect, &blockRect)) {
+                kill();
+
+                float overflow;
+                switch (Rect::getCollidedFace(&playerRect, &blockRect)) {
+                    case TOP:
+                        overflow = playerRect.getMaxY() - blockRect.getMinY();
+                        pos.y -= overflow;
+                        break;
+                    case RIGHT:
+                        overflow = playerRect.getMaxX() - blockRect.getMinX();
+                        camera->setPos({ camPos.x - overflow + velocity.x - gameData->physics->speeds[level->getCurrentSpeed()], camPos.y });
+                        pos.x -= overflow;
+                        break;
+                    case BOTTOM:
+                        overflow = blockRect.getMaxY() - playerRect.getMinY();
+                        pos.y += overflow;
+                        break;
+                }
+                break;
             }
         }
     }
@@ -197,12 +228,17 @@ void Player::updatePercentage() {
 
 // RENDER
 void Player::render() {
+    renderTexture();
+    renderHitboxes();
+}
+
+void Player::renderTexture() {
+    static Calculator* calculator = game->getCalculator();
     static GameData* gameData = game->getData();
     static H2DE_Engine* engine = game->getEngine();
-    static Calculator* calculator = game->getCalculator();
 
-    LevelPos offsetIconPos = { pos.x + gameData->offsets->iconOffsets[gamemode][size].x, pos.y + gameData->offsets->iconOffsets[gamemode][size].y };
     H2DE_Size absRedHitboxSize = calculator->convertToPx(gameData->sizes->redHitboxSizes[gamemode][size]);
+    LevelPos offsetIconPos = { pos.x + gameData->offsets->iconOffsets[gamemode][size].x, pos.y + gameData->offsets->iconOffsets[gamemode][size].y };
     if (game->getState().main != LEVEL_DEAD) {
         H2DE_GraphicObject* icon = new H2DE_GraphicObject();
         icon->type = IMAGE;
@@ -214,7 +250,14 @@ void Player::render() {
         icon->index = Zindex{ T1, 0 }.getIndex();
         H2DE_AddGraphicObject(engine, icon);
     }
+}
 
+void Player::renderHitboxes() {
+    static Calculator* calculator = game->getCalculator();
+    static GameData* gameData = game->getData();
+    static H2DE_Engine* engine = game->getEngine();
+
+    H2DE_Size absRedHitboxSize = calculator->convertToPx(gameData->sizes->redHitboxSizes[gamemode][size]);
     LevelPos offsetRedHitboxPos = { pos.x + gameData->offsets->redHitboxOffsets[gamemode][size].x, pos.y + gameData->offsets->redHitboxOffsets[gamemode][size].y };
     H2DE_GraphicObject* redHitbox = new H2DE_GraphicObject();
     redHitbox->type = POLYGON;
@@ -264,8 +307,8 @@ void Player::kill() {
 
     clicking = false;
     game->setState({ LEVEL_DEAD, DEFAULT });
-    H2DE_PlaySFX(engine, "death-sound.wav", 0);
     H2DE_PauseSong(engine);
+    H2DE_PlaySFX(engine, "death-sound.wav", 0);
 
     Game::delay(1000, [this]() {
 

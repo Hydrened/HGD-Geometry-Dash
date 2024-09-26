@@ -37,6 +37,9 @@ private:
     void checkTriggers();
     void updatePercentage();
 
+    void renderTexture();
+    void renderHitboxes();
+
 public:
     Player(Game* game, Checkpoint* startpos);
     ~Player();
