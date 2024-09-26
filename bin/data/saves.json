@@ -1,0 +1,39 @@
+{
+    "achievments": {},
+    "hacks": {
+        "noclip": false,
+        "showHitboxes": false
+    },
+    "icons": {
+        "color": [
+            0,
+            0
+        ],
+        "textures": {
+            "cube": 59,
+            "ship": 1
+        }
+    },
+    "levels": {
+        "0": {
+            "attempts": 395,
+            "clicks": 2757,
+            "coins": [
+                false,
+                false,
+                false
+            ],
+            "jumps": 2953,
+            "progress": {
+                "normal": 17,
+                "practice": 0
+            }
+        }
+    },
+    "shop": {},
+    "stats": {},
+    "volume": {
+        "sfx": 100,
+        "song": 100
+    }
+}
