@@ -98,6 +98,7 @@ void Player::checkGroundCollisions() {
 void Player::checkItemCollisions() {
     static GameData* gameData = game->getData();
     static Camera* camera = game->getCamera();
+    static std::unordered_map<std::string, Hack*> hacks = game->getMegahack()->getHacks();
     Level* level = game->getLevel();
     std::vector<Item*>* items = level->getItems();
     LevelPos camPos = camera->getPos();
@@ -164,29 +165,31 @@ void Player::checkItemCollisions() {
             }
         }
 
-        if (blockData->type != SPECIAL) {
-            Rect playerRect = (blockData->type == SOLID) ? bluePlayerRect : redPlayerRect;
+        if (!hacks["noclip"]->active) {
+            if (blockData->type != SPECIAL) {
+                Rect playerRect = (blockData->type == SOLID) ? bluePlayerRect : redPlayerRect;
 
-            if (Rect::intersect(&playerRect, &blockRect)) {
-                kill();
+                if (Rect::intersect(&playerRect, &blockRect)) {
+                    kill();
 
-                float overflow;
-                switch (Rect::getCollidedFace(&playerRect, &blockRect)) {
-                    case TOP:
-                        overflow = playerRect.getMaxY() - blockRect.getMinY();
-                        pos.y -= overflow;
-                        break;
-                    case RIGHT:
-                        overflow = playerRect.getMaxX() - blockRect.getMinX();
-                        camera->setPos({ camPos.x - overflow + velocity.x - gameData->physics->speeds[level->getCurrentSpeed()], camPos.y });
-                        pos.x -= overflow;
-                        break;
-                    case BOTTOM:
-                        overflow = blockRect.getMaxY() - playerRect.getMinY();
-                        pos.y += overflow;
-                        break;
+                    float overflow;
+                    switch (Rect::getCollidedFace(&playerRect, &blockRect)) {
+                        case TOP:
+                            overflow = playerRect.getMaxY() - blockRect.getMinY();
+                            pos.y -= overflow;
+                            break;
+                        case RIGHT:
+                            overflow = playerRect.getMaxX() - blockRect.getMinX();
+                            camera->setPos({ camPos.x - overflow + velocity.x - gameData->physics->speeds[level->getCurrentSpeed()], camPos.y });
+                            pos.x -= overflow;
+                            break;
+                        case BOTTOM:
+                            overflow = blockRect.getMaxY() - playerRect.getMinY();
+                            pos.y += overflow;
+                            break;
+                    }
+                    break;
                 }
-                break;
             }
         }
     }
@@ -313,6 +316,11 @@ void Player::kill() {
     Game::delay(1000, [this]() {
 
     });
+}
+
+// GETTER
+LevelPos Player::getPos() {
+    return pos;
 }
 
 // SETTER

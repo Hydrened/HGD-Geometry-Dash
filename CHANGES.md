@@ -1,3 +1,7 @@
+## HGD-1.0.4
+### ADDED
+- color triggers
+
 ## HGD-1.0.3
 ### ADDED
 - megahack

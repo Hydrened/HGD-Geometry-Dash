@@ -15,26 +15,12 @@ class H2DE_Engine;
 class H2DE_Timeline {
 private:
     H2DE_Engine* engine;
-    float start;
-    float end;
     int duration;
     H2DE_TimelineEffect effect;
     std::function<void(float)> update;
     std::function<void()> completed;
     int index = 0;
 
-    /**
-     * Gets a value betwwen two values from a blend value
-     * 
-     * \param a the minimum value
-     * \param b the maximum value
-     * \param blend a value between 0 and 1
-     * 
-     * \return a value between `a` and `b`
-     * 
-     * \since H2DE-1.0.9
-     */
-    static float lerp(float a, float b, float blend);
     /**
      * Obtains the number of steps required for a given duration
      * 
@@ -47,18 +33,50 @@ private:
     int getSteps(int ms);
 
 public:
-    H2DE_Timeline(H2DE_Engine* engine, float start, float end, int duration, H2DE_TimelineEffect effect, std::function<void(float)> update, std::function<void()> completed);
+    H2DE_Timeline(H2DE_Engine* engine, int duration, H2DE_TimelineEffect effect, std::function<void(float)> update, std::function<void()> completed);
     ~H2DE_Timeline();
 
     /**
-     * Calls the update function with the next value from the timeline as parameter
-     * Notes: Ticks one time when the `H2DE_Engine::render()` method is called
+     * Calls the update function with the next value from the timeline as a float parameter
      * 
      * \return true if it ticks
      * 
      * \since H2DE-1.0.9
      */
     bool tick();
+};
+
+/**
+ * The type used to identify a timeline manager
+ * 
+ * \since H2DE-1.0.14
+ */
+class H2DE_TimelineManager {
+private:
+    std::vector<H2DE_Timeline*> timelines;
+
+public:
+    H2DE_TimelineManager();
+    H2DE_TimelineManager(std::vector<H2DE_Timeline*> timelines);
+
+    /**
+     * Adds a timeline to a manager
+     * 
+     * \param manager a pointer to a manager
+     * \param timeline a pointer to a timeline
+     * 
+     * \since H2DE-1.0.14
+     */
+    friend void H2DE_AddTimelineToManager(H2DE_TimelineManager* manager, H2DE_Timeline* timeline);
+
+    /**
+     * Ticks each timelines of a manager 
+     * 
+     * \param manager a pointer to a manager
+     * 
+     * \since H2DE-1.0.14
+     */
+    friend void H2DE_TickTimelineManager(H2DE_TimelineManager* manager);
 };
 
 #endif

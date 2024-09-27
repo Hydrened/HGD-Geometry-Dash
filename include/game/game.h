@@ -62,6 +62,7 @@ public:
     H2DE_Engine* getEngine();
     Calculator* getCalculator();
     Camera* getCamera();
+    Megahack* getMegahack();
     Level* getLevel();
     void setState(GameState state);
     GameState getState();

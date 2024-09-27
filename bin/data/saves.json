@@ -2,7 +2,7 @@
     "achievments": {},
     "hacks": [
         {
-            "active": true,
+            "active": false,
             "keycode": 48,
             "name": "noclip"
         },

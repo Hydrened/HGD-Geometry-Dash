@@ -253,6 +253,7 @@ void Level::update() {
     switch (state.main) {
         case LEVEL_PLAYING:
             backgroundPos.x += (gameData->physics->speeds[speed] * gameData->physics->backgroundRatio);
+            for (Item* item : items) item->update();
             player->update(); break;
             break;
     }
@@ -358,6 +359,18 @@ LevelPos Level::getTopGroundPos() {
     return topGroundPos;
 }
 
+Color Level::getBackgroundColor() {
+    return backgroundColor;
+}
+
+Color Level::getGroundColor() {
+    return groundColor;
+}
+
+Color Level::getLineColor() {
+    return lineColor;
+}
+
 Player* Level::getPlayer() {
     return player;
 }
@@ -368,6 +381,25 @@ std::vector<Item*>* Level::getItems() {
 
 int Level::getLevelLength() {
     return levelLength;
+}
+
+// SETTER
+void Level::setBackgroundColor(Color color) {
+    backgroundColor.r = color.r;
+    backgroundColor.g = color.g;
+    backgroundColor.b = color.b;
+}
+
+void Level::setGroundColor(Color color) {
+    groundColor.r = color.r;
+    groundColor.g = color.g;
+    groundColor.b = color.b;
+}
+
+void Level::setLineColor(Color color) {
+    lineColor.r = color.r;
+    lineColor.g = color.g;
+    lineColor.b = color.b;
 }
 
 // OTHER

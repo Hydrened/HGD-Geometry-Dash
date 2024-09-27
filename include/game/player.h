@@ -47,6 +47,7 @@ public:
     void update();
     void render();
 
+    LevelPos getPos();
     void setClicking(bool value);
 };
 

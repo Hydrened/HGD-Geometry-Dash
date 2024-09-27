@@ -303,6 +303,10 @@ Camera* Game::getCamera() {
     return camera;
 }
 
+Megahack* Game::getMegahack() {
+    return megahack;
+}
+
 Level* Game::getLevel() {
     return level;
 }

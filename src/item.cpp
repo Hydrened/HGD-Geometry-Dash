@@ -1,6 +1,7 @@
 #include "item.h"
 
 // ITEM
+
 // INIT
 Item::Item(Game* g) : game(g), used(false) {
 
@@ -24,6 +25,7 @@ void Item::setUsed() {
 
 
 // BLOCK
+
 // INIT
 Block::Block(Game* game, BufferedBlock* d) : Item(game), data(d) {
     
@@ -89,9 +91,10 @@ BufferedBlock* Block::getData() {
 
 
 // TRIGGER
+
 // INIT
 Trigger::Trigger(Game* game, BufferedTrigger* d) : Item(game), data(d) {
-    
+    if (data->type == STARTPOS) setUsed();
 }
 
 // CLEANUP
@@ -101,7 +104,50 @@ Trigger::~Trigger() {
 
 // UPDATE
 void Trigger::update() {
+    Player* player = game->getLevel()->getPlayer();
 
+    H2DE_TickTimelineManager(tm);
+
+    if (isUsed()) return;
+    if (player->getPos().x >= data->pos.x) {
+        if (data->touchTrigger) {
+
+        } else trigger();
+    }
+}
+
+void Trigger::trigger() {
+    static H2DE_Engine* engine = game->getEngine();
+    Level* level = game->getLevel();
+
+    setUsed();
+
+    Color sCol;
+    switch (data->type) {
+        case BACKGROUND: sCol = level->getBackgroundColor(); break;
+        case GROUND: sCol = level->getGroundColor(); break;
+        case LINE: sCol = level->getLineColor(); break;
+        default: sCol = { 0, 0, 0, 0 }; break;
+    }
+
+    H2DE_Timeline* timeline = H2DE_CreateTimeline(engine, data->ms, LINEAR, [this, level, sCol](float blend) {
+        Color eCol = data->color;
+        Color bCol = {
+            static_cast<Uint8>(sCol.r + blend * (eCol.r - sCol.r)),
+            static_cast<Uint8>(sCol.g + blend * (eCol.g - sCol.g)),
+            static_cast<Uint8>(sCol.b + blend * (eCol.b - sCol.b)),
+            static_cast<Uint8>(sCol.a + blend * (eCol.a - sCol.a)),
+        };
+
+        switch (data->type) {
+            case BACKGROUND: level->setBackgroundColor(bCol); break;
+            case GROUND: level->setGroundColor(bCol); break;
+            case LINE: level->setLineColor(bCol); break;
+            default: break;
+        }
+    }, NULL);
+
+    H2DE_AddTimelineToManager(tm, timeline);
 }
 
 // RENDER

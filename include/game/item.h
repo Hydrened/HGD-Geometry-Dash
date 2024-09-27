@@ -40,12 +40,14 @@ public:
 class Trigger : public Item {
 private:
     BufferedTrigger* data;
+    H2DE_TimelineManager* tm = new H2DE_TimelineManager();
 
 public:
     Trigger(Game* game, BufferedTrigger* data);
     ~Trigger() override;
 
     void update() override;
+    void trigger();
     void render() override;
 
     BufferedTrigger* getData();

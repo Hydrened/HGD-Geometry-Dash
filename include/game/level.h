@@ -72,6 +72,12 @@ public:
     int getCurrentSpeed();
     LevelPos getBotGroundPos();
     LevelPos getTopGroundPos();
+    Color getBackgroundColor();
+    void setBackgroundColor(Color color);
+    Color getGroundColor();
+    void setGroundColor(Color color);
+    Color getLineColor();
+    void setLineColor(Color color);
     Player* getPlayer();
     std::vector<Item*>* getItems();
     int getLevelLength();
