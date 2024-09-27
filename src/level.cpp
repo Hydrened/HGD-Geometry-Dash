@@ -110,11 +110,11 @@ void Level::Levels::getStartposInfo(LevelData* data, json* level, json* itemsDat
     json config = (*level)["config"];
     Checkpoint* startpos = nullptr;
 
-    for (json trigger : (*level)["triggers"]) if ((*itemsData)[trigger["i"]]["type"] == STARTPOS) {
+    for (json trigger : (*level)["triggers"]) if ((*itemsData)[trigger["i"]]["type"] == STARTPOS && trigger["p"]["x"] >= 0) {
         if (!startpos) startpos = new Checkpoint();
         
-        if (startpos->playerPos.x < trigger["p"]["x"]) {
-            startpos->camPos = { trigger["p"]["x"], trigger["p"]["y"] }; // x: - data->positions->camera.x ___ y: + 10 - data->sizes->cameraPaddingTop
+        if (startpos->playerPos.x <= trigger["p"]["x"]) {
+            startpos->camPos = { (float)(trigger["p"]["x"]) + gameData->positions->camera.x, (float)(trigger["p"]["y"]) - 10.0f + gameData->sizes->cameraPaddingTop};
             startpos->playerPos = { trigger["p"]["x"], trigger["p"]["y"] };
             startpos->velocity = { gameData->physics->speeds[trigger["sp"]], 0 };
             startpos->speed = trigger["sp"];

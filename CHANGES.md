@@ -1,3 +1,9 @@
+## HGD-1.0.2
+### ADDED
+- startpos
+### FIXED
+- bugged deaths on solid blocks
+
 ## HGD-1.0.1
 ### ADDED
 - deaths

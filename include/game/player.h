@@ -23,7 +23,7 @@ private:
 
     bool clicking = false;
     bool onSolid = false;
-    bool canBuffer = true; // retirer et get depuis le GameData
+    bool canBuffer = true;
 
     void click();
     void kill();
