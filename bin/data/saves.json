@@ -1,9 +1,17 @@
 {
     "achievments": {},
-    "hacks": {
-        "noclip": false,
-        "showHitboxes": false
-    },
+    "hacks": [
+        {
+            "active": true,
+            "keycode": 48,
+            "name": "noclip"
+        },
+        {
+            "active": false,
+            "keycode": 61,
+            "name": "show-hitboxes"
+        }
+    ],
     "icons": {
         "color": [
             0,

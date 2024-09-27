@@ -1,3 +1,7 @@
+## HGD-1.0.3
+### ADDED
+- megahack
+
 ## HGD-1.0.2
 ### ADDED
 - startpos

@@ -69,6 +69,7 @@ Game::~Game() {
     if (menu) delete menu;
     if (level) delete level;
     delete calculator;
+    delete megahack;
     SDL_DestroyWindow(window);
     SDL_DestroyRenderer(renderer);
     H2DE_DestroyEngine(engine);
@@ -169,27 +170,40 @@ void Game::handleEvents(SDL_Event event) {
 
     while (SDL_PollEvent(&event)) switch (event.type) {
         case SDL_QUIT: quit(); break;
+
         case SDL_WINDOWEVENT: switch (event.window.event) {
             case SDL_WINDOWEVENT_RESIZED: resizeWindow(event.window.data1, event.window.data2); break;
         } break;
+
         case SDL_MOUSEBUTTONDOWN: if (event.button.button == SDL_BUTTON_LEFT) switch (state.main) {
             case LEVEL_STARTING_DELAY: level->getPlayer()->setClicking(true); break;
             case LEVEL_PLAYING: level->getPlayer()->setClicking(true); break;
             case LEVEL_DEAD: level->getPlayer()->setClicking(true); break;
         } break;
+
         case SDL_MOUSEBUTTONUP: if (event.button.button == SDL_BUTTON_LEFT) switch (state.main) {
             case LEVEL_STARTING_DELAY: level->getPlayer()->setClicking(false); break;
             case LEVEL_PLAYING: level->getPlayer()->setClicking(false); break;
             case LEVEL_DEAD: level->getPlayer()->setClicking(false); break;
         } break;
-        case SDL_KEYDOWN: for (KeyEvent e : keyDownEvents) {
-            bool sameKey = (event.key.keysym.sym == e.keycode);
-            bool sameState = (state.main == e.state.main && state.sub == e.state.sub);
-            if (sameKey && sameState) {
-                e.call();
-                break;
+
+        case SDL_KEYDOWN:
+
+            for (const auto& hack : megahack->getHacks()) if (event.key.keysym.sym == hack.second->keycode) {
+                hack.second->active = !hack.second->active;
+                std::cout << hack.first << " is now " << ((hack.second->active) ? "enabled" : "disabled") << std::endl;
             }
-        } break;
+
+            for (KeyEvent e : keyDownEvents) {
+                bool sameKey = (event.key.keysym.sym == e.keycode);
+                bool sameState = (state.main == e.state.main && state.sub == e.state.sub);
+                if (sameKey && sameState) {
+                    e.call();
+                    break;
+                }
+            }
+            break;
+
         case SDL_KEYUP: for (KeyEvent e : keyUpEvents) {
             bool sameKey = (event.key.keysym.sym == e.keycode);
             bool sameState = (state.main == e.state.main && state.sub == e.state.sub);

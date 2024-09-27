@@ -230,4 +230,9 @@ struct LevelData {
     std::vector<Color> colors = {{ 255, 255, 255, 255 }};
 };
 
+struct Hack {
+    bool active;
+    SDL_KeyCode keycode;
+};
+
 #endif

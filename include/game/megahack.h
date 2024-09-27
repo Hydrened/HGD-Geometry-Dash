@@ -7,12 +7,16 @@ class Game;
 class Megahack {
 private:
     Game* game;
+    std::unordered_map<std::string, Hack*> hacks;
 
-    void loadData();
+    void loadHacks();
+    void saveHacks();
 
 public:
     Megahack(Game* game);
     ~Megahack();
+
+    std::unordered_map<std::string, Hack*> getHacks();
 };
 
 #endif
