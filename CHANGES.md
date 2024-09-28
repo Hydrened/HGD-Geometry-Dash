@@ -2,7 +2,7 @@
 ### ADDED
 - respawn
 - load volume from saves
-- enable / disable showhitboxes
+- showhitboxes
 ### FIXED
 - pause song when paused
 - resume song when resumed
