@@ -1,5 +1,3 @@
 .vscode/
-bin/old
-
-Makefile
 todo.md
+errors.md

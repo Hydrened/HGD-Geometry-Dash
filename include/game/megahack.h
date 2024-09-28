@@ -17,6 +17,7 @@ public:
     ~Megahack();
 
     std::unordered_map<std::string, Hack*> getHacks();
+    Hack* getHack(std::string hack);
 };
 
 #endif

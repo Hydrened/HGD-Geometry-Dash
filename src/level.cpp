@@ -160,9 +160,9 @@ LevelData* Level::Levels::getLevelData(int id) {
             getStartposInfo(data, level, itemsData);
 
         } catch (const std::exception& e) {
-            throw std::runtime_error("Error loading level => " + std::string(e.what()));
+            throw std::runtime_error("HGD-1004: Error loading level => " + std::string(e.what()));
         }
-    } else throw std::runtime_error("Error loading level => Level ID not found");
+    } else throw std::runtime_error("HGD-1005: Error loading level => Level ID not found");
 
     std::cout << "Level data loaded in " << SDL_GetTicks() - start << "ms" << std::endl;
     return data;
@@ -206,9 +206,10 @@ Level::Level(Game* g, int i) : game(g), id(i) {
 void Level::initAttempts() {
     json* saves = H2DE_Json::read("data/saves.json");
     std::string stingifiedID = std::to_string(id);
+
     if ((*saves)["levels"].contains(stingifiedID)) {
         attempts = static_cast<int>((*saves)["levels"][stingifiedID]["attempts"]) + 1;
-    } else throw std::runtime_error("Error loading level => Attempts could not be loaded");
+    } else attempts = 1;
 }
 
 void Level::initCamera() {
@@ -241,9 +242,35 @@ void Level::initConfig() {
 }
 
 // CLEANUP
-Level::~Level() {
-    if (data) delete data;
+Level::~Level() noexcept(false) {
+    saveData();
     if (player) delete player;
+    if (data) delete data;
+}
+
+void Level::saveData() {
+    std::string SAVESpath = "data/saves.json";
+    std::string stingifiedID = std::to_string(data->id);
+    json* saves = H2DE_Json::read(SAVESpath);
+
+    if ((*saves)["levels"].contains(stingifiedID)) {
+        json level = (*saves)["levels"][stingifiedID];
+        int savedJumps = level["jumps"];
+        int savedClicks = level["clicks"];
+
+        (*saves)["levels"][stingifiedID]["attempts"] = attempts;
+        (*saves)["levels"][stingifiedID]["jumps"] = savedJumps + player->getJumps();
+        (*saves)["levels"][stingifiedID]["clicks"] = savedClicks + player->getClicks();
+    } else {
+        (*saves)["levels"][stingifiedID] = {};
+        (*saves)["levels"][stingifiedID]["attempts"] = attempts;
+        (*saves)["levels"][stingifiedID]["jumps"] = player->getJumps();
+        (*saves)["levels"][stingifiedID]["clicks"] = player->getClicks();
+    }
+
+    if (!H2DE_Json::write(SAVESpath, saves)) {
+        throw std::runtime_error("HGD-3002: Error saving player data => Writing player data failed");
+    }
 }
 
 // UPDATE
@@ -411,9 +438,48 @@ void Level::finish() {
 }
 
 void Level::pause() {
+    static H2DE_Engine* engine = game->getEngine();
+
+    H2DE_PauseSong(engine);
     game->setState({ LEVEL_PAUSE, DEFAULT });
 }
 
 void Level::resume() {
+    static H2DE_Engine* engine = game->getEngine();
+    
+    H2DE_ResumeSong(engine);
     game->setState({ LEVEL_PLAYING, DEFAULT });
+}
+
+void Level::respawn() {
+    static H2DE_Engine* engine = game->getEngine();
+    static GameData* gameData = game->getData();
+    static Camera* camera = game->getCamera();
+
+    if (mode == NORMAL_MODE) {
+        camera->reset();
+
+        speed = data->startpos.speed;
+
+        backgroundPos = gameData->positions->backgroundPos;
+        botGroundPos = gameData->positions->botGroundPos;
+        topGroundPos = gameData->positions->topGroundPos;
+
+        backgroundColor = data->backgroundColor;
+        groundColor = data->groundColor;
+        lineColor = data->lineColor;
+
+        for (Item* item : items) item->reset();
+
+        player->reset(&(data->startpos));
+
+        H2DE_PlaySong(engine, data->song, 0);
+    } else {
+        // add => practice respawn
+    }
+
+    game->setState({ LEVEL_PLAYING, DEFAULT });
+
+    attempts++;
+    std::cout << "Attempt " << attempts << std::endl;
 }

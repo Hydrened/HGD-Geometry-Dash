@@ -2,12 +2,16 @@
 
 // INIT
 Menu::Menu(Game* g) : game(g) {
+    static H2DE_Engine* engine = game->getEngine();
 
+    H2DE_PlaySong(engine, "menu_loop.mp3", -1);
 }
 
 // CLEANUP
 Menu::~Menu() {
+    static H2DE_Engine* engine = game->getEngine();
     
+    H2DE_PauseSong(engine);
 }
 
 // UPDATE

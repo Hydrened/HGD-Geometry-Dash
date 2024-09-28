@@ -8,7 +8,7 @@
         },
         {
             "active": false,
-            "keycode": 61,
+            "keycode": 41,
             "name": "show-hitboxes"
         }
     ],
@@ -24,16 +24,16 @@
     },
     "levels": {
         "0": {
-            "attempts": 395,
-            "clicks": 2757,
+            "attempts": 58,
+            "clicks": 185,
             "coins": [
                 false,
                 false,
                 false
             ],
-            "jumps": 2953,
+            "jumps": 267,
             "progress": {
-                "normal": 17,
+                "normal": 0,
                 "practice": 0
             }
         }
@@ -41,7 +41,7 @@
     "shop": {},
     "stats": {},
     "volume": {
-        "sfx": 100,
-        "song": 100
+        "sfx": 20,
+        "song": 20
     }
 }

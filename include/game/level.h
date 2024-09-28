@@ -21,9 +21,10 @@ private:
     GameData* gameData = new GameData();
 
     int id;
-    int attempts;
+    int attempts = 0;
     int speed;
     int levelLength;
+    LevelMode mode = NORMAL_MODE;
 
     LevelPos backgroundPos;
     LevelPos botGroundPos;
@@ -54,12 +55,13 @@ private:
     void initLevelElements();
     void initItems();
     void initConfig();
+    void saveData();
 
     static bool sortItems(Item* item1, Item* item2);
 
 public:
     Level(Game* game, int id);
-    ~Level();
+    ~Level() noexcept(false);
 
     void update();
     void render();
@@ -67,6 +69,7 @@ public:
     void finish();
     void pause();
     void resume();
+    void respawn();
 
     LevelData* getData();
     int getCurrentSpeed();

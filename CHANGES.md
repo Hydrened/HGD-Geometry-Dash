@@ -1,20 +1,30 @@
+## HGD-1.0.5
+### ADDED
+- respawn
+- load volume from saves
+- enable / disable showhitboxes
+### FIXED
+- pause song when paused
+- resume song when resumed
+
 ## HGD-1.0.4
 ### ADDED
-- color triggers
+- added color triggers
 
 ## HGD-1.0.3
 ### ADDED
-- megahack
+- added megahack
+- added noclip
 
 ## HGD-1.0.2
 ### ADDED
-- startpos
+- added startpos
 ### FIXED
-- bugged deaths on solid blocks
+- fixed bugged deaths on solid blocks
 
 ## HGD-1.0.1
 ### ADDED
-- deaths
+- added player deaths
 
 ## HGD-1.0.0
 ### ADDED

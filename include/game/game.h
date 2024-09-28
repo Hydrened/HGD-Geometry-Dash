@@ -38,6 +38,7 @@ private:
     GameState state;
 
     void createWindow(SDL_WindowFlags flag);
+    void loadVolumes();
     void saveSettings();
     void resizeWindow(int w, int h);
 

@@ -14,9 +14,10 @@ public:
 
     virtual void update() = 0;
     virtual void render() = 0;
+    virtual void reset() = 0;
 
     bool isUsed();
-    void setUsed();
+    void setUsed(bool value);
 };
 
 
@@ -31,6 +32,9 @@ public:
 
     void update() override;
     void render() override;
+    void renderTexture();
+    void renderHitbox();
+    void reset() override;
 
     BufferedBlock* getData();
 };
@@ -49,6 +53,7 @@ public:
     void update() override;
     void trigger();
     void render() override;
+    void reset() override;
 
     BufferedTrigger* getData();
 };

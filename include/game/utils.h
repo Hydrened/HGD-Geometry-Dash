@@ -26,7 +26,7 @@ enum Gravity {
 
 enum Size {
     MINI,
-    NORMAL,
+    BIG,
 };
 
 enum Gamemode {
@@ -81,6 +81,11 @@ enum Face {
     RIGHT,
     BOTTOM,
     LEFT,
+};
+
+enum LevelMode {
+    NORMAL_MODE,
+    PRACTICE_MODE,
 };
 
 struct GameState {
@@ -167,7 +172,7 @@ struct Checkpoint {
     Velocity velocity = { 0, 0 };
     int speed = 1;
     Gravity gravity = RIGHT_SIDE_UP;
-    Size size = NORMAL;
+    Size size = BIG;
     Gamemode gamemode = CUBE;
     int rotation = 0;
 };

@@ -41,11 +41,15 @@ void Megahack::saveHacks() {
     }
 
     if (!H2DE_Json::write(SAVESpath, saves)) {
-        throw std::runtime_error("Error saving hacks => Writing hacks failed");
+        throw std::runtime_error("HGD-3003: Error saving hacks => Writing hacks failed");
     }
 }   
 
 // GETTER
 std::unordered_map<std::string, Hack*> Megahack::getHacks() {
     return hacks;
+}
+
+Hack* Megahack::getHack(std::string hack) {
+    return hacks[hack];
 }

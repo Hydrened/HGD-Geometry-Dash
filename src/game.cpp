@@ -12,15 +12,14 @@ Game::Game(int f, int argc, char** argv) : FPS(f) {
 
     createWindow(flag);
     H2DE_LoadAssets(engine, "assets");
+    loadVolumes();
+
     calculator = new Calculator(this);
     megahack = new Megahack(this);
 
     camera = new Camera(this);
     setState({ MAIN_MENU, DEFAULT });
     openMenu();
-
-    H2DE_SetSongVolume(engine, 0); // temp
-    H2DE_SetSFXVolume(engine, -1, 0); // temp
 }
 
 void Game::createWindow(SDL_WindowFlags flag) {
@@ -33,20 +32,20 @@ void Game::createWindow(SDL_WindowFlags flag) {
     int h = (fullscreen) ? 1080 : static_cast<int>((*settings)["window"]["h"]);
 
     if (SDL_Init(SDL_INIT_VIDEO) != 0) {
-        throw std::runtime_error("Error creating window => SDL_Init failed: " + std::string(SDL_GetError()));
+        throw std::runtime_error("HGD-1000: Error creating window => SDL_Init failed: " + std::string(SDL_GetError()));
     }
 
-    window = SDL_CreateWindow("Geometry Dash 1.0 (1.0.0)", x, y, w, h, flag);
+    window = SDL_CreateWindow("Geometry Dash 1.0 (1.0.5)", x, y, w, h, flag);
     if (!window) {
         SDL_Quit();
-        throw std::runtime_error("Error creating window => SDL_CreateWindow failed: " + std::string(SDL_GetError()));
+        throw std::runtime_error("HGD-1001: Error creating window => SDL_CreateWindow failed: " + std::string(SDL_GetError()));
     }
 
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
     if (!renderer) {
         SDL_DestroyWindow(window);
         SDL_Quit();
-        throw std::runtime_error("Error creating window => SDL_CreateRenderer failed: " + std::string(SDL_GetError()));
+        throw std::runtime_error("HGD-1002: Error creating window => SDL_CreateRenderer failed: " + std::string(SDL_GetError()));
     }
 
     engine = H2DE_CreateEngine(renderer, w, h, FPS);
@@ -54,22 +53,31 @@ void Game::createWindow(SDL_WindowFlags flag) {
         SDL_DestroyWindow(window);
         SDL_DestroyRenderer(renderer);
         SDL_Quit();
-        throw std::runtime_error("Error creating window => H2DE_CreateEngine failed");
+        throw std::runtime_error("HGD-1003: Error creating window => H2DE_CreateEngine failed");
     }
 
     SDL_SetWindowMaximumSize(window, ((fullscreen) ? 1920 : 1600), ((fullscreen) ? 1080 : 900));
     H2DE_SetEngineMaximumSize(engine, ((fullscreen) ? 1920 : 1600), ((fullscreen) ? 1080 : 900));
 }
 
+void Game::loadVolumes() {
+    std::string SAVESpath = "data/saves.json";
+    json* saves = H2DE_Json::read(SAVESpath);
+
+    json volume = (*saves)["volume"];
+    H2DE_SetSongVolume(engine, volume["song"]);
+    H2DE_SetSFXVolume(engine, -1, volume["sfx"]);
+}
+
 // CLEANUP
 Game::~Game() {
     saveSettings();
-    delete data;
-    delete camera;
     if (menu) delete menu;
     if (level) delete level;
+    delete camera;
     delete calculator;
     delete megahack;
+    delete data;
     SDL_DestroyWindow(window);
     SDL_DestroyRenderer(renderer);
     H2DE_DestroyEngine(engine);
@@ -96,7 +104,7 @@ void Game::saveSettings() {
         (*settings)["window"]["h"] = winH;
 
         if (!H2DE_Json::write(SETTINGSpath, settings)) {
-            throw std::runtime_error("Error updating settings => Writing settings failed");
+            throw std::runtime_error("HGD-3001: Error updating settings => Writing settings failed");
         }
     }
 }
@@ -330,8 +338,8 @@ void Game::setState(GameState s) {
     };
     static std::vector<std::string> subs = {
         "default",
-        "taénsition in",
-        "taénsition out",
+        "transition in",
+        "transition out",
     };
     state.main = s.main;
     state.sub = s.sub;

@@ -232,7 +232,7 @@ void Player::updatePercentage() {
 // RENDER
 void Player::render() {
     renderTexture();
-    renderHitboxes();
+    if (game->getMegahack()->getHack("show-hitboxes")->active) renderHitboxes();
 }
 
 void Player::renderTexture() {
@@ -314,8 +314,26 @@ void Player::kill() {
     H2DE_PlaySFX(engine, "death-sound.wav", 0);
 
     Game::delay(1000, [this]() {
-
+        game->getLevel()->respawn();
     });
+}
+
+void Player::reset(Checkpoint* c) {
+    pos.x = c->playerPos.x;
+    pos.y = c->playerPos.y;
+
+    velocity.x = c->velocity.x;
+    velocity.y = c->velocity.y;
+
+    gravity = c->gravity;
+    size = c->size;
+    gamemode = c->gamemode;
+
+    rotation = 0;
+    percentage = 0;
+
+    onSolid = false;
+    startingItem = 0;
 }
 
 // GETTER
@@ -323,7 +341,16 @@ LevelPos Player::getPos() {
     return pos;
 }
 
+int Player::getClicks() {
+    return clicks;
+}
+
+int Player::getJumps() {
+    return jumps;
+}
+
 // SETTER
 void Player::setClicking(bool value) {
     clicking = value;
+    if (!value) clicks++;
 }

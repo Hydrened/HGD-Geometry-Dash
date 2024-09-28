@@ -40,17 +40,17 @@ struct GameData {
         Sizes() {
             gamemodeHeights[CUBE] = -1.0f;
             gamemodeHeights[SHIP] = 10.0f;
-            iconSizes[CUBE][NORMAL] = { 1.0f, 1.0f };
+            iconSizes[CUBE][BIG] = { 1.0f, 1.0f };
             iconSizes[CUBE][MINI] = { 1.0f, 1.0f };
-            iconSizes[SHIP][NORMAL] = { 1.0f, 1.0f };
+            iconSizes[SHIP][BIG] = { 1.0f, 1.0f };
             iconSizes[SHIP][MINI] = { 1.0f, 1.0f };
-            redHitboxSizes[CUBE][NORMAL] = { 1.0f, 1.0f };
+            redHitboxSizes[CUBE][BIG] = { 1.0f, 1.0f };
             redHitboxSizes[CUBE][MINI] = { 1.0f, 1.0f };
-            redHitboxSizes[SHIP][NORMAL] = { 1.0f, 1.0f };
+            redHitboxSizes[SHIP][BIG] = { 1.0f, 1.0f };
             redHitboxSizes[SHIP][MINI] = { 1.0f, 1.0f };
-            blueHitboxSizes[CUBE][NORMAL] = { 0.35f, 0.35f };
+            blueHitboxSizes[CUBE][BIG] = { 0.35f, 0.35f };
             blueHitboxSizes[CUBE][MINI] = { 0.35f, 0.35f };
-            blueHitboxSizes[SHIP][NORMAL] = { 0.35f, 0.35f };
+            blueHitboxSizes[SHIP][BIG] = { 0.35f, 0.35f };
             blueHitboxSizes[SHIP][MINI] = { 0.35f, 0.35f };
         }
     };
@@ -63,17 +63,17 @@ struct GameData {
         std::unordered_map<Gamemode, std::unordered_map<Size, LevelOffset>> blueHitboxOffsets;
 
         Offsets() {
-            iconOffsets[CUBE][NORMAL] = { 0.0f, 0.0f };
+            iconOffsets[CUBE][BIG] = { 0.0f, 0.0f };
             iconOffsets[CUBE][MINI] = { 0.0f, 0.0f };
-            iconOffsets[SHIP][NORMAL] = { 0.0f, 0.0f };
+            iconOffsets[SHIP][BIG] = { 0.0f, 0.0f };
             iconOffsets[SHIP][MINI] = { 0.0f, 0.0f };
-            redHitboxOffsets[CUBE][NORMAL] = { 0.0f, 0.0f };
+            redHitboxOffsets[CUBE][BIG] = { 0.0f, 0.0f };
             redHitboxOffsets[CUBE][MINI] = { 0.0f, 0.0f };
-            redHitboxOffsets[SHIP][NORMAL] = { 0.0f, 0.0f };
+            redHitboxOffsets[SHIP][BIG] = { 0.0f, 0.0f };
             redHitboxOffsets[SHIP][MINI] = { 0.0f, 0.0f };
-            blueHitboxOffsets[CUBE][NORMAL] = { 0.325f, -0.325f };
+            blueHitboxOffsets[CUBE][BIG] = { 0.325f, -0.325f };
             blueHitboxOffsets[CUBE][MINI] = { 0.325f, -0.325f };
-            blueHitboxOffsets[SHIP][NORMAL] = { 0.325f, -0.325f };
+            blueHitboxOffsets[SHIP][BIG] = { 0.325f, -0.325f };
             blueHitboxOffsets[SHIP][MINI] = { 0.325f, -0.325f };
         }
     };
@@ -91,21 +91,21 @@ struct GameData {
         std::unordered_map<Gamemode, bool> canMoveCamera;
 
         Physics() {
-            gravities[CUBE][NORMAL] = -0.0244f;
+            gravities[CUBE][BIG] = -0.0244f;
             gravities[CUBE][MINI] = 0.0f;
-            gravities[SHIP][NORMAL] = -0.013f;
+            gravities[SHIP][BIG] = -0.013f;
             gravities[SHIP][MINI] = 0.0f;
-            maxGravities[CUBE][NORMAL] = 0.4f;
+            maxGravities[CUBE][BIG] = 0.4f;
             maxGravities[CUBE][MINI] = 0.0f;
-            maxGravities[SHIP][NORMAL] = 0.22f;
+            maxGravities[SHIP][BIG] = 0.22f;
             maxGravities[SHIP][MINI] = 0.0f;
-            clicks[CUBE][NORMAL] = 0.3332f;
+            clicks[CUBE][BIG] = 0.3332f;
             clicks[CUBE][MINI] = 0.0f;
-            clicks[SHIP][NORMAL] = 0.03f;
+            clicks[SHIP][BIG] = 0.03f;
             clicks[SHIP][MINI] = 0.0f;
-            rotations[CUBE][NORMAL] = 6.8f;
+            rotations[CUBE][BIG] = 6.8f;
             rotations[CUBE][MINI] = 0.0f;
-            rotations[SHIP][NORMAL] = -200.0f;
+            rotations[SHIP][BIG] = -200.0f;
             rotations[SHIP][MINI] = 0.0f;
             canHitTop[CUBE] = false;
             canHitTop[SHIP] = true;

@@ -18,8 +18,8 @@ bool Item::isUsed() {
 }
 
 // SETTER
-void Item::setUsed() {
-    used = true;
+void Item::setUsed(bool value) {
+    used = value;
 }
 
 
@@ -43,13 +43,16 @@ void Block::update() {
 
 // RENDER
 void Block::render() {
-    static GameData* gameData = game->getData();
+    renderTexture();
+    if (game->getMegahack()->getHack("show-hitboxes")->active) renderHitbox();
+}
+
+void Block::renderTexture() {
     static H2DE_Engine* engine = game->getEngine();
     static Calculator* calculator = game->getCalculator();
     LevelPos camPos = game->getCamera()->getPos();
 
     bool textureOnCamX = (data->pos.x + data->textureOffset.x + data->textureSize.w > camPos.x) && (data->pos.x + data->textureOffset.x < camPos.x + BLOCKS_ON_WIDTH + 1);
-    bool hitboxOnCamX = (data->pos.x + data->hitboxOffset.x + data->hitboxSize.w > camPos.x) && (data->pos.x + data->hitboxOffset.x < camPos.x + BLOCKS_ON_WIDTH + 1);
 
     if (textureOnCamX) {
         H2DE_Size absBlockSize = calculator->convertToPx(LevelSize{ 1.0f, 1.0f });
@@ -65,6 +68,16 @@ void Block::render() {
         texture->index = data->zIndex->getIndex();
         H2DE_AddGraphicObject(engine, texture);
     }
+}
+
+void Block::renderHitbox() {
+    static H2DE_Engine* engine = game->getEngine();
+    static GameData* gameData = game->getData();
+    static Calculator* calculator = game->getCalculator();
+    LevelPos camPos = game->getCamera()->getPos();
+
+    bool hitboxOnCamX = (data->pos.x + data->hitboxOffset.x + data->hitboxSize.w > camPos.x) && (data->pos.x + data->hitboxOffset.x < camPos.x + BLOCKS_ON_WIDTH + 1);
+    
     if (hitboxOnCamX && data->type != DECORATION) {
         H2DE_Size absHitboxSize = calculator->convertToPx(data->hitboxSize);
         H2DE_Pos absHitboxOffset = calculator->convertToPx(data->hitboxOffset);
@@ -83,6 +96,11 @@ void Block::render() {
     }
 }
 
+// RESET
+void Block::reset() {
+    setUsed(false);
+}
+
 // GETTER
 BufferedBlock* Block::getData() {
     return data;
@@ -94,7 +112,7 @@ BufferedBlock* Block::getData() {
 
 // INIT
 Trigger::Trigger(Game* game, BufferedTrigger* d) : Item(game), data(d) {
-    if (data->type == STARTPOS) setUsed();
+    if (data->type == STARTPOS) setUsed(true);
 }
 
 // CLEANUP
@@ -120,7 +138,7 @@ void Trigger::trigger() {
     static H2DE_Engine* engine = game->getEngine();
     Level* level = game->getLevel();
 
-    setUsed();
+    setUsed(true);
 
     Color sCol;
     switch (data->type) {
@@ -153,6 +171,12 @@ void Trigger::trigger() {
 // RENDER
 void Trigger::render() {
 
+}
+
+// RESET
+void Trigger::reset() {
+    if (data->type != STARTPOS) setUsed(false);
+    H2DE_ClearTimelineManager(tm);
 }
 
 // GETTER

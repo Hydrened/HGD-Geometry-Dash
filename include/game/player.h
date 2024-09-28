@@ -8,8 +8,8 @@ private:
     Game* game;
 
     Checkpoint* startpos;
-    int jumps;
-    int clicks;
+    int jumps = 0;
+    int clicks = 0;
     
     LevelPos pos;
     Velocity velocity;
@@ -46,8 +46,11 @@ public:
 
     void update();
     void render();
+    void reset(Checkpoint* checkpoint);
 
     LevelPos getPos();
+    int getJumps();
+    int getClicks();
     void setClicking(bool value);
 };
 
