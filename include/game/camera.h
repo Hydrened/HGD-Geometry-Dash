@@ -8,6 +8,8 @@ class Camera {
 private:
     Game* game;
 
+    H2DE_TimelineManager* tm = new H2DE_TimelineManager();
+
     LevelPos initalPos;
     LevelPos currentPos;
 
@@ -17,7 +19,7 @@ public:
 
     void reset();
     void globalSet(LevelPos pos);
-    void setPos(LevelPos pos);
+    void setPos(LevelPos pos, int ms);
     LevelPos getPos();
 };
 

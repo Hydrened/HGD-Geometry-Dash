@@ -19,6 +19,9 @@ private:
     Game* game;
     LevelData* data = nullptr;
     GameData* gameData = new GameData();
+    
+    H2DE_TimelineManager* topGroundTM = new H2DE_TimelineManager();
+    H2DE_TimelineManager* botGroundTM = new H2DE_TimelineManager();
 
     int id;
     int attempts = 0;
@@ -28,7 +31,9 @@ private:
 
     LevelPos backgroundPos;
     LevelPos botGroundPos;
+    LevelPos botGroundVisualPos;
     LevelPos topGroundPos;
+    LevelPos topGroundVisualPos;
     Color backgroundColor;
     Color groundColor;
     Color lineColor;
@@ -81,6 +86,8 @@ public:
     void setGroundColor(Color color);
     Color getLineColor();
     void setLineColor(Color color);
+    void setTopGroundPos(LevelPos pos, int ms);
+    void setBotGroundPos(LevelPos pos, int ms);
     Player* getPlayer();
     std::vector<Item*>* getItems();
     int getLevelLength();

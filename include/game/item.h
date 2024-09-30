@@ -7,6 +7,7 @@ class Item {
 protected:
     Game* game;
     bool used;
+    H2DE_TimelineManager* tm = new H2DE_TimelineManager();
 
 public:
     Item(Game* game);
@@ -15,9 +16,6 @@ public:
     virtual void update() = 0;
     virtual void render() = 0;
     virtual void reset() = 0;
-
-    bool isUsed();
-    void setUsed(bool value);
 };
 
 
@@ -35,8 +33,10 @@ public:
     void renderTexture();
     void renderHitbox();
     void reset() override;
+    void enter();
 
     BufferedBlock* getData();
+    bool entered();
 };
 
 
@@ -44,7 +44,6 @@ public:
 class Trigger : public Item {
 private:
     BufferedTrigger* data;
-    H2DE_TimelineManager* tm = new H2DE_TimelineManager();
 
 public:
     Trigger(Game* game, BufferedTrigger* data);

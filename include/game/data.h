@@ -27,7 +27,7 @@ struct GameData {
         float cameraPaddingTop = 3.0f; // replace => 3.0f(more accurate value)
         float cameraPaddingBot = 3.0f; // replace => 3.0f(more accurate value)
         float levelEndPadding = 8.0f; // replace => 8.0f(more accurate value)
-        std::unordered_map<Gamemode, float> gamemodeHeights;
+        std::unordered_map<Gamemode, int> gamemodeHeights;
         std::unordered_map<Gamemode, std::unordered_map<Size, LevelSize>> iconSizes;
         std::unordered_map<Gamemode, std::unordered_map<Size, LevelSize>> redHitboxSizes;
         std::unordered_map<Gamemode, std::unordered_map<Size, LevelSize>> blueHitboxSizes;
@@ -38,8 +38,8 @@ struct GameData {
         LevelSize progressBar = { 100.0f, 2.0f };
 
         Sizes() {
-            gamemodeHeights[CUBE] = -1.0f;
-            gamemodeHeights[SHIP] = 10.0f;
+            gamemodeHeights[CUBE] = -1;
+            gamemodeHeights[SHIP] = 10;
             iconSizes[CUBE][BIG] = { 1.0f, 1.0f };
             iconSizes[CUBE][MINI] = { 1.0f, 1.0f };
             iconSizes[SHIP][BIG] = { 1.0f, 1.0f };

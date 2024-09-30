@@ -88,6 +88,24 @@ enum LevelMode {
     PRACTICE_MODE,
 };
 
+enum ItemSpecialDataType {
+    SD_PORTAL,
+    SD_ORB,
+    SD_PAD,
+    SD_COIN,
+};
+
+enum ItemSpecialDataDesc {
+    SD_CUBE,
+    SD_SHIP,
+    SD_RIGHT_SIDE_UP,
+    SD_UPSIDE_DOWN,
+    SD_PINK,
+    SD_YELLOW,
+    SD_BLUE,
+    SD_SECRET,
+};
+
 struct GameState {
     MainGameState main;
     SubGameState sub;
@@ -194,6 +212,11 @@ public:
     int getIndex() { return layer * range * 2 + layer + order; };
 };
 
+struct ItemSpecialData {
+    ItemSpecialDataType type;
+    ItemSpecialDataDesc desc;
+};
+
 struct BufferedBlock {
     BlockType type;
     std::string texture = "";
@@ -205,7 +228,7 @@ struct BufferedBlock {
     int rotation = 0;
     SDL_RendererFlip flip = SDL_FLIP_NONE;
     int colorID = 0;
-    std::string specialData = "";
+    ItemSpecialData specialData;
     Zindex* zIndex;
 };
 

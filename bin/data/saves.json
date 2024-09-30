@@ -7,7 +7,7 @@
             "name": "noclip"
         },
         {
-            "active": false,
+            "active": true,
             "keycode": 41,
             "name": "show-hitboxes"
         }
@@ -24,14 +24,14 @@
     },
     "levels": {
         "0": {
-            "attempts": 58,
-            "clicks": 185,
+            "attempts": 211,
+            "clicks": 1267,
             "coins": [
                 false,
                 false,
                 false
             ],
-            "jumps": 267,
+            "jumps": 986,
             "progress": {
                 "normal": 0,
                 "practice": 0
@@ -41,7 +41,7 @@
     "shop": {},
     "stats": {},
     "volume": {
-        "sfx": 20,
-        "song": 20
+        "sfx": 0,
+        "song": 0
     }
 }

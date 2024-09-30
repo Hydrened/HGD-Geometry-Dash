@@ -1,3 +1,9 @@
+## HGD-1.0.6
+### ADDED
+- cube and ship portals
+### FIXED
+- color trigger can now overlap
+
 ## HGD-1.0.5
 ### ADDED
 - respawn

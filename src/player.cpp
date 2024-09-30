@@ -18,7 +18,6 @@ void Player::update() {
     checkGroundCollisions();
     checkItemCollisions();
     updateRotation();
-    checkTriggers();
     updatePercentage();
 }
 
@@ -68,7 +67,7 @@ void Player::updateCamera() {
         else if (newCamPosY > cameraMaxY) newCamPosY = cameraMaxY;
     }
 
-    camera->setPos({ camPos.x + gameData->physics->speeds[level->getCurrentSpeed()], newCamPosY });
+    camera->setPos({ camPos.x + gameData->physics->speeds[level->getCurrentSpeed()], newCamPosY }, 0);
 }
 
 void Player::checkGroundCollisions() {
@@ -146,19 +145,9 @@ void Player::checkItemCollisions() {
                             pos.y = blockData->pos.y + blockData->hitboxSize.h + blockData->hitboxOffset.y;
                         } break;
                     } break;
-                    // case SPECIAL: if (!item->entered()) {
-                    //     item->enter();
-                    //     switch (itemData->specialData.type) {
-                    //         case COIN: break;
-                    //         case PORTAL: 
-                    //             if (itemData->specialData.gamemode.has_value()) {
-                    //                 setGamemode(itemData->specialData.gamemode.value(), itemPos.y);
-                    //             }
-                    //             break;
-                    //         case ORB: break;
-                    //         case PAD: break;
-                    //     }
-                    // } break;
+                    case SPECIAL: if (!block->entered()) {
+                        block->enter();
+                    } break;
                     redPlayerRect = { pos.x + gameData->offsets->redHitboxOffsets[gamemode][size].x, pos.y + gameData->offsets->redHitboxOffsets[gamemode][size].y, gameData->sizes->redHitboxSizes[gamemode][size].w, gameData->sizes->redHitboxSizes[gamemode][size].h };
                     bluePlayerRect = { pos.x + gameData->offsets->blueHitboxOffsets[gamemode][size].x, pos.y - gameData->offsets->blueHitboxOffsets[gamemode][size].y, gameData->sizes->blueHitboxSizes[gamemode][size].w, gameData->sizes->blueHitboxSizes[gamemode][size].h };
                 }
@@ -180,7 +169,7 @@ void Player::checkItemCollisions() {
                             break;
                         case RIGHT:
                             overflow = playerRect.getMaxX() - blockRect.getMinX();
-                            camera->setPos({ camPos.x - overflow + velocity.x - gameData->physics->speeds[level->getCurrentSpeed()], camPos.y });
+                            camera->setPos({ camPos.x - overflow + velocity.x - gameData->physics->speeds[level->getCurrentSpeed()], camPos.y }, 0);
                             pos.x -= overflow;
                             break;
                         case BOTTOM:
@@ -216,10 +205,6 @@ void Player::updateRotation() {
 
     if (rotation > 360) rotation -= 360;
     else if (rotation < -360) rotation += 360;
-}
-
-void Player::checkTriggers() {
-
 }
 
 void Player::updatePercentage() {
@@ -353,4 +338,42 @@ int Player::getJumps() {
 void Player::setClicking(bool value) {
     clicking = value;
     if (!value) clicks++;
+}
+
+void Player::setGamemode(Gamemode g, float y) {
+    static H2DE_Engine* engine = game->getEngine();
+    static GameData* gameData = game->getData();
+    static Camera* camera = game->getCamera();
+    H2DE_Size winSize = H2DE_GetEngineSize(engine);
+    Level* level = game->getLevel();
+    LevelPos topGroundPos = level->getTopGroundPos();
+    LevelPos botGroundPos = level->getBotGroundPos();
+    LevelPos camPos = camera->getPos();
+
+    gamemode = g;
+    int gamemodeHeight = gameData->sizes->gamemodeHeights[g];
+
+    float newTopGroundPosY, newBotGroundPosY;
+    if (gamemodeHeight != -1) {
+        if (y < 5.0f) y = 5.0f;
+
+        float winHeight = winSize.h / round(winSize.w / BLOCKS_ON_WIDTH);
+        newTopGroundPosY = floor((gamemodeHeight - 1.0f) / 2.0f) + y + 1.0f;
+        newBotGroundPosY = newTopGroundPosY - gamemodeHeight;
+
+        camera->setPos({ camPos.x, newBotGroundPosY - (winHeight - gamemodeHeight) / 2 }, 350);
+    } else {
+        newTopGroundPosY = gameData->positions->topGroundPos.y;
+        newBotGroundPosY = gameData->positions->botGroundPos.y + gameData->sizes->ground.h;
+    }
+    
+    float tempTopGroundYpos = newTopGroundPosY + 5.0f;
+    if (tempTopGroundYpos > gameData->positions->topGroundPos.y) tempTopGroundYpos = gameData->positions->topGroundPos.y;
+    level->setTopGroundPos({ topGroundPos.x, tempTopGroundYpos }, 0);
+    level->setTopGroundPos({ topGroundPos.x, newTopGroundPosY }, 500);
+    
+    float tempBotGroundPos = newBotGroundPosY - gameData->sizes->ground.h - 5.0f;
+    if (tempBotGroundPos < gameData->positions->botGroundPos.y) tempBotGroundPos = gameData->positions->botGroundPos.y;
+    level->setBotGroundPos({ botGroundPos.x, tempBotGroundPos }, 0);
+    level->setBotGroundPos({ botGroundPos.x, newBotGroundPosY - gameData->sizes->ground.h }, 500);
 }

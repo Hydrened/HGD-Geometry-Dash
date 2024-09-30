@@ -34,7 +34,6 @@ private:
     void checkGroundCollisions();
     void checkItemCollisions();
     void updateRotation();
-    void checkTriggers();
     void updatePercentage();
 
     void renderTexture();
@@ -52,6 +51,7 @@ public:
     int getJumps();
     int getClicks();
     void setClicking(bool value);
+    void setGamemode(Gamemode gamemode, float y);
 };
 
 #endif 

@@ -82,7 +82,11 @@ void Level::Levels::getBlocksInfos(LevelData* data, json* level, json* itemsData
         } else bBlock->flip = SDL_FLIP_NONE;
 
         bBlock->zIndex = new Zindex(Zindex::getLayer(itemData["zIndex"]["layer"]), itemData["zIndex"]["order"]);
-        if (itemData.contains("special")) bBlock->specialData = itemData["special"];
+        if (itemData.contains("special")) {
+            bBlock->specialData = ItemSpecialData();
+            bBlock->specialData.type = itemData["special"]["type"];
+            bBlock->specialData.desc = itemData["special"]["desc"];
+        }
 
         data->blocks.push_back(bBlock);
     }
@@ -218,8 +222,12 @@ void Level::initCamera() {
 
 void Level::initLevelElements() {
     backgroundPos = gameData->positions->backgroundPos;
+
     botGroundPos = gameData->positions->botGroundPos;
+    botGroundVisualPos = gameData->positions->botGroundPos;
     topGroundPos = gameData->positions->topGroundPos;
+    topGroundVisualPos = gameData->positions->topGroundPos;
+
     backgroundColor = data->backgroundColor;
     groundColor = data->groundColor;
     lineColor = data->lineColor;
@@ -246,6 +254,10 @@ Level::~Level() noexcept(false) {
     saveData();
     if (player) delete player;
     if (data) delete data;
+    H2DE_ClearTimelineManager(topGroundTM);
+    delete topGroundTM;
+    H2DE_ClearTimelineManager(botGroundTM);
+    delete botGroundTM;
 }
 
 void Level::saveData() {
@@ -280,6 +292,8 @@ void Level::update() {
     switch (state.main) {
         case LEVEL_PLAYING:
             backgroundPos.x += (gameData->physics->speeds[speed] * gameData->physics->backgroundRatio);
+            H2DE_TickTimelineManager(topGroundTM);
+            H2DE_TickTimelineManager(botGroundTM);
             for (Item* item : items) item->update();
             player->update(); break;
             break;
@@ -311,7 +325,7 @@ void Level::render() {
     // render bot ground
     H2DE_GraphicObject* botGround = new H2DE_GraphicObject();
     botGround->type = IMAGE;
-    botGround->pos = calculator->convertToPx(botGroundPos, gameData->sizes->ground, false, false);
+    botGround->pos = calculator->convertToPx(botGroundVisualPos, gameData->sizes->ground, false, false);
     botGround->size = absGroundSize;
     botGround->texture = "ground_1.png";
     botGround->repeatX = true;
@@ -322,7 +336,7 @@ void Level::render() {
     // render bot line
     H2DE_GraphicObject* botLine = new H2DE_GraphicObject();
     botLine->type = IMAGE;
-    botLine->pos = calculator->convertToPx({ gameData->offsets->botLine.x, botGroundPos.y + gameData->offsets->botLine.y }, gameData->sizes->line, true, false);
+    botLine->pos = calculator->convertToPx({ gameData->offsets->botLine.x, botGroundVisualPos.y + gameData->offsets->botLine.y }, gameData->sizes->line, true, false);
     botLine->size = absLineSize;
     botLine->texture = "line_1.png";
     botLine->color = static_cast<H2DE_Color>(lineColor);
@@ -332,7 +346,7 @@ void Level::render() {
     // render top ground
     H2DE_GraphicObject* topGround = new H2DE_GraphicObject();
     topGround->type = IMAGE;
-    topGround->pos = calculator->convertToPx(topGroundPos, gameData->sizes->ground, false, false);
+    topGround->pos = calculator->convertToPx(topGroundVisualPos, gameData->sizes->ground, false, false);
     topGround->size = absGroundSize;
     topGround->texture = "ground_1.png";
     topGround->repeatX = true;
@@ -344,7 +358,7 @@ void Level::render() {
     // render top line
     H2DE_GraphicObject* topLine = new H2DE_GraphicObject();
     topLine->type = IMAGE;
-    topLine->pos = calculator->convertToPx({ gameData->offsets->topLine.x, topGroundPos.y + gameData->offsets->topLine.y }, gameData->sizes->line, true, false);
+    topLine->pos = calculator->convertToPx({ gameData->offsets->topLine.x, topGroundVisualPos.y + gameData->offsets->topLine.y }, gameData->sizes->line, true, false);
     topLine->size = absLineSize;
     topLine->texture = "line_1.png";
     topLine->color = static_cast<H2DE_Color>(lineColor);
@@ -427,6 +441,40 @@ void Level::setLineColor(Color color) {
     lineColor.r = color.r;
     lineColor.g = color.g;
     lineColor.b = color.b;
+}
+
+void Level::setTopGroundPos(LevelPos pos, int ms) {
+    static H2DE_Engine* engine = game->getEngine();
+    H2DE_ClearTimelineManager(topGroundTM);
+
+    topGroundPos.x = pos.x;
+    topGroundPos.y = pos.y;
+
+    if (ms != 0) {
+        LevelPos defaultPos = topGroundVisualPos;
+
+        H2DE_Timeline* t = H2DE_CreateTimeline(engine, ms, EASE_IN_OUT, [this, defaultPos, pos](float blend) {
+            this->topGroundVisualPos.y = defaultPos.y + blend * (pos.y - defaultPos.y);
+        }, NULL);
+        H2DE_AddTimelineToManager(topGroundTM, t);
+    }
+}
+
+void Level::setBotGroundPos(LevelPos pos, int ms) {
+    static H2DE_Engine* engine = game->getEngine();
+    H2DE_ClearTimelineManager(botGroundTM);
+
+    botGroundPos.x = pos.x;
+    botGroundPos.y = pos.y;
+
+    if (ms != 0) {
+        LevelPos defaultPos = botGroundVisualPos;
+
+        H2DE_Timeline* t = H2DE_CreateTimeline(engine, ms, EASE_IN_OUT, [this, defaultPos, pos](float blend) {
+            this->botGroundVisualPos.y = defaultPos.y + blend * (pos.y - defaultPos.y);
+        }, NULL);
+        H2DE_AddTimelineToManager(botGroundTM, t);
+    }
 }
 
 // OTHER

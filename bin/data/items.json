@@ -208,7 +208,10 @@
             "order": 10
         },
         "type": 2,
-        "special": "portal-cube"
+        "special": {
+            "type": 0,
+            "desc": 0
+        }
     },
     "6_21": {
         "size": {
@@ -224,7 +227,10 @@
             "order": 10
         },
         "type": 2,
-        "special": "portal-ship"
+        "special": {
+            "type": 0,
+            "desc": 1
+        }
     },
     "11_193": {
         "size": {
