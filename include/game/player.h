@@ -3,9 +3,12 @@
 
 #include "game.h"
 
+class Level;
+
 class Player {
 private:
     Game* game;
+    Level* level;
 
     Checkpoint* startpos;
     int jumps = 0;
@@ -21,8 +24,9 @@ private:
     float percentage = 0.0f;
     int startingItem = 0;
 
+    bool botOnSolid = false;
+    bool topOnSolid = false;
     bool clicking = false;
-    bool onSolid = false;
     bool canBuffer = true;
 
     void click();
@@ -30,9 +34,8 @@ private:
 
     void updateClicks();
     void updatePositions();
-    void updateCamera();
     void checkGroundCollisions();
-    void checkItemCollisions();
+    void checkBlocksCollisions();
     void updateRotation();
     void updatePercentage();
 
@@ -40,7 +43,7 @@ private:
     void renderHitboxes();
 
 public:
-    Player(Game* game, Checkpoint* startpos);
+    Player(Game* game, Level* level, Checkpoint* startpos);
     ~Player();
 
     void update();
@@ -50,8 +53,9 @@ public:
     LevelPos getPos();
     int getJumps();
     int getClicks();
+    Gamemode getGamemode();
     void setClicking(bool value);
-    void setGamemode(Gamemode gamemode, float y);
+    void setGamemode(Gamemode gamemode, float y, unsigned int ms);
 };
 
 #endif 

@@ -15,7 +15,7 @@ class H2DE_Engine;
 class H2DE_Timeline {
 private:
     H2DE_Engine* engine;
-    int duration;
+    unsigned int duration;
     H2DE_TimelineEffect effect;
     std::function<void(float)> update;
     std::function<void()> completed;
@@ -30,10 +30,10 @@ private:
      * 
      * \since H2DE-1.0.0
      */
-    int getSteps(int ms);
+    unsigned int getSteps(unsigned int ms);
 
 public:
-    H2DE_Timeline(H2DE_Engine* engine, int duration, H2DE_TimelineEffect effect, std::function<void(float)> update, std::function<void()> completed);
+    H2DE_Timeline(H2DE_Engine* engine, unsigned int duration, H2DE_TimelineEffect effect, std::function<void(float)> update, std::function<void()> completed);
     ~H2DE_Timeline();
 
     /**

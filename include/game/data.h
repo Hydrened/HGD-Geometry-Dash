@@ -25,7 +25,7 @@ struct GameData {
         LevelSize checkpoint = { 1.0f, 1.0f };
         float levelHeight = 80.0f;
         float cameraPaddingTop = 3.0f; // replace => 3.0f(more accurate value)
-        float cameraPaddingBot = 3.0f; // replace => 3.0f(more accurate value)
+        float cameraPaddingBot = 3.2f; // replace => 3.0f(more accurate value)
         float levelEndPadding = 8.0f; // replace => 8.0f(more accurate value)
         std::unordered_map<Gamemode, int> gamemodeHeights;
         std::unordered_map<Gamemode, std::unordered_map<Size, LevelSize>> iconSizes;
@@ -81,7 +81,6 @@ struct GameData {
     struct Physics {
         std::vector<float> speeds = { 0.0f, 0.1723f, 0.0f, 0.0f, 0.0f }; // replace => more accurate values 0.171
         float backgroundRatio = 0.9f;
-        float cameraSpeedY = 0.05f;
         std::unordered_map<Gamemode, std::unordered_map<Size, float>> gravities;
         std::unordered_map<Gamemode, std::unordered_map<Size, float>> maxGravities;
         std::unordered_map<Gamemode, std::unordered_map<Size, float>> clicks;

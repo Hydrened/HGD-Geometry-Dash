@@ -1,8 +1,8 @@
 #include "player.h"
 
 // INIT
-Player::Player(Game* g, Checkpoint* s) : game(g), startpos(s), pos(s->playerPos), velocity(s->velocity), gravity(s->gravity), gamemode(s->gamemode), size(s->size), rotation(s->rotation) {
-    
+Player::Player(Game* g, Level* l, Checkpoint* s) : game(g), level(l), startpos(s), pos(s->playerPos), velocity(s->velocity), gamemode(s->gamemode), gravity(s->gravity), size(s->size), rotation(s->rotation) {
+    setGamemode(s->gamemode, pos.y, 0);
 }
 
 // CLEANUP
@@ -14,9 +14,8 @@ Player::~Player() {
 void Player::update() {
     updateClicks();
     updatePositions();
-    updateCamera();
     checkGroundCollisions();
-    checkItemCollisions();
+    checkBlocksCollisions();
     updateRotation();
     updatePercentage();
 }
@@ -28,9 +27,9 @@ void Player::updateClicks() {
 
 void Player::updatePositions() {
     static GameData* gameData = game->getData();
-    Level* level = game->getLevel();
 
-    onSolid = false;
+    botOnSolid = false;
+    topOnSolid = false;
 
     velocity.x = gameData->physics->speeds[level->getCurrentSpeed()];
     velocity.y += gameData->physics->gravities[gamemode][size] * gravity;
@@ -42,44 +41,16 @@ void Player::updatePositions() {
     else if (velocity.y * -1.0f > maxGravity) velocity.y = maxGravity * -1.0f;
 }
 
-void Player::updateCamera() {
-    static GameData* gameData = game->getData();
-    static Camera* camera = game->getCamera();
-
-    H2DE_Size engineSize = H2DE_GetEngineSize(game->getEngine());
-
-    static float winHeight = engineSize.h / round(engineSize.w / BLOCKS_ON_WIDTH);
-    static float cameraMinY = gameData->positions->cameraMinY;
-    static float cameraMaxY = gameData->positions->cameraMaxY;
-    static float cameraPaddingBot = gameData->sizes->cameraPaddingBot;
-    static float cameraPaddingTop = gameData->sizes->cameraPaddingTop;
-    static float cameraSpeedY = gameData->physics->cameraSpeedY;
-
-    Level* level = game->getLevel();
-    LevelPos camPos = camera->getPos();
-
-    float newCamPosY = camPos.y;
-
-    if (gameData->physics->canMoveCamera[gamemode]) {
-        if (pos.y < camPos.y + cameraPaddingBot) newCamPosY -= cameraSpeedY;
-        else if (pos.y > camPos.y + winHeight - cameraPaddingTop) newCamPosY += cameraSpeedY;
-        if (newCamPosY < cameraMinY) newCamPosY = cameraMinY;
-        else if (newCamPosY > cameraMaxY) newCamPosY = cameraMaxY;
-    }
-
-    camera->setPos({ camPos.x + gameData->physics->speeds[level->getCurrentSpeed()], newCamPosY }, 0);
-}
-
 void Player::checkGroundCollisions() {
     static GameData* gameData = game->getData();
     static float groundHeight = gameData->sizes->ground.h;
-    Level* level = game->getLevel();
 
     if (velocity.y < 0.0f) {
         float bottomGroundsTop = level->getBotGroundPos().y + groundHeight;
 
         if (pos.y < bottomGroundsTop) {
-            if (gravity == RIGHT_SIDE_UP) onSolid = true;
+            if (gravity == RIGHT_SIDE_UP) botOnSolid = true;
+            else topOnSolid = true;
             velocity.y = 0.0f;
             pos.y = bottomGroundsTop;
         }
@@ -87,18 +58,18 @@ void Player::checkGroundCollisions() {
         float topGroundsBottom = level->getTopGroundPos().y;
         
         if (pos.y + gameData->sizes->redHitboxSizes[gamemode][size].h > topGroundsBottom) {
-            if (gravity == UPSIDE_DOWN) onSolid = true;
+            if (gravity == UPSIDE_DOWN) botOnSolid = true;
+            else topOnSolid = true;
             velocity.y = 0.0f;
             pos.y = topGroundsBottom - gameData->sizes->redHitboxSizes[gamemode][size].h;
         }
     }
 }
 
-void Player::checkItemCollisions() {
+void Player::checkBlocksCollisions() {
     static GameData* gameData = game->getData();
     static Camera* camera = game->getCamera();
     static std::unordered_map<std::string, Hack*> hacks = game->getMegahack()->getHacks();
-    Level* level = game->getLevel();
     std::vector<Item*>* items = level->getItems();
     LevelPos camPos = camera->getPos();
 
@@ -135,19 +106,24 @@ void Player::checkItemCollisions() {
                 switch (blockData->type) {
                     case SOLID: switch (Rect::getCollidedFace(&redPlayerRect, &blockRect)) {
                         case TOP: if ((gravity == RIGHT_SIDE_UP && canHitTop) || (gravity == UPSIDE_DOWN && canHitBottom)) {
-                            onSolid = true;
+                            botOnSolid = (gravity == UPSIDE_DOWN);
+                            topOnSolid = !botOnSolid;
                             velocity.y = 0;
-                            pos.y = blockData->pos.y - gameData->sizes->redHitboxSizes[gamemode][size].h;
+                            pos.y = blockData->pos.y - gameData->sizes->redHitboxSizes[gamemode][size].h + blockData->hitboxOffset.y;
                         } break;
+
                         case BOTTOM: if ((gravity == RIGHT_SIDE_UP && canHitBottom) || (gravity == UPSIDE_DOWN && canHitTop)) {
-                            onSolid = true;
+                            botOnSolid = (gravity == RIGHT_SIDE_UP);
+                            topOnSolid = !botOnSolid;
                             velocity.y = 0;
                             pos.y = blockData->pos.y + blockData->hitboxSize.h + blockData->hitboxOffset.y;
                         } break;
                     } break;
+
                     case SPECIAL: if (!block->entered()) {
                         block->enter();
                     } break;
+
                     redPlayerRect = { pos.x + gameData->offsets->redHitboxOffsets[gamemode][size].x, pos.y + gameData->offsets->redHitboxOffsets[gamemode][size].y, gameData->sizes->redHitboxSizes[gamemode][size].w, gameData->sizes->redHitboxSizes[gamemode][size].h };
                     bluePlayerRect = { pos.x + gameData->offsets->blueHitboxOffsets[gamemode][size].x, pos.y - gameData->offsets->blueHitboxOffsets[gamemode][size].y, gameData->sizes->blueHitboxSizes[gamemode][size].w, gameData->sizes->blueHitboxSizes[gamemode][size].h };
                 }
@@ -167,11 +143,13 @@ void Player::checkItemCollisions() {
                             overflow = playerRect.getMaxY() - blockRect.getMinY();
                             pos.y -= overflow;
                             break;
+
                         case RIGHT:
                             overflow = playerRect.getMaxX() - blockRect.getMinX();
                             camera->setPos({ camPos.x - overflow + velocity.x - gameData->physics->speeds[level->getCurrentSpeed()], camPos.y }, 0);
                             pos.x -= overflow;
                             break;
+
                         case BOTTOM:
                             overflow = blockRect.getMaxY() - playerRect.getMinY();
                             pos.y += overflow;
@@ -186,21 +164,20 @@ void Player::checkItemCollisions() {
 
 void Player::updateRotation() {
     static GameData* gameData = game->getData();
-    float rotationIncr = gameData->physics->rotations[gamemode][size];
+    float gmRotation = gameData->physics->rotations[gamemode][size];
+    float defaultRotationIncr = gameData->physics->rotations[CUBE][size];
 
-    switch (gamemode) {
-        case CUBE:
-            if (onSolid) {
-                int remain = (gravity == 1) ? 90 - fmod(rotation, 90) : fmod(rotation, 90);
-                if (remain != 0) {
-                    if (remain * gravity < 45) rotation += (remain * gravity > rotationIncr) ? rotationIncr : remain * gravity;
-                    else rotation -= (90 - remain * gravity > rotationIncr) ? rotationIncr : 90 - remain * gravity;
-                }
-            } else rotation += rotationIncr * gravity;
-            break;
-        case SHIP:
-            rotation = velocity.y * rotationIncr;
-            break;
+    if (botOnSolid || topOnSolid) {
+        int remain = (gravity == RIGHT_SIDE_UP) ? 90 - fmod(std::abs(rotation), 90) : fmod(std::abs(rotation), 90);
+        int rotationSense = (botOnSolid) ? 1 : -1;
+
+        if (remain != 0) {
+            if (remain < 45) rotation += ((remain > defaultRotationIncr) ? defaultRotationIncr : remain) * rotationSense;
+            else rotation -= ((90 - remain > defaultRotationIncr) ? defaultRotationIncr : 90 - remain) * rotationSense;
+        }
+    } else switch (gamemode) {
+        case CUBE: rotation += gmRotation * gravity; break;
+        case SHIP: rotation = velocity.y * gmRotation; break;
     }
 
     if (rotation > 360) rotation -= 360;
@@ -208,8 +185,6 @@ void Player::updateRotation() {
 }
 
 void Player::updatePercentage() {
-    Level* level = game->getLevel();
-    
     percentage = pos.x / level->getLevelLength() * 100;
     if (percentage > 100.0) level->finish();
 }
@@ -281,7 +256,7 @@ void Player::click() {
     static GameData* gameData = game->getData();
 
     switch (gamemode) {
-        case CUBE: if (onSolid) {
+        case CUBE: if (botOnSolid) {
             canBuffer = true;
             velocity.y = gameData->physics->clicks[CUBE][size] * gravity;
             jumps++;
@@ -299,7 +274,7 @@ void Player::kill() {
     H2DE_PlaySFX(engine, "death-sound.wav", 0);
 
     Game::delay(1000, [this]() {
-        game->getLevel()->respawn();
+        level->respawn();
     });
 }
 
@@ -312,12 +287,13 @@ void Player::reset(Checkpoint* c) {
 
     gravity = c->gravity;
     size = c->size;
-    gamemode = c->gamemode;
+    setGamemode(c->gamemode, pos.y, 0);
 
     rotation = 0;
     percentage = 0;
 
-    onSolid = false;
+    botOnSolid = false;
+    topOnSolid = false;
     startingItem = 0;
 }
 
@@ -334,18 +310,21 @@ int Player::getJumps() {
     return jumps;
 }
 
+Gamemode Player::getGamemode() {
+    return gamemode;
+}
+
 // SETTER
 void Player::setClicking(bool value) {
     clicking = value;
     if (!value) clicks++;
 }
 
-void Player::setGamemode(Gamemode g, float y) {
+void Player::setGamemode(Gamemode g, float y, unsigned int ms) {
     static H2DE_Engine* engine = game->getEngine();
     static GameData* gameData = game->getData();
     static Camera* camera = game->getCamera();
     H2DE_Size winSize = H2DE_GetEngineSize(engine);
-    Level* level = game->getLevel();
     LevelPos topGroundPos = level->getTopGroundPos();
     LevelPos botGroundPos = level->getBotGroundPos();
     LevelPos camPos = camera->getPos();
@@ -361,19 +340,12 @@ void Player::setGamemode(Gamemode g, float y) {
         newTopGroundPosY = floor((gamemodeHeight - 1.0f) / 2.0f) + y + 1.0f;
         newBotGroundPosY = newTopGroundPosY - gamemodeHeight;
 
-        camera->setPos({ camPos.x, newBotGroundPosY - (winHeight - gamemodeHeight) / 2 }, 350);
+        camera->setPos({ camPos.x, newBotGroundPosY - (winHeight - gamemodeHeight) / 2 }, ms);
     } else {
         newTopGroundPosY = gameData->positions->topGroundPos.y;
         newBotGroundPosY = gameData->positions->botGroundPos.y + gameData->sizes->ground.h;
     }
-    
-    float tempTopGroundYpos = newTopGroundPosY + 5.0f;
-    if (tempTopGroundYpos > gameData->positions->topGroundPos.y) tempTopGroundYpos = gameData->positions->topGroundPos.y;
-    level->setTopGroundPos({ topGroundPos.x, tempTopGroundYpos }, 0);
-    level->setTopGroundPos({ topGroundPos.x, newTopGroundPosY }, 500);
-    
-    float tempBotGroundPos = newBotGroundPosY - gameData->sizes->ground.h - 5.0f;
-    if (tempBotGroundPos < gameData->positions->botGroundPos.y) tempBotGroundPos = gameData->positions->botGroundPos.y;
-    level->setBotGroundPos({ botGroundPos.x, tempBotGroundPos }, 0);
-    level->setBotGroundPos({ botGroundPos.x, newBotGroundPosY - gameData->sizes->ground.h }, 500);
+
+    level->setTopGroundPos({ topGroundPos.x, newTopGroundPosY }, ms);
+    level->setBotGroundPos({ botGroundPos.x, newBotGroundPosY - gameData->sizes->ground.h }, ms);
 }

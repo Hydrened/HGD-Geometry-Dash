@@ -105,8 +105,8 @@ void Block::enter() {
 
     switch (data->specialData.type) {
         case SD_PORTAL: switch (data->specialData.desc) {
-            case SD_CUBE: player->setGamemode(CUBE, data->pos.y); break;
-            case SD_SHIP: player->setGamemode(SHIP, data->pos.y); break;
+            case SD_CUBE: player->setGamemode(CUBE, data->pos.y, 500); break;
+            case SD_SHIP: player->setGamemode(SHIP, data->pos.y, 500); break;
             case SD_RIGHT_SIDE_UP: break;
             case SD_UPSIDE_DOWN: break;
         } break;

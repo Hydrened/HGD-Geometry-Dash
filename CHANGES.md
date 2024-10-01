@@ -1,3 +1,9 @@
+## HGD-1.0.7
+### FIXED
+- ship instant rotation reset when on surface
+- collisions from below on blocks that are not 1x1
+- camera y movements
+
 ## HGD-1.0.6
 ### ADDED
 - cube and ship portals

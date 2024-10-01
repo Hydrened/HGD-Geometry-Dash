@@ -11,6 +11,40 @@ Camera::~Camera() {
     delete tm;
 }
 
+// EACH FRAME
+void Camera::update() {
+    static H2DE_Engine* engine = game->getEngine();
+    static GameData* gameData = game->getData();
+    Level* level = game->getLevel();
+    Player* player = level->getPlayer();
+
+    H2DE_Size engineSize = H2DE_GetEngineSize(engine);
+
+    static float winHeight = engineSize.h / round(engineSize.w / BLOCKS_ON_WIDTH);
+    static float cameraMinY = gameData->positions->cameraMinY;
+    static float cameraMaxY = gameData->positions->cameraMaxY;
+    static float cameraPaddingBot = gameData->sizes->cameraPaddingBot;
+    static float cameraPaddingTop = gameData->sizes->cameraPaddingTop;
+    static float maxGravityCube = gameData->physics->maxGravities[CUBE][BIG];
+
+    LevelPos playerPos = player->getPos();
+    float newYpos = currentPos.y;
+
+    if (gameData->physics->canMoveCamera[player->getGamemode()]) {
+        if (playerPos.y < currentPos.y + cameraPaddingBot) {
+            newYpos -= ((( currentPos.y + cameraPaddingBot ) - playerPos.y ) / cameraPaddingBot) * maxGravityCube;
+
+        } else if (playerPos.y > currentPos.y + winHeight - cameraPaddingTop) {
+            newYpos += (( playerPos.y - ( currentPos.y + winHeight - cameraPaddingTop )) / cameraPaddingTop) * maxGravityCube;
+        }
+
+        if (newYpos < cameraMinY) newYpos = cameraMinY;
+        else if (newYpos > cameraMaxY) newYpos = cameraMaxY;
+    }
+
+    setPos({ currentPos.x + gameData->physics->speeds[level->getCurrentSpeed()],newYpos }, 0);
+}
+
 // RESET
 void Camera::reset() {
     currentPos.x = initalPos.x;
@@ -29,7 +63,7 @@ void Camera::globalSet(LevelPos pos) {
     reset();
 }
 
-void Camera::setPos(LevelPos pos, int ms) {
+void Camera::setPos(LevelPos pos, unsigned int ms) {
     static H2DE_Engine* engine = game->getEngine();
     currentPos.x = pos.x;
 

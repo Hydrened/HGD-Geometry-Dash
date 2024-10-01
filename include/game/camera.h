@@ -12,14 +12,17 @@ private:
 
     LevelPos initalPos;
     LevelPos currentPos;
+    Velocity velocity = { 0.0f, 0.0f };
 
 public:
     Camera(Game* game);
     ~Camera();
 
+    void update();
+
     void reset();
     void globalSet(LevelPos pos);
-    void setPos(LevelPos pos, int ms);
+    void setPos(LevelPos pos, unsigned int ms);
     LevelPos getPos();
 };
 

@@ -86,8 +86,8 @@ public:
     void setGroundColor(Color color);
     Color getLineColor();
     void setLineColor(Color color);
-    void setTopGroundPos(LevelPos pos, int ms);
-    void setBotGroundPos(LevelPos pos, int ms);
+    void setTopGroundPos(LevelPos pos, unsigned int ms);
+    void setBotGroundPos(LevelPos pos, unsigned int ms);
     Player* getPlayer();
     std::vector<Item*>* getItems();
     int getLevelLength();

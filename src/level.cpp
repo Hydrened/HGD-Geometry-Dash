@@ -194,7 +194,7 @@ Level::Level(Game* g, int i) : game(g), id(i) {
     initItems();
     initConfig();
 
-    player = new Player(game, &data->startpos);
+    player = new Player(game, this, &data->startpos);
     std::cout << "Level initialized in " << SDL_GetTicks() - start << "ms" << std::endl;
 
     H2DE_PlaySFX(engine, "test.wav", 0); // replace => test.wav(playing level sound)
@@ -287,6 +287,7 @@ void Level::saveData() {
 
 // UPDATE
 void Level::update() {
+    static Camera* camera = game->getCamera();
     GameState state = game->getState();
 
     switch (state.main) {
@@ -295,7 +296,8 @@ void Level::update() {
             H2DE_TickTimelineManager(topGroundTM);
             H2DE_TickTimelineManager(botGroundTM);
             for (Item* item : items) item->update();
-            player->update(); break;
+            player->update();
+            camera->update();
             break;
     }
 }
@@ -443,7 +445,7 @@ void Level::setLineColor(Color color) {
     lineColor.b = color.b;
 }
 
-void Level::setTopGroundPos(LevelPos pos, int ms) {
+void Level::setTopGroundPos(LevelPos pos, unsigned int ms) {
     static H2DE_Engine* engine = game->getEngine();
     H2DE_ClearTimelineManager(topGroundTM);
 
@@ -457,10 +459,10 @@ void Level::setTopGroundPos(LevelPos pos, int ms) {
             this->topGroundVisualPos.y = defaultPos.y + blend * (pos.y - defaultPos.y);
         }, NULL);
         H2DE_AddTimelineToManager(topGroundTM, t);
-    }
+    } else topGroundVisualPos.y = topGroundPos.y;
 }
 
-void Level::setBotGroundPos(LevelPos pos, int ms) {
+void Level::setBotGroundPos(LevelPos pos, unsigned int ms) {
     static H2DE_Engine* engine = game->getEngine();
     H2DE_ClearTimelineManager(botGroundTM);
 
@@ -474,7 +476,7 @@ void Level::setBotGroundPos(LevelPos pos, int ms) {
             this->botGroundVisualPos.y = defaultPos.y + blend * (pos.y - defaultPos.y);
         }, NULL);
         H2DE_AddTimelineToManager(botGroundTM, t);
-    }
+    } else botGroundVisualPos.y = botGroundPos.y;
 }
 
 // OTHER
@@ -504,21 +506,24 @@ void Level::respawn() {
     static GameData* gameData = game->getData();
     static Camera* camera = game->getCamera();
 
+    H2DE_ClearTimelineManager(botGroundTM);
+    H2DE_ClearTimelineManager(topGroundTM);
+
     if (mode == NORMAL_MODE) {
         camera->reset();
-
         speed = data->startpos.speed;
 
         backgroundPos = gameData->positions->backgroundPos;
         botGroundPos = gameData->positions->botGroundPos;
+        botGroundVisualPos = gameData->positions->botGroundPos;
         topGroundPos = gameData->positions->topGroundPos;
+        topGroundVisualPos = gameData->positions->topGroundPos;
 
         backgroundColor = data->backgroundColor;
         groundColor = data->groundColor;
         lineColor = data->lineColor;
 
         for (Item* item : items) item->reset();
-
         player->reset(&(data->startpos));
 
         H2DE_PlaySong(engine, data->song, 0);
