@@ -33,10 +33,11 @@ public:
     void renderTexture();
     void renderHitbox();
     void reset() override;
-    void enter();
 
-    BufferedBlock* getData();
-    bool entered();
+    BufferedBlock* getData() const;
+    bool entered() const;
+
+    void enter();
 };
 
 
@@ -50,11 +51,12 @@ public:
     ~Trigger() override;
 
     void update() override;
-    void trigger();
     void render() override;
     void reset() override;
 
-    BufferedTrigger* getData();
+    BufferedTrigger* getData() const;
+
+    void trigger();
 };
 
 

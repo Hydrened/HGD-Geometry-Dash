@@ -20,7 +20,7 @@ public:
     void renderMainMenu();
     void renderLevelMenu();
 
-    int getLevelIndex();
+    int getLevelIndex() const;
 };
 
 #endif

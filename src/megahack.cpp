@@ -46,7 +46,7 @@ void Megahack::saveHacks() {
 }   
 
 // GETTER
-std::unordered_map<std::string, Hack*> Megahack::getHacks() {
+std::unordered_map<std::string, Hack*> Megahack::getHacks() const {
     return hacks;
 }
 

@@ -16,7 +16,7 @@ public:
     Megahack(Game* game);
     ~Megahack();
 
-    std::unordered_map<std::string, Hack*> getHacks();
+    std::unordered_map<std::string, Hack*> getHacks() const;
     Hack* getHack(std::string hack);
 };
 

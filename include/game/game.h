@@ -3,14 +3,18 @@
 
 #include <H2DE/H2DE.h>
 #include <cstdlib>
+#include <fstream>
 #include <functional>
 #include <iostream>
+#include <sstream>
 #include <thread>
 #include <unordered_map>
+#include <vector>
 #include "utils.h"
 #include "camera.h"
 #include "megahack.h"
 #include "menu.h"
+#include "level_loader.h"
 #include "level.h"
 #include "data.h"
 #include "calculator.h"
@@ -59,14 +63,15 @@ public:
 
     static void delay(int ms, std::function<void()> callback);
 
-    GameData* getData();
-    H2DE_Engine* getEngine();
-    Calculator* getCalculator();
-    Camera* getCamera();
-    Megahack* getMegahack();
-    Level* getLevel();
+    GameData* getData() const;
+    H2DE_Engine* getEngine() const;
+    Calculator* getCalculator() const;
+    Camera* getCamera() const;
+    Megahack* getMegahack() const;
+    Level* getLevel() const;
+    GameState getState() const;
+
     void setState(GameState state);
-    GameState getState();
 };
 
 #endif

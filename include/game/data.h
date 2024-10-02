@@ -6,11 +6,13 @@ struct GameData {
         LevelPos camera = { -6.5f, -3.0f };
         LevelPos backgroundPos = { -6.5f, -4.0f };
         LevelPos botGroundPos = { -6.5f, -4.0f };
-        LevelPos topGroundPos = { -6.5f, 80.0f };
+        LevelPos topGroundPos = { -6.5f, 91.0f };
         LevelPos botLinePos = { -6.5f, -4.0f };
         LevelPos topLinePos = { -6.5f, 80.0f };
         float cameraMinY = -3.0f;
         float cameraMaxY = 80.0f;
+        float backgroundMinY = -4.0f;
+        float backgroundMaxY = 70.0f;
         LevelPos gameTitle = { 13.05f, 8.89f };
         LevelPos levelMenuButton = { 41.33f, 31.67f };
         LevelPos iconsMenuButton = { 25.16f, 37.22f };
@@ -25,7 +27,7 @@ struct GameData {
         LevelSize checkpoint = { 1.0f, 1.0f };
         float levelHeight = 80.0f;
         float cameraPaddingTop = 3.0f; // replace => 3.0f(more accurate value)
-        float cameraPaddingBot = 3.2f; // replace => 3.0f(more accurate value)
+        float cameraPaddingBot = 3.2f; // replace => 3.2f(more accurate value)
         float levelEndPadding = 8.0f; // replace => 8.0f(more accurate value)
         std::unordered_map<Gamemode, int> gamemodeHeights;
         std::unordered_map<Gamemode, std::unordered_map<Size, LevelSize>> iconSizes;
@@ -140,6 +142,5 @@ struct GameData {
     Physics* physics = new Physics();
     Colors* colors = new Colors();
 };
-
 
 #endif

@@ -50,12 +50,14 @@ public:
     void render();
     void reset(Checkpoint* checkpoint);
 
-    LevelPos getPos();
-    int getJumps();
-    int getClicks();
-    Gamemode getGamemode();
+    LevelPos getPos() const;
+    int getJumps() const;
+    int getClicks() const;
+    Gamemode getGamemode() const;
+    
     void setClicking(bool value);
     void setGamemode(Gamemode gamemode, float y, unsigned int ms);
+    void setGravity(Gravity gravity);
 };
 
 #endif 

@@ -35,7 +35,7 @@ void Game::createWindow(SDL_WindowFlags flag) {
         throw std::runtime_error("HGD-1000: Error creating window => SDL_Init failed: " + std::string(SDL_GetError()));
     }
 
-    window = SDL_CreateWindow("Geometry Dash 1.0 (1.0.7)", x, y, w, h, flag);
+    window = SDL_CreateWindow("Geometry Dash 1.0 (1.0.8)", x, y, w, h, flag);
     if (!window) {
         SDL_Quit();
         throw std::runtime_error("HGD-1001: Error creating window => SDL_CreateWindow failed: " + std::string(SDL_GetError()));
@@ -296,31 +296,31 @@ void Game::delay(int ms, std::function<void()> callback) {
 }
 
 // GETTER
-GameData* Game::getData() {
+GameData* Game::getData() const {
     return data;
 }
 
-H2DE_Engine* Game::getEngine() {
+H2DE_Engine* Game::getEngine() const {
     return engine;
 }
 
-Calculator* Game::getCalculator() {
+Calculator* Game::getCalculator() const {
     return calculator;
 }
 
-Camera* Game::getCamera() {
+Camera* Game::getCamera() const {
     return camera;
 }
 
-Megahack* Game::getMegahack() {
+Megahack* Game::getMegahack() const {
     return megahack;
 }
 
-Level* Game::getLevel() {
+Level* Game::getLevel() const {
     return level;
 }
 
-GameState Game::getState() {
+GameState Game::getState() const {
     return state;
 }
 

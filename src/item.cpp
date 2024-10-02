@@ -98,7 +98,16 @@ void Block::reset() {
     used = false;
 }
 
-// ACTIONS
+// GETTER
+BufferedBlock* Block::getData() const {
+    return data;
+}
+ 
+bool Block::entered() const {
+    return used;
+}
+
+// SETTER
 void Block::enter() {
     Player* player = game->getLevel()->getPlayer();
     used = true;
@@ -107,8 +116,8 @@ void Block::enter() {
         case SD_PORTAL: switch (data->specialData.desc) {
             case SD_CUBE: player->setGamemode(CUBE, data->pos.y, 500); break;
             case SD_SHIP: player->setGamemode(SHIP, data->pos.y, 500); break;
-            case SD_RIGHT_SIDE_UP: break;
-            case SD_UPSIDE_DOWN: break;
+            case SD_RIGHT_SIDE_UP: player->setGravity(RIGHT_SIDE_UP); break;
+            case SD_UPSIDE_DOWN: player->setGravity(UPSIDE_DOWN); break;
         } break;
         case SD_ORB: switch (data->specialData.desc) {
             case SD_PINK: break;
@@ -124,15 +133,6 @@ void Block::enter() {
             case SD_SECRET: break;
         } break;
     }
-}
-
-// GETTER
-BufferedBlock* Block::getData() {
-    return data;
-}
- 
-bool Block::entered() {
-    return used;
 }
 
 
@@ -216,7 +216,7 @@ void Trigger::reset() {
 }
 
 // GETTER
-BufferedTrigger* Trigger::getData() {
+BufferedTrigger* Trigger::getData() const {
     return data;
 }
 

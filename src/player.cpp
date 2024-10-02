@@ -36,6 +36,8 @@ void Player::updatePositions() {
     pos.x += velocity.x;
     pos.y += velocity.y;
 
+    if (pos.y < -1.0f || pos.y > gameData->sizes->levelHeight) kill();
+
     float maxGravity = gameData->physics->maxGravities[gamemode][size];
     if (velocity.y > maxGravity) velocity.y = maxGravity;
     else if (velocity.y * -1.0f > maxGravity) velocity.y = maxGravity * -1.0f;
@@ -298,19 +300,19 @@ void Player::reset(Checkpoint* c) {
 }
 
 // GETTER
-LevelPos Player::getPos() {
+LevelPos Player::getPos() const {
     return pos;
 }
 
-int Player::getClicks() {
+int Player::getClicks() const {
     return clicks;
 }
 
-int Player::getJumps() {
+int Player::getJumps() const {
     return jumps;
 }
 
-Gamemode Player::getGamemode() {
+Gamemode Player::getGamemode() const {
     return gamemode;
 }
 
@@ -348,4 +350,8 @@ void Player::setGamemode(Gamemode g, float y, unsigned int ms) {
 
     level->setTopGroundPos({ topGroundPos.x, newTopGroundPosY }, ms);
     level->setBotGroundPos({ botGroundPos.x, newBotGroundPosY - gameData->sizes->ground.h }, ms);
+}
+
+void Player::setGravity(Gravity g) {
+    gravity = g;
 }

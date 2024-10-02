@@ -19,11 +19,12 @@ public:
     ~Camera();
 
     void update();
-
     void reset();
+
+    LevelPos getPos();
+
     void globalSet(LevelPos pos);
     void setPos(LevelPos pos, unsigned int ms);
-    LevelPos getPos();
 };
 
 #endif

@@ -1,3 +1,9 @@
+## HGD-1.0.8
+### ADDED
+- background y movement
+- kill player when too high or under the ground
+- gravity portals
+
 ## HGD-1.0.7
 ### FIXED
 - ship instant rotation reset when on surface

@@ -15,12 +15,12 @@ Camera::~Camera() {
 void Camera::update() {
     static H2DE_Engine* engine = game->getEngine();
     static GameData* gameData = game->getData();
+    
     Level* level = game->getLevel();
     Player* player = level->getPlayer();
-
     H2DE_Size engineSize = H2DE_GetEngineSize(engine);
+    float winHeight = engineSize.h / round(engineSize.w / BLOCKS_ON_WIDTH);
 
-    static float winHeight = engineSize.h / round(engineSize.w / BLOCKS_ON_WIDTH);
     static float cameraMinY = gameData->positions->cameraMinY;
     static float cameraMaxY = gameData->positions->cameraMaxY;
     static float cameraPaddingBot = gameData->sizes->cameraPaddingBot;

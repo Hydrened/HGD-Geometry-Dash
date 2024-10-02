@@ -59,6 +59,6 @@ void Menu::renderLevelMenu() {
 }
 
 // GETTER
-int Menu::getLevelIndex() {
+int Menu::getLevelIndex() const {
     return levelIndex;
 }

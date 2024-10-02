@@ -7,7 +7,6 @@ class Game;
 class Item;
 class Player;
 
-#include <vector>
 #include "game.h"
 #include "item.h"
 #include "player.h"
@@ -42,19 +41,6 @@ private:
 
     Player* player = nullptr;
 
-    class Levels {
-    private:
-        static void getMenuInfos(LevelData* data, json* level);
-        static void getConfigInfos(LevelData* data, json* level);
-        static void getBlocksInfos(LevelData* data, json* level, json* itemsData);
-        static void getTriggersInfos(LevelData* data, json* level, json* itemsData);
-        static void getStartposInfo(LevelData* data, json* level, json* itemsData);
-
-    public:
-        static LevelData* getLevelData(int id);
-        static void loadLevelData(int id, const fs::path& gmdFile);
-    };
-
     void initAttempts();
     void initCamera();
     void initLevelElements();
@@ -69,6 +55,7 @@ public:
     ~Level() noexcept(false);
 
     void update();
+    void updateBackground();
     void render();
 
     void finish();
@@ -76,21 +63,22 @@ public:
     void resume();
     void respawn();
 
-    LevelData* getData();
-    int getCurrentSpeed();
-    LevelPos getBotGroundPos();
-    LevelPos getTopGroundPos();
-    Color getBackgroundColor();
+    LevelData* getData() const;
+    LevelPos getBotGroundPos() const;
+    LevelPos getTopGroundPos() const;
+    Color getBackgroundColor() const;
+    Color getGroundColor() const;
+    Color getLineColor() const;
+    Player* getPlayer() const;
+    std::vector<Item*>* getItems();
+    int getCurrentSpeed() const;
+    int getLevelLength() const;
+
     void setBackgroundColor(Color color);
-    Color getGroundColor();
     void setGroundColor(Color color);
-    Color getLineColor();
     void setLineColor(Color color);
     void setTopGroundPos(LevelPos pos, unsigned int ms);
     void setBotGroundPos(LevelPos pos, unsigned int ms);
-    Player* getPlayer();
-    std::vector<Item*>* getItems();
-    int getLevelLength();
 };
 
 #endif
