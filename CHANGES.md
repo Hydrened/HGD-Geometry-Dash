@@ -1,60 +1,70 @@
+## HGD-1.0.10
+#### ADDED
+- switch levels in level menu
+#### FIXED
+- noclip dying when reaching level height limits
+- coins only pickable on normal mode without startpos
+- crash when level without any items
+- background y offset on spawn
+- rotated textures
+
 ## HGD-1.0.9
-### ADDED
+#### ADDED
 - yellow, pink and blue pads
 - animated blocks
 - coins
-### FIXED
+#### FIXED
 - cube and ship portal hitboxes
 - cube and ship portal textures sizes
 
 ## HGD-1.0.8
-### ADDED
+#### ADDED
 - background y movement
 - kill player when too high or under the ground
 - gravity portals
 
 ## HGD-1.0.7
-### FIXED
+#### FIXED
 - ship instant rotation reset when on surface
 - collisions from below on blocks that are not 1x1
 - camera y movements
 
 ## HGD-1.0.6
-### ADDED
+#### ADDED
 - cube and ship portals
-### FIXED
+#### FIXED
 - color trigger can now overlap
 
 ## HGD-1.0.5
-### ADDED
+#### ADDED
 - respawn
 - load volume from saves
 - showhitboxes
-### FIXED
+#### FIXED
 - pause song when paused
 - resume song when resumed
 
 ## HGD-1.0.4
-### ADDED
+#### ADDED
 - added color triggers
 
 ## HGD-1.0.3
-### ADDED
+#### ADDED
 - added megahack
 - added noclip
 
 ## HGD-1.0.2
-### ADDED
+#### ADDED
 - added startpos
-### FIXED
+#### FIXED
 - fixed bugged deaths on solid blocks
 
 ## HGD-1.0.1
-### ADDED
+#### ADDED
 - added player deaths
 
 ## HGD-1.0.0
-### ADDED
+#### ADDED
 - playing level
 - level background
 - level top and bottom ground

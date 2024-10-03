@@ -102,7 +102,7 @@ void LevelLoader::getBlocksInfos(LevelData* data, json* level, json* itemsData) 
         bBlock->textureSize = { texSize["w"], texSize["h"] };
         json texOffset = itemData["offset"]["texture"];
         bBlock->textureOffset = { texOffset["x"], texOffset["y"] };
-        
+
         if (block.contains("r")) bBlock->rotation = block["r"];
         json hitSize = itemData["size"]["hitbox"];
         json hitOffset = itemData["offset"]["hitbox"];
@@ -124,6 +124,9 @@ void LevelLoader::getBlocksInfos(LevelData* data, json* level, json* itemsData) 
                 bBlock->hitboxOffset = { hitOffset["x"], hitOffset["y"] };
                 break;
         }
+
+        json origin = itemData["origin"];
+        bBlock->rotationOrigin = { origin["x"], origin["y"] };
 
         if (block.contains("c")) bBlock->colorID = block["c"];
 

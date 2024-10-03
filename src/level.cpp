@@ -2,7 +2,7 @@
 
 // INIT
 Level::Level(Game* g, int i) : game(g), id(i) {
-    static H2DE_Engine* engine = game->getEngine();    
+    static H2DE_Engine* engine = game->getEngine(); 
 
     std::cout << "Initializing level..." << std::endl;
     Uint32 start = SDL_GetTicks();
@@ -15,10 +15,12 @@ Level::Level(Game* g, int i) : game(g), id(i) {
     initConfig();
 
     player = new Player(game, this, &data->startpos);
-    std::cout << "Level initialized in " << SDL_GetTicks() - start << "ms" << std::endl;
+    updateBackgroundY();
 
     H2DE_PlaySFX(engine, "test.wav", 0); // replace => test.wav(playing level sound)
     game->setState({ LEVEL_STARTING_DELAY, DEFAULT });
+
+    std::cout << "Level initialized in " << SDL_GetTicks() - start << "ms" << std::endl;
     std::cout << "Attempt " << attempts << std::endl;
 
     Game::delay(1000, [this]() {
@@ -61,26 +63,34 @@ void Level::initLevelElements() {
 void Level::initItems() {
     for (BufferedBlock* bBlock : data->blocks) items.push_back(new Block(game, bBlock));
     for (BufferedTrigger* bTrigger : data->triggers) items.push_back(new Trigger(game, bTrigger));
+    
     std::sort(items.begin(), items.end(), &sortItems);
 }
 
 void Level::initConfig() {
     speed = data->startpos.speed;
 
-    Item* lastItem = items[items.size() - 1];
-    Block* block = ItemManager::castToBlock(lastItem);
-    Trigger* trigger = ItemManager::castToTrigger(lastItem);
-    if (block) levelLength = block->getData()->pos.x + gameData->sizes->levelEndPadding;
-    else if (trigger) levelLength = trigger->getData()->pos.x + gameData->sizes->levelEndPadding;
+    if (items.size() > 0) {
+        Item* lastItem = items[items.size() - 1];
+        Block* block = ItemManager::castToBlock(lastItem);
+        Trigger* trigger = ItemManager::castToTrigger(lastItem);
+
+        if (block) levelLength = block->getData()->pos.x + gameData->sizes->levelEndPadding;
+        else if (trigger) levelLength = trigger->getData()->pos.x + gameData->sizes->levelEndPadding;
+
+    } else levelLength = gameData->sizes->levelEndPadding;
 }
 
 // CLEANUP
 Level::~Level() noexcept(false) {
     saveData();
+
     if (player) delete player;
     if (data) delete data;
+
     H2DE_ClearTimelineManager(topGroundTM);
     delete topGroundTM;
+
     H2DE_ClearTimelineManager(botGroundTM);
     delete botGroundTM;
 }
@@ -140,6 +150,13 @@ void Level::update() {
 
 void Level::updateBackground() {
     static GameData* gameData = game->getData();
+
+    backgroundPos.x += (gameData->physics->speeds[speed] * gameData->physics->backgroundRatio);
+    updateBackgroundY();
+}
+
+void Level::updateBackgroundY() {
+    static GameData* gameData = game->getData();
     static Camera* camera = game->getCamera();
 
     static float camMinY = gameData->positions->cameraMinY;
@@ -149,7 +166,6 @@ void Level::updateBackground() {
 
     float camPosY = camera->getPos().y;
 
-    backgroundPos.x += (gameData->physics->speeds[speed] * gameData->physics->backgroundRatio);
     backgroundPos.y = ((camPosY - camMinY) / (camMaxY - camMinY)) * (bgMaxY - bgMinY) + bgMinY;
 }
 
@@ -337,17 +353,19 @@ void Level::finish() {
     game->setState({ LEVEL_END, DEFAULT });
     H2DE_PauseSong(engine);
 
-    int coinNb = 0;
+    if (mode == NORMAL_MODE && data->startpos.playerPos.x == 0) {
+        int coinNb = 0;
 
-    for (Item* item : items) {
-        Block* block = ItemManager::castToBlock(item);
-        if (!block) continue;
+        for (Item* item : items) {
+            Block* block = ItemManager::castToBlock(item);
+            if (!block) continue;
 
-        BufferedBlock* bData = block->getData();
-        if (bData->specialData.desc != SD_SECRET) continue;
+            BufferedBlock* bData = block->getData();
+            if (bData->specialData.desc != SD_SECRET) continue;
 
-        if (!coins[coinNb]) coins[coinNb] = block->isPickedUp();
-        coinNb++;
+            if (!coins[coinNb]) coins[coinNb] = block->isPickedUp();
+            coinNb++;
+        }
     }
 }
 
@@ -395,6 +413,7 @@ void Level::respawn() {
         // add => practice respawn
     }
 
+    updateBackgroundY();
     game->setState({ LEVEL_PLAYING, DEFAULT });
 
     attempts++;

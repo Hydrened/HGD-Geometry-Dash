@@ -62,3 +62,12 @@ void Menu::renderLevelMenu() {
 int Menu::getLevelIndex() const {
     return levelIndex;
 }
+
+// SETTER
+void Menu::incrLevelIndex(int incr) {
+    int max = 1;
+
+    if (levelIndex + incr < 0) levelIndex = max;
+    else if (levelIndex + incr > max) levelIndex = 0;
+    else levelIndex += incr;
+}

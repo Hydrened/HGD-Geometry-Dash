@@ -63,8 +63,11 @@ void Block::renderTexture() {
 
     bool textureOnCamX = (data->pos.x + data->textureOffset.x + data->textureSize.w > camPos.x) && (data->pos.x + data->textureOffset.x < camPos.x + BLOCKS_ON_WIDTH + 1);
     if (textureOnCamX) {
-        H2DE_Size absBlockSize = calculator->convertToPx(LevelSize{ 1.0f, 1.0f });
+        // H2DE_Size absBlockSize = calculator->convertToPx(LevelSize{ 0.5f - data->textureOffset.x, 0.5f + data->textureOffset.y });
         std::string tex = data->texture.substr(0, data->texture.size() - 4).append(((data->sprites != 0) ? std::string("-").append(std::to_string(currentSprite)) : "")).append(".png");
+
+
+        H2DE_Size absTexOri = calculator->convertToPx(LevelSize{ data->rotationOrigin.x, data->rotationOrigin.y });
 
         H2DE_GraphicObject* texture = new H2DE_GraphicObject();
         texture->type = IMAGE;
@@ -72,12 +75,14 @@ void Block::renderTexture() {
         texture->pos = calculator->convertToPx({ data->pos.x + data->textureOffset.x, data->pos.y + data->textureOffset.y }, data->textureSize, false, false);
         texture->size = calculator->convertToPx(data->textureSize);
         texture->rotation = data->rotation;
-        texture->rotationOrigin = { absBlockSize.w / 2, absBlockSize.h / 2 };
+        texture->rotationOrigin = { absTexOri.w, absTexOri.h };
         texture->flip = data->flip;
         texture->color = static_cast<H2DE_Color>(level->getData()->colors[data->colorID]);
         texture->index = data->zIndex->getIndex();
         H2DE_AddGraphicObject(engine, texture);
     }
+
+    
 }
 
 void Block::renderHitbox() {

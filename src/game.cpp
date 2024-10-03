@@ -35,7 +35,7 @@ void Game::createWindow(SDL_WindowFlags flag) {
         throw std::runtime_error("HGD-1000: Error creating window => SDL_Init failed: " + std::string(SDL_GetError()));
     }
 
-    window = SDL_CreateWindow("Geometry Dash 1.0 (1.0.9)", x, y, w, h, flag);
+    window = SDL_CreateWindow("Geometry Dash 1.0 (1.0.10)", x, y, w, h, flag);
     if (!window) {
         SDL_Quit();
         throw std::runtime_error("HGD-1001: Error creating window => SDL_CreateWindow failed: " + std::string(SDL_GetError()));
@@ -171,6 +171,8 @@ void Game::handleEvents(SDL_Event event) {
         { SDLK_SPACE, { LEVEL_PAUSE, DEFAULT }, [this]() { level->resume(); } },
         { SDLK_ESCAPE, { LEVEL_PAUSE, DEFAULT }, [this]() { closeLevel(); setState({ LEVEL_MENU, DEFAULT }); openMenu(); } },
         { SDLK_ESCAPE, { LEVEL_END, DEFAULT }, [this]() { closeLevel(); setState({ LEVEL_MENU, DEFAULT }); openMenu(); } },
+        { SDLK_LEFT, { LEVEL_MENU, DEFAULT }, [this]() { menu->incrLevelIndex(-1); } },
+        { SDLK_RIGHT, { LEVEL_MENU, DEFAULT }, [this]() { menu->incrLevelIndex(1); } },
     };
 
     static std::vector<KeyEvent> keyUpEvents = {

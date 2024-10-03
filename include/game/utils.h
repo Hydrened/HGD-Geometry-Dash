@@ -237,6 +237,7 @@ struct BufferedBlock {
     LevelSize hitboxSize = { 0, 0 };
     LevelOffset textureOffset = { 0, 0 };
     LevelOffset hitboxOffset = { 0, 0 };
+    LevelPos rotationOrigin = { 0, 0 };
     int rotation = 0;
     SDL_RendererFlip flip = SDL_FLIP_NONE;
     int colorID = 0;

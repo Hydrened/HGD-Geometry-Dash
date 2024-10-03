@@ -49,6 +49,9 @@ private:
     void initConfig();
     void saveData();
 
+    void updateBackground();
+    void updateBackgroundY();
+
     static bool sortItems(Item* item1, Item* item2);
 
 public:
@@ -56,7 +59,6 @@ public:
     ~Level() noexcept(false);
 
     void update();
-    void updateBackground();
     void render();
 
     void finish();

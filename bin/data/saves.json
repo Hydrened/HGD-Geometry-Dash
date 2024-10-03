@@ -24,14 +24,28 @@
     },
     "levels": {
         "0": {
-            "attempts": 645,
-            "clicks": 4246,
+            "attempts": 679,
+            "clicks": 4584,
+            "coins": [
+                true,
+                true,
+                false
+            ],
+            "jumps": 3265,
+            "progress": {
+                "normal": 0,
+                "practice": 0
+            }
+        },
+        "1": {
+            "attempts": 149,
+            "clicks": 272,
             "coins": [
                 false,
                 false,
                 false
             ],
-            "jumps": 2944,
+            "jumps": 23,
             "progress": {
                 "normal": 0,
                 "practice": 0

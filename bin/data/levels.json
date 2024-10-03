@@ -16241,18 +16241,7 @@
                 },
                 "texture": "backgrounds/background_1.png"
             },
-            "colors": [
-                {
-                    "b": 0,
-                    "g": 0,
-                    "r": 255
-                },
-                {
-                    "b": 0,
-                    "g": 255,
-                    "r": 0
-                }
-            ],
+            "colors": [],
             "gamemode": 0,
             "gravity": 1,
             "ground": {
@@ -16471,5 +16460,74 @@
                 "tt": true
             }
         ]
+    },
+    "1": {
+        "blocks": [
+            {
+                "i": "11_1",
+                "p": {
+                    "x": 10,
+                    "y": 3
+                },
+                "r": 90
+            },
+            {
+                "i": "1_6",
+                "p": {
+                    "x": 10,
+                    "y": 3
+                }
+            },
+            {
+                "i": "1_1",
+                "p": {
+                    "x": 150,
+                    "y": 1
+                }
+            }
+        ],
+        "config": {
+            "background": {
+                "color": {
+                    "b": 50,
+                    "g": 50,
+                    "r": 50
+                },
+                "texture": "backgrounds/background_1.png"
+            },
+            "colors": [],
+            "gamemode": 1,
+            "gravity": 1,
+            "ground": {
+                "color": {
+                    "b": 30,
+                    "g": 30,
+                    "r": 30
+                },
+                "texture": "grounds/ground_1.png"
+            },
+            "line": {
+                "color": {
+                    "b": 100,
+                    "g": 100,
+                    "r": 100
+                },
+                "texture": "lines/line_1.png"
+            },
+            "size": 1,
+            "song": "stereo_madness.mp3",
+            "speed": 1
+        },
+        "menuInfos": {
+            "backgroundColor": {
+                "b": 0,
+                "g": 0,
+                "r": 0
+            },
+            "creator": "Hydren",
+            "difficulty": 0,
+            "name": "Tests"
+        },
+        "triggers": []
     }
 }

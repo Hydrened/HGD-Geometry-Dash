@@ -22,6 +22,7 @@ void Player::update() {
 
 void Player::updatePositions() {
     static GameData* gameData = game->getData();
+    static std::unordered_map<std::string, Hack*> hacks = game->getMegahack()->getHacks();
 
     botOnSolid = false;
     topOnSolid = false;
@@ -31,7 +32,7 @@ void Player::updatePositions() {
     pos.x += velocity.x;
     pos.y += velocity.y;
 
-    if (pos.y < -1.0f || pos.y > gameData->sizes->levelHeight) kill();
+    if (!hacks["noclip"]->active) if (pos.y < -1.0f || pos.y > gameData->sizes->levelHeight) kill();
 
     float maxGravity = gameData->physics->maxGravities[gamemode][size];
     if (velocity.y > maxGravity) velocity.y = maxGravity;

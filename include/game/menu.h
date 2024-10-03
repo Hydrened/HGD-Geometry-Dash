@@ -21,6 +21,8 @@ public:
     void renderLevelMenu();
 
     int getLevelIndex() const;
+
+    void incrLevelIndex(int incr);
 };
 
 #endif
