@@ -8,7 +8,7 @@ Level::Level(Game* g, int i) : game(g), id(i) {
     Uint32 start = SDL_GetTicks();
     data = LevelLoader::getLevelData(id);
 
-    initAttempts();
+    initFromSave();
     initCamera();
     initLevelElements();
     initItems();
@@ -27,13 +27,18 @@ Level::Level(Game* g, int i) : game(g), id(i) {
     }); // error => rare crash
 }
 
-void Level::initAttempts() {
+void Level::initFromSave() {
     json* saves = H2DE_Json::read("data/saves.json");
     std::string stingifiedID = std::to_string(id);
 
     if ((*saves)["levels"].contains(stingifiedID)) {
         attempts = static_cast<int>((*saves)["levels"][stingifiedID]["attempts"]) + 1;
-    } else attempts = 1;
+        for (bool c : (*saves)["levels"][stingifiedID]["coins"]) coins.push_back(c);
+
+    } else {
+        attempts = 1;
+        coins = { false, false, false };
+    }
 }
 
 void Level::initCamera() {
@@ -93,12 +98,23 @@ void Level::saveData() {
         (*saves)["levels"][stingifiedID]["attempts"] = attempts;
         (*saves)["levels"][stingifiedID]["jumps"] = savedJumps + player->getJumps();
         (*saves)["levels"][stingifiedID]["clicks"] = savedClicks + player->getClicks();
+
     } else {
         (*saves)["levels"][stingifiedID] = {};
         (*saves)["levels"][stingifiedID]["attempts"] = attempts;
         (*saves)["levels"][stingifiedID]["jumps"] = player->getJumps();
         (*saves)["levels"][stingifiedID]["clicks"] = player->getClicks();
+
+        (*saves)["levels"][stingifiedID]["progress"] = {};
+        (*saves)["levels"][stingifiedID]["coins"] = {};
     }
+
+    (*saves)["levels"][stingifiedID]["progress"]["normal"] = 0;
+    (*saves)["levels"][stingifiedID]["progress"]["practice"] = 0;
+
+    (*saves)["levels"][stingifiedID]["coins"][0] = coins[0];
+    (*saves)["levels"][stingifiedID]["coins"][1] = coins[1];
+    (*saves)["levels"][stingifiedID]["coins"][2] = coins[2];
 
     if (!H2DE_Json::write(SAVESpath, saves)) {
         throw std::runtime_error("HGD-3002: Error saving player data => Writing player data failed");
@@ -292,7 +308,7 @@ void Level::setTopGroundPos(LevelPos pos, unsigned int ms) {
 
         H2DE_Timeline* t = H2DE_CreateTimeline(engine, ms, EASE_IN_OUT, [this, defaultPos, pos](float blend) {
             this->topGroundVisualPos.y = defaultPos.y + blend * (pos.y - defaultPos.y);
-        }, NULL);
+        }, NULL, 0);
         H2DE_AddTimelineToManager(topGroundTM, t);
     } else topGroundVisualPos.y = topGroundPos.y;
 }
@@ -309,7 +325,7 @@ void Level::setBotGroundPos(LevelPos pos, unsigned int ms) {
 
         H2DE_Timeline* t = H2DE_CreateTimeline(engine, ms, EASE_IN_OUT, [this, defaultPos, pos](float blend) {
             this->botGroundVisualPos.y = defaultPos.y + blend * (pos.y - defaultPos.y);
-        }, NULL);
+        }, NULL, 0);
         H2DE_AddTimelineToManager(botGroundTM, t);
     } else botGroundVisualPos.y = botGroundPos.y;
 }
@@ -320,6 +336,19 @@ void Level::finish() {
 
     game->setState({ LEVEL_END, DEFAULT });
     H2DE_PauseSong(engine);
+
+    int coinNb = 0;
+
+    for (Item* item : items) {
+        Block* block = ItemManager::castToBlock(item);
+        if (!block) continue;
+
+        BufferedBlock* bData = block->getData();
+        if (bData->specialData.desc != SD_SECRET) continue;
+
+        if (!coins[coinNb]) coins[coinNb] = block->isPickedUp();
+        coinNb++;
+    }
 }
 
 void Level::pause() {

@@ -12,17 +12,12 @@ Player::~Player() {
 
 // UPDATE
 void Player::update() {
-    updateClicks();
     updatePositions();
     checkGroundCollisions();
     checkBlocksCollisions();
     updateRotation();
     updatePercentage();
-}
-
-void Player::updateClicks() {
-    if (!clicking) canBuffer = true;
-    if (clicking && canBuffer) click();
+    updateClicks();
 }
 
 void Player::updatePositions() {
@@ -191,6 +186,11 @@ void Player::updatePercentage() {
     if (percentage > 100.0) level->finish();
 }
 
+void Player::updateClicks() {
+    if (!clicking) canBuffer = true;
+    if (clicking && canBuffer) click();
+}
+
 // RENDER
 void Player::render() {
     renderTexture();
@@ -259,9 +259,11 @@ void Player::click() {
 
     switch (gamemode) {
         case CUBE: if (botOnSolid) {
-            canBuffer = true;
-            velocity.y = gameData->physics->clicks[CUBE][size] * gravity;
-            jumps++;
+            if (gameData->physics->clicks[CUBE][size] * gravity > velocity.y) {
+                canBuffer = true;
+                velocity.y = gameData->physics->clicks[CUBE][size] * gravity;
+                jumps++;
+            }
         } break;
         case SHIP: velocity.y += (gameData->physics->clicks[SHIP][size] * gravity); break;
     }
@@ -316,6 +318,14 @@ Gamemode Player::getGamemode() const {
     return gamemode;
 }
 
+Size Player::getSize() const {
+    return size;
+}
+
+Gravity Player::getGravity() const {
+    return gravity;
+}
+
 // SETTER
 void Player::setClicking(bool value) {
     clicking = value;
@@ -354,4 +364,8 @@ void Player::setGamemode(Gamemode g, float y, unsigned int ms) {
 
 void Player::setGravity(Gravity g) {
     gravity = g;
+}
+
+void Player::setYvelocity(float vy) {
+    velocity.y = vy;
 }

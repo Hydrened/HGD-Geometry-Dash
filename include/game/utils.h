@@ -88,22 +88,34 @@ enum LevelMode {
     PRACTICE_MODE,
 };
 
+enum Pad {
+    YELLOW_PAD,
+    PINK_PAD,
+    BLUE_PAD,
+};
+
+enum Orb {
+    YELLOW_ORB,
+    PINK_ORB,
+    BLUE_ORB,
+};
+
 enum ItemSpecialDataType {
-    SD_PORTAL,
-    SD_ORB,
-    SD_PAD,
-    SD_COIN,
+    SD_PORTAL = 0,
+    SD_ORB = 1,
+    SD_PAD = 2,
+    SD_COIN = 3,
 };
 
 enum ItemSpecialDataDesc {
-    SD_CUBE,
-    SD_SHIP,
-    SD_RIGHT_SIDE_UP,
-    SD_UPSIDE_DOWN,
-    SD_PINK,
-    SD_YELLOW,
-    SD_BLUE,
-    SD_SECRET,
+    SD_CUBE = 0,
+    SD_SHIP = 1,
+    SD_RIGHT_SIDE_UP = 2,
+    SD_UPSIDE_DOWN = 3,
+    SD_YELLOW = 4,
+    SD_PINK = 5,
+    SD_BLUE = 6,
+    SD_SECRET = 7,
 };
 
 struct GameState {
@@ -229,6 +241,7 @@ struct BufferedBlock {
     SDL_RendererFlip flip = SDL_FLIP_NONE;
     int colorID = 0;
     ItemSpecialData specialData;
+    int sprites = 0;
     Zindex* zIndex;
 };
 

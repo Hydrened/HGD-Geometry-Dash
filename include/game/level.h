@@ -38,10 +38,11 @@ private:
     Color lineColor;
 
     std::vector<Item*> items;
+    std::vector<bool> coins;
 
     Player* player = nullptr;
 
-    void initAttempts();
+    void initFromSave();
     void initCamera();
     void initLevelElements();
     void initItems();

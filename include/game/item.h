@@ -7,7 +7,6 @@ class Item {
 protected:
     Game* game;
     bool used;
-    H2DE_TimelineManager* tm = new H2DE_TimelineManager();
 
 public:
     Item(Game* game);
@@ -23,6 +22,9 @@ public:
 class Block : public Item {
 private:
     BufferedBlock* data;
+    int currentSprite = -1;
+    H2DE_TimelineManager* sprites = new H2DE_TimelineManager();
+    bool pickedUp = false;
 
 public:
     Block(Game* game, BufferedBlock* data);
@@ -36,6 +38,7 @@ public:
 
     BufferedBlock* getData() const;
     bool entered() const;
+    bool isPickedUp() const;
 
     void enter();
 };
@@ -45,6 +48,7 @@ public:
 class Trigger : public Item {
 private:
     BufferedTrigger* data;
+    H2DE_TimelineManager* effects = new H2DE_TimelineManager();
 
 public:
     Trigger(Game* game, BufferedTrigger* data);

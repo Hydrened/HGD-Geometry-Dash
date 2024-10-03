@@ -1,3 +1,12 @@
+## HGD-1.0.9
+### ADDED
+- yellow, pink and blue pads
+- animated blocks
+- coins
+### FIXED
+- cube and ship portal hitboxes
+- cube and ship portal textures sizes
+
 ## HGD-1.0.8
 ### ADDED
 - background y movement

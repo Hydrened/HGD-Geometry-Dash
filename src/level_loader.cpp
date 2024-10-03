@@ -55,7 +55,6 @@ void LevelLoader::loadLevelData(const fs::path& gmdFile) {
     } else throw std::runtime_error("HGD-2002: Error loading extern level => File isn't a gmd file");
 }
 
-
 // GET DATA
 void LevelLoader::getMenuInfos(LevelData* data, json* level) {
     json menuInfos = (*level)["menuInfos"];
@@ -141,6 +140,8 @@ void LevelLoader::getBlocksInfos(LevelData* data, json* level, json* itemsData) 
             bBlock->specialData.type = itemData["special"]["type"];
             bBlock->specialData.desc = itemData["special"]["desc"];
         }
+
+        if (itemData.contains("sprites")) bBlock->sprites = itemData["sprites"];
 
         data->blocks.push_back(bBlock);
     }

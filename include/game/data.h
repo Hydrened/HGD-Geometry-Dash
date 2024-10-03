@@ -42,14 +42,17 @@ struct GameData {
         Sizes() {
             gamemodeHeights[CUBE] = -1;
             gamemodeHeights[SHIP] = 10;
+
             iconSizes[CUBE][BIG] = { 1.0f, 1.0f };
             iconSizes[CUBE][MINI] = { 1.0f, 1.0f };
             iconSizes[SHIP][BIG] = { 1.0f, 1.0f };
             iconSizes[SHIP][MINI] = { 1.0f, 1.0f };
+
             redHitboxSizes[CUBE][BIG] = { 1.0f, 1.0f };
             redHitboxSizes[CUBE][MINI] = { 1.0f, 1.0f };
             redHitboxSizes[SHIP][BIG] = { 1.0f, 1.0f };
             redHitboxSizes[SHIP][MINI] = { 1.0f, 1.0f };
+
             blueHitboxSizes[CUBE][BIG] = { 0.35f, 0.35f };
             blueHitboxSizes[CUBE][MINI] = { 0.35f, 0.35f };
             blueHitboxSizes[SHIP][BIG] = { 0.35f, 0.35f };
@@ -69,10 +72,12 @@ struct GameData {
             iconOffsets[CUBE][MINI] = { 0.0f, 0.0f };
             iconOffsets[SHIP][BIG] = { 0.0f, 0.0f };
             iconOffsets[SHIP][MINI] = { 0.0f, 0.0f };
+
             redHitboxOffsets[CUBE][BIG] = { 0.0f, 0.0f };
             redHitboxOffsets[CUBE][MINI] = { 0.0f, 0.0f };
             redHitboxOffsets[SHIP][BIG] = { 0.0f, 0.0f };
             redHitboxOffsets[SHIP][MINI] = { 0.0f, 0.0f };
+
             blueHitboxOffsets[CUBE][BIG] = { 0.325f, -0.325f };
             blueHitboxOffsets[CUBE][MINI] = { 0.325f, -0.325f };
             blueHitboxOffsets[SHIP][BIG] = { 0.325f, -0.325f };
@@ -80,13 +85,14 @@ struct GameData {
         }
     };
 
-    struct Physics {
-        std::vector<float> speeds = { 0.0f, 0.1723f, 0.0f, 0.0f, 0.0f }; // replace => more accurate values 0.171
+    struct Physics { // replace => everything
+        std::vector<float> speeds = { 0.0f, 0.1723f, 0.0f, 0.0f, 0.0f };
         float backgroundRatio = 0.9f;
         std::unordered_map<Gamemode, std::unordered_map<Size, float>> gravities;
         std::unordered_map<Gamemode, std::unordered_map<Size, float>> maxGravities;
         std::unordered_map<Gamemode, std::unordered_map<Size, float>> clicks;
         std::unordered_map<Gamemode, std::unordered_map<Size, float>> rotations;
+        std::unordered_map<Pad, std::unordered_map<Gamemode, std::unordered_map<Size, float>>> pads;
         std::unordered_map<Gamemode, bool> canHitTop;
         std::unordered_map<Gamemode, bool> canHitBottom;
         std::unordered_map<Gamemode, bool> canMoveCamera;
@@ -96,22 +102,43 @@ struct GameData {
             gravities[CUBE][MINI] = 0.0f;
             gravities[SHIP][BIG] = -0.013f;
             gravities[SHIP][MINI] = 0.0f;
+
             maxGravities[CUBE][BIG] = 0.4f;
             maxGravities[CUBE][MINI] = 0.0f;
             maxGravities[SHIP][BIG] = 0.22f;
             maxGravities[SHIP][MINI] = 0.0f;
+
             clicks[CUBE][BIG] = 0.3332f;
             clicks[CUBE][MINI] = 0.0f;
             clicks[SHIP][BIG] = 0.03f;
             clicks[SHIP][MINI] = 0.0f;
+
             rotations[CUBE][BIG] = 6.8f;
             rotations[CUBE][MINI] = 0.0f;
             rotations[SHIP][BIG] = -200.0f;
             rotations[SHIP][MINI] = 0.0f;
+
+            pads[YELLOW_PAD][CUBE][BIG] = 1.3f;
+            pads[YELLOW_PAD][CUBE][MINI] = 0.0f;
+            pads[YELLOW_PAD][SHIP][BIG] = 0.0f;
+            pads[YELLOW_PAD][SHIP][MINI] = 0.0f;
+
+            pads[PINK_PAD][CUBE][BIG] = 0.31f;
+            pads[PINK_PAD][CUBE][MINI] = 0.0f;
+            pads[PINK_PAD][SHIP][BIG] = 0.0f;
+            pads[PINK_PAD][SHIP][MINI] = 0.0f;
+            
+            pads[BLUE_PAD][CUBE][BIG] = 0.18f;
+            pads[BLUE_PAD][CUBE][MINI] = 0.0f;
+            pads[BLUE_PAD][SHIP][BIG] = 0.0f;
+            pads[BLUE_PAD][SHIP][MINI] = 0.0f;
+
             canHitTop[CUBE] = false;
             canHitTop[SHIP] = true;
+
             canHitBottom[CUBE] = true;
             canHitBottom[SHIP] = true;
+
             canMoveCamera[CUBE] = true;
             canMoveCamera[SHIP] = false;
         }

@@ -32,12 +32,12 @@ private:
     void click();
     void kill();
 
-    void updateClicks();
     void updatePositions();
     void checkGroundCollisions();
     void checkBlocksCollisions();
     void updateRotation();
     void updatePercentage();
+    void updateClicks();
 
     void renderTexture();
     void renderHitboxes();
@@ -54,10 +54,13 @@ public:
     int getJumps() const;
     int getClicks() const;
     Gamemode getGamemode() const;
+    Size getSize() const;
+    Gravity getGravity() const;
     
     void setClicking(bool value);
     void setGamemode(Gamemode gamemode, float y, unsigned int ms);
     void setGravity(Gravity gravity);
+    void setYvelocity(float yv);
 };
 
 #endif 
