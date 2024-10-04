@@ -45,6 +45,20 @@ H2DE_Pos Calculator::convertToPx(LevelOffset o) {
     };
 }
 
+H2DE_Pos Calculator::convertToPxAbs(LevelPos p) {
+    static H2DE_Engine* engine = game->getEngine();
+    H2DE_Size engineSize = H2DE_GetEngineSize(engine);
+
+    return { (int)(p.x / 100 * engineSize.w), (int)(p.y / 100 * engineSize.h) };
+}
+
+H2DE_Size Calculator::convertToPxAbs(LevelSize s) {
+    static H2DE_Engine* engine = game->getEngine();
+    H2DE_Size engineSize = H2DE_GetEngineSize(engine);
+
+    return { (int)(s.w / 100 * engineSize.w), (int)(s.h / 100 * engineSize.h) };
+}
+
 // GETTER
 void Calculator::getUtils(H2DE_Size* engineSize, int* blockSize) {
     *engineSize = H2DE_GetEngineSize(game->getEngine());

@@ -358,6 +358,29 @@
             "desc": 6
         }
     },
+    "6_6": {
+        "size": {
+            "texture": { "w": 1, "h": 1 },
+            "hitbox": { "w": 1.2, "h": 1.2 }
+        },
+        "offset": {
+            "texture": { "x": 0, "y": 0 },
+            "hitbox": { "x": -0.1, "y": -0.1 }
+        },
+        "origin": {
+            "x": 0.5,
+            "y": 0.5
+        },
+        "zIndex": {
+            "layer": "B1",
+            "order": 12
+        },
+        "type": 2,
+        "special": {
+            "type": 1,
+            "desc": 4
+        }
+    },
     "6_17": {
         "size": {
             "texture": { "w": 1.2, "h": 2.52 },

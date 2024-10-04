@@ -18,13 +18,12 @@ Level::Level(Game* g, int i) : game(g), id(i) {
     updateBackgroundY();
 
     H2DE_PlaySFX(engine, "test.wav", 0); // replace => test.wav(playing level sound)
-    game->setState({ LEVEL_STARTING_DELAY, DEFAULT });
-
+    
     std::cout << "Level initialized in " << SDL_GetTicks() - start << "ms" << std::endl;
     std::cout << "Attempt " << attempts << std::endl;
 
     Game::delay(1000, [this]() {
-        game->setState({ LEVEL_PLAYING, DEFAULT });
+        game->setState({ LEVEL_PLAYING, DEFAULT }, 0, NULL);
         H2DE_PlaySong(engine, data->song, 0);
     }); // error => rare crash
 }
@@ -48,12 +47,12 @@ void Level::initCamera() {
 }
 
 void Level::initLevelElements() {
-    backgroundPos = gameData->positions->backgroundPos;
+    backgroundPos = gameData->positions->background;
 
-    botGroundPos = gameData->positions->botGroundPos;
-    botGroundVisualPos = gameData->positions->botGroundPos;
-    topGroundPos = gameData->positions->topGroundPos;
-    topGroundVisualPos = gameData->positions->topGroundPos;
+    botGroundPos = gameData->positions->botGround;
+    botGroundVisualPos = gameData->positions->botGround;
+    topGroundPos = gameData->positions->topGround;
+    topGroundVisualPos = gameData->positions->topGround;
 
     backgroundColor = data->backgroundColor;
     groundColor = data->groundColor;
@@ -138,11 +137,11 @@ void Level::update() {
 
     switch (state.main) {
         case LEVEL_PLAYING:
-            updateBackground();
             H2DE_TickTimelineManager(topGroundTM);
             H2DE_TickTimelineManager(botGroundTM);
             for (Item* item : items) item->update();
             player->update();
+            updateBackground();
             camera->update();
             break;
     }
@@ -185,7 +184,7 @@ void Level::render() {
     background->type = IMAGE;
     background->pos = calculator->convertToPx(backgroundPos, gameData->sizes->background, false, false);
     background->size = calculator->convertToPx(gameData->sizes->background);
-    background->texture = "background_1.png";
+    background->texture = data->backgroundTexture;
     background->repeatX = true;
     background->color = static_cast<H2DE_Color>(backgroundColor);
     background->index = Zindex{ BG, 0 }.getIndex();
@@ -196,7 +195,7 @@ void Level::render() {
     botGround->type = IMAGE;
     botGround->pos = calculator->convertToPx(botGroundVisualPos, gameData->sizes->ground, false, false);
     botGround->size = absGroundSize;
-    botGround->texture = "ground_1.png";
+    botGround->texture = data->groundTexture;
     botGround->repeatX = true;
     botGround->color = static_cast<H2DE_Color>(groundColor);
     botGround->index = groundIndex;
@@ -207,7 +206,7 @@ void Level::render() {
     botLine->type = IMAGE;
     botLine->pos = calculator->convertToPx({ gameData->offsets->botLine.x, botGroundVisualPos.y + gameData->offsets->botLine.y }, gameData->sizes->line, true, false);
     botLine->size = absLineSize;
-    botLine->texture = "line_1.png";
+    botLine->texture = data->lineTexture;
     botLine->color = static_cast<H2DE_Color>(lineColor);
     botLine->index = lineIndex;
     H2DE_AddGraphicObject(engine, botLine);
@@ -217,7 +216,7 @@ void Level::render() {
     topGround->type = IMAGE;
     topGround->pos = calculator->convertToPx(topGroundVisualPos, gameData->sizes->ground, false, false);
     topGround->size = absGroundSize;
-    topGround->texture = "ground_1.png";
+    topGround->texture = data->groundTexture;
     topGround->repeatX = true;
     topGround->color = static_cast<H2DE_Color>(groundColor);
     topGround->flip = SDL_FLIP_VERTICAL;
@@ -229,7 +228,7 @@ void Level::render() {
     topLine->type = IMAGE;
     topLine->pos = calculator->convertToPx({ gameData->offsets->topLine.x, topGroundVisualPos.y + gameData->offsets->topLine.y }, gameData->sizes->line, true, false);
     topLine->size = absLineSize;
-    topLine->texture = "line_1.png";
+    topLine->texture = data->lineTexture;
     topLine->color = static_cast<H2DE_Color>(lineColor);
     topLine->index = lineIndex;
     H2DE_AddGraphicObject(engine, topLine);
@@ -350,7 +349,7 @@ void Level::setBotGroundPos(LevelPos pos, unsigned int ms) {
 void Level::finish() {
     static H2DE_Engine* engine = game->getEngine();
 
-    game->setState({ LEVEL_END, DEFAULT });
+    game->setState({ LEVEL_END, DEFAULT }, 0, NULL);
     H2DE_PauseSong(engine);
 
     if (mode == NORMAL_MODE && data->startpos.playerPos.x == 0) {
@@ -373,14 +372,14 @@ void Level::pause() {
     static H2DE_Engine* engine = game->getEngine();
 
     H2DE_PauseSong(engine);
-    game->setState({ LEVEL_PAUSE, DEFAULT });
+    game->setState({ LEVEL_PAUSE, DEFAULT }, 0, NULL);
 }
 
 void Level::resume() {
     static H2DE_Engine* engine = game->getEngine();
     
     H2DE_ResumeSong(engine);
-    game->setState({ LEVEL_PLAYING, DEFAULT });
+    game->setState({ LEVEL_PLAYING, DEFAULT }, 0, NULL);
 }
 
 void Level::respawn() {
@@ -395,11 +394,11 @@ void Level::respawn() {
         camera->reset();
         speed = data->startpos.speed;
 
-        backgroundPos = gameData->positions->backgroundPos;
-        botGroundPos = gameData->positions->botGroundPos;
-        botGroundVisualPos = gameData->positions->botGroundPos;
-        topGroundPos = gameData->positions->topGroundPos;
-        topGroundVisualPos = gameData->positions->topGroundPos;
+        backgroundPos = gameData->positions->background;
+        botGroundPos = gameData->positions->botGround;
+        botGroundVisualPos = gameData->positions->botGround;
+        topGroundPos = gameData->positions->topGround;
+        topGroundVisualPos = gameData->positions->topGround;
 
         backgroundColor = data->backgroundColor;
         groundColor = data->groundColor;
@@ -414,7 +413,7 @@ void Level::respawn() {
     }
 
     updateBackgroundY();
-    game->setState({ LEVEL_PLAYING, DEFAULT });
+    game->setState({ LEVEL_PLAYING, DEFAULT }, 0, NULL);
 
     attempts++;
     std::cout << "Attempt " << attempts << std::endl;

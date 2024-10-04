@@ -6,6 +6,7 @@
 #include <fstream>
 #include <functional>
 #include <iostream>
+#include <optional>
 #include <sstream>
 #include <thread>
 #include <unordered_map>
@@ -34,12 +35,14 @@ private:
     bool debug = false;
     GameData* data = new GameData();
     Calculator* calculator;
+    H2DE_TimelineManager* tm = new H2DE_TimelineManager();
 
     Camera* camera = nullptr;
     Megahack* megahack = nullptr;
     Menu* menu = nullptr;
     Level* level = nullptr;
     GameState state;
+    Uint8 transitionOpacity = 0;
 
     void createWindow(SDL_WindowFlags flag);
     void loadVolumes();
@@ -70,8 +73,9 @@ public:
     Megahack* getMegahack() const;
     Level* getLevel() const;
     GameState getState() const;
+    unsigned int getTransitionDuration(unsigned int ms) const;
 
-    void setState(GameState state);
+    void setState(GameState state, unsigned int ms, std::function<void()> then);
 };
 
 #endif

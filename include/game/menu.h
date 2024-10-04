@@ -11,14 +11,15 @@ private:
 
     int levelIndex = 0;
 
+    void renderMainMenu();
+    void renderLevelMenu();
+
 public:
     Menu(Game* game);
     ~Menu();
 
     void update();
     void render();
-    void renderMainMenu();
-    void renderLevelMenu();
 
     int getLevelIndex() const;
 

@@ -4,18 +4,18 @@
 struct GameData {
     struct Positions {
         LevelPos camera = { -6.5f, -3.0f };
-        LevelPos backgroundPos = { -6.5f, -4.0f };
-        LevelPos botGroundPos = { -6.5f, -4.0f };
-        LevelPos topGroundPos = { -6.5f, 91.0f };
-        LevelPos botLinePos = { -6.5f, -4.0f };
-        LevelPos topLinePos = { -6.5f, 80.0f };
+        LevelPos background = { -6.5f, -4.0f };
+        LevelPos botGround = { -6.5f, -4.0f };
+        LevelPos topGround = { -6.5f, 91.0f };
+        LevelPos botLine = { -6.5f, -4.0f };
+        LevelPos topLine = { -6.5f, 80.0f };
         float cameraMinY = -3.0f;
         float cameraMaxY = 80.0f;
         float backgroundMinY = -4.0f;
         float backgroundMaxY = 70.0f;
         LevelPos gameTitle = { 13.05f, 8.89f };
         LevelPos levelMenuButton = { 41.33f, 31.67f };
-        LevelPos iconsMenuButton = { 25.16f, 37.22f };
+        LevelPos shopMenuButton = { 25.16f, 37.22f };
         LevelPos onlineMenuButton = { 63.83f, 37.22f };
         LevelPos progressBar = { 0.0f, 0.0f };
     };
@@ -35,7 +35,7 @@ struct GameData {
         std::unordered_map<Gamemode, std::unordered_map<Size, LevelSize>> blueHitboxSizes;
         LevelSize gameTitle = { 74.61f, 14.86f };
         LevelSize levelMenuButton = { 18.28f, 32.5f };
-        LevelSize iconsMenuButton = { 11.79f, 20.97f };
+        LevelSize shopMenuButton = { 11.79f, 20.97f };
         LevelSize onlineMenuButton = { 11.79f, 20.97f };
         LevelSize progressBar = { 100.0f, 2.0f };
 
@@ -93,6 +93,7 @@ struct GameData {
         std::unordered_map<Gamemode, std::unordered_map<Size, float>> clicks;
         std::unordered_map<Gamemode, std::unordered_map<Size, float>> rotations;
         std::unordered_map<Pad, std::unordered_map<Gamemode, std::unordered_map<Size, float>>> pads;
+        std::unordered_map<Orb, std::unordered_map<Gamemode, std::unordered_map<Size, float>>> orbs;
         std::unordered_map<Gamemode, bool> canHitTop;
         std::unordered_map<Gamemode, bool> canHitBottom;
         std::unordered_map<Gamemode, bool> canMoveCamera;
@@ -113,10 +114,10 @@ struct GameData {
             clicks[SHIP][BIG] = 0.03f;
             clicks[SHIP][MINI] = 0.0f;
 
-            rotations[CUBE][BIG] = 6.8f;
-            rotations[CUBE][MINI] = 0.0f;
+            rotations[CUBE][BIG] = 6.96f;
+            rotations[CUBE][MINI] = 6.9f;
             rotations[SHIP][BIG] = -200.0f;
-            rotations[SHIP][MINI] = 0.0f;
+            rotations[SHIP][MINI] = -200.0f;
 
             pads[YELLOW_PAD][CUBE][BIG] = 1.3f;
             pads[YELLOW_PAD][CUBE][MINI] = 0.0f;
@@ -132,6 +133,21 @@ struct GameData {
             pads[BLUE_PAD][CUBE][MINI] = 0.0f;
             pads[BLUE_PAD][SHIP][BIG] = 0.0f;
             pads[BLUE_PAD][SHIP][MINI] = 0.0f;
+
+            orbs[YELLOW_ORB][CUBE][BIG] = 0.3332f;
+            orbs[YELLOW_ORB][CUBE][MINI] = 0.0f;
+            orbs[YELLOW_ORB][SHIP][BIG] = 0.0f;
+            orbs[YELLOW_ORB][SHIP][MINI] = 0.0f;
+
+            orbs[PINK_ORB][CUBE][BIG] = 0.2f;
+            orbs[PINK_ORB][CUBE][MINI] = 0.0f;
+            orbs[PINK_ORB][SHIP][BIG] = 0.0f;
+            orbs[PINK_ORB][SHIP][MINI] = 0.0f;
+            
+            orbs[BLUE_ORB][CUBE][BIG] = 0.18f;
+            orbs[BLUE_ORB][CUBE][MINI] = 0.0f;
+            orbs[BLUE_ORB][SHIP][BIG] = 0.0f;
+            orbs[BLUE_ORB][SHIP][MINI] = 0.0f;
 
             canHitTop[CUBE] = false;
             canHitTop[SHIP] = true;

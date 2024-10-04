@@ -2,7 +2,9 @@
 
 // INIT
 Camera::Camera(Game* g) : game(g) {
-
+    static GameData* gameData = game->getData();
+    
+    globalSet(gameData->positions->camera);
 }
 
 // CLEANUP

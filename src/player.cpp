@@ -188,8 +188,14 @@ void Player::updatePercentage() {
 }
 
 void Player::updateClicks() {
-    if (!clicking) canBuffer = true;
-    if (clicking && canBuffer) click();
+    if (clicking) {
+        if (gamemode == CUBE && !botOnSolid && clickInit) orbBuffer = true;
+        else if (botOnSolid) orbBuffer = false;
+        click();
+    }
+
+    clickInit = false;
+    hoveredOrb = std::nullopt;
 }
 
 // RENDER
@@ -208,9 +214,9 @@ void Player::renderTexture() {
     if (game->getState().main != LEVEL_DEAD) {
         H2DE_GraphicObject* icon = new H2DE_GraphicObject();
         icon->type = IMAGE;
+        icon->texture = "cube_59.png"; // replace => 59(player's cube ID)
         icon->pos = calculator->convertToPx(offsetIconPos, gameData->sizes->iconSizes[gamemode][size], false, false);
         icon->size = calculator->convertToPx(gameData->sizes->iconSizes[gamemode][size]);
-        icon->texture = "cube_59.png"; // replace => 59(player's cube ID)
         icon->rotation = rotation;
         icon->rotationOrigin = { absRedHitboxSize.w / 2, absRedHitboxSize.h / 2 };
         icon->index = Zindex{ T1, 0 }.getIndex();
@@ -258,10 +264,26 @@ void Player::renderHitboxes() {
 void Player::click() {
     static GameData* gameData = game->getData();
 
-    switch (gamemode) {
+    if (hoveredOrb.has_value() && orbBuffer) {
+        Orb orb;
+        switch (hoveredOrb.value()->getData()->specialData.desc) {
+            case SD_YELLOW: orb = YELLOW_ORB; break;
+            case SD_PINK: orb = PINK_ORB; break;
+            case SD_BLUE: orb = BLUE_ORB; break;
+            default: orb = YELLOW_ORB; break;
+        }
+
+        orbBuffer = false;
+
+        if (orb == BLUE_ORB) gravity = ((gravity == UPSIDE_DOWN) ? RIGHT_SIDE_UP : UPSIDE_DOWN);
+        velocity.y = gameData->physics->orbs[orb][gamemode][size];
+        hoveredOrb.value()->setUsed();
+
+        jumps++;
+
+    } else switch (gamemode) {
         case CUBE: if (botOnSolid) {
             if (gameData->physics->clicks[CUBE][size] * gravity > velocity.y) {
-                canBuffer = true;
                 velocity.y = gameData->physics->clicks[CUBE][size] * gravity;
                 jumps++;
             }
@@ -274,13 +296,11 @@ void Player::kill() {
     static H2DE_Engine* engine = game->getEngine();
 
     clicking = false;
-    game->setState({ LEVEL_DEAD, DEFAULT });
+    game->setState({ LEVEL_DEAD, DEFAULT }, 0, NULL);
     H2DE_PauseSong(engine);
     H2DE_PlaySFX(engine, "death-sound.wav", 0);
 
-    Game::delay(1000, [this]() {
-        level->respawn();
-    });
+    Game::delay(1000, [this]() { level->respawn(); });
 }
 
 void Player::reset(Checkpoint* c) {
@@ -330,6 +350,7 @@ Gravity Player::getGravity() const {
 // SETTER
 void Player::setClicking(bool value) {
     clicking = value;
+    clickInit = value;
     if (!value) clicks++;
 }
 
@@ -355,8 +376,8 @@ void Player::setGamemode(Gamemode g, float y, unsigned int ms) {
 
         camera->setPos({ camPos.x, newBotGroundPosY - (winHeight - gamemodeHeight) / 2 }, ms);
     } else {
-        newTopGroundPosY = gameData->positions->topGroundPos.y;
-        newBotGroundPosY = gameData->positions->botGroundPos.y + gameData->sizes->ground.h;
+        newTopGroundPosY = gameData->positions->topGround.y;
+        newBotGroundPosY = gameData->positions->botGround.y + gameData->sizes->ground.h;
     }
 
     level->setTopGroundPos({ topGroundPos.x, newTopGroundPosY }, ms);
@@ -369,4 +390,8 @@ void Player::setGravity(Gravity g) {
 
 void Player::setYvelocity(float vy) {
     velocity.y = vy;
+}
+
+void Player::setHoveredOrb(Block* block) {
+    hoveredOrb = block;
 }

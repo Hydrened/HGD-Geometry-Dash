@@ -2,14 +2,19 @@
     "achievments": {},
     "hacks": [
         {
-            "active": true,
+            "active": false,
             "keycode": 48,
             "name": "noclip"
         },
         {
-            "active": true,
+            "active": false,
             "keycode": 41,
             "name": "show-hitboxes"
+        },
+        {
+            "active": true,
+            "keycode": 57,
+            "name": "no-transition"
         }
     ],
     "icons": {
@@ -24,28 +29,28 @@
     },
     "levels": {
         "0": {
-            "attempts": 679,
-            "clicks": 4584,
+            "attempts": 727,
+            "clicks": 4903,
             "coins": [
                 true,
                 true,
-                false
+                true
             ],
-            "jumps": 3265,
+            "jumps": 3755,
             "progress": {
                 "normal": 0,
                 "practice": 0
             }
         },
         "1": {
-            "attempts": 149,
-            "clicks": 272,
+            "attempts": 214,
+            "clicks": 450,
             "coins": [
                 false,
                 false,
                 false
             ],
-            "jumps": 23,
+            "jumps": 186,
             "progress": {
                 "normal": 0,
                 "practice": 0

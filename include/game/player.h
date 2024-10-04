@@ -4,6 +4,7 @@
 #include "game.h"
 
 class Level;
+class Block;
 
 class Player {
 private:
@@ -27,7 +28,10 @@ private:
     bool botOnSolid = false;
     bool topOnSolid = false;
     bool clicking = false;
-    bool canBuffer = true;
+    bool clickInit = false;
+    bool orbBuffer = false;
+
+    std::optional<Block*> hoveredOrb;
 
     void click();
     void kill();
@@ -61,6 +65,7 @@ public:
     void setGamemode(Gamemode gamemode, float y, unsigned int ms);
     void setGravity(Gravity gravity);
     void setYvelocity(float yv);
+    void setHoveredOrb(Block* block);
 };
 
 #endif 

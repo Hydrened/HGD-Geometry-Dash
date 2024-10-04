@@ -12,6 +12,10 @@ Item::~Item() {
 
 }
 
+// SETTER
+void Item::setUsed() {
+    used = true;
+}
 
 
 // BLOCK
@@ -63,10 +67,7 @@ void Block::renderTexture() {
 
     bool textureOnCamX = (data->pos.x + data->textureOffset.x + data->textureSize.w > camPos.x) && (data->pos.x + data->textureOffset.x < camPos.x + BLOCKS_ON_WIDTH + 1);
     if (textureOnCamX) {
-        // H2DE_Size absBlockSize = calculator->convertToPx(LevelSize{ 0.5f - data->textureOffset.x, 0.5f + data->textureOffset.y });
         std::string tex = data->texture.substr(0, data->texture.size() - 4).append(((data->sprites != 0) ? std::string("-").append(std::to_string(currentSprite)) : "")).append(".png");
-
-
         H2DE_Size absTexOri = calculator->convertToPx(LevelSize{ data->rotationOrigin.x, data->rotationOrigin.y });
 
         H2DE_GraphicObject* texture = new H2DE_GraphicObject();
@@ -81,8 +82,6 @@ void Block::renderTexture() {
         texture->index = data->zIndex->getIndex();
         H2DE_AddGraphicObject(engine, texture);
     }
-
-    
 }
 
 void Block::renderHitbox() {
@@ -138,27 +137,21 @@ void Block::enter() {
     Size si = player->getSize();
     Gravity gr = player->getGravity();
 
-    used = true;
-
     switch (data->specialData.type) {
         case SD_PORTAL: switch (data->specialData.desc) {
-            case SD_CUBE: player->setGamemode(CUBE, data->pos.y, 500); break;
-            case SD_SHIP: player->setGamemode(SHIP, data->pos.y, 500); break;
-            case SD_RIGHT_SIDE_UP: player->setGravity(RIGHT_SIDE_UP); break;
-            case SD_UPSIDE_DOWN: player->setGravity(UPSIDE_DOWN); break;
+            case SD_CUBE: player->setGamemode(CUBE, data->pos.y, 500); used = true; break;
+            case SD_SHIP: player->setGamemode(SHIP, data->pos.y, 500); used = true; break;
+            case SD_RIGHT_SIDE_UP: player->setGravity(RIGHT_SIDE_UP); used = true; break;
+            case SD_UPSIDE_DOWN: player->setGravity(UPSIDE_DOWN); used = true; break;
         } break;
-        case SD_ORB: switch (data->specialData.desc) {
-            case SD_PINK: break;
-            case SD_YELLOW: break;
-            case SD_BLUE: break;
-        } break;
+        case SD_ORB: player->setHoveredOrb(this); break;
         case SD_PAD: switch (data->specialData.desc) {
-            case SD_YELLOW: player->setYvelocity(gameData->physics->pads[YELLOW_PAD][gm][si] * gr); break;
-            case SD_PINK: player->setYvelocity(gameData->physics->pads[PINK_PAD][gm][si] * gr); break;
-            case SD_BLUE: player->setYvelocity(gameData->physics->pads[BLUE_PAD][gm][si] * gr); player->setGravity(((gr == UPSIDE_DOWN) ? RIGHT_SIDE_UP : UPSIDE_DOWN)); break;
+            case SD_YELLOW: player->setYvelocity(gameData->physics->pads[YELLOW_PAD][gm][si] * gr); used = true; break;
+            case SD_PINK: player->setYvelocity(gameData->physics->pads[PINK_PAD][gm][si] * gr); used = true; break;
+            case SD_BLUE: player->setYvelocity(gameData->physics->pads[BLUE_PAD][gm][si] * gr); player->setGravity(((gr == UPSIDE_DOWN) ? RIGHT_SIDE_UP : UPSIDE_DOWN)); used = true; break;
         } break;
         case SD_COIN: switch (data->specialData.desc) {
-            case SD_SECRET: pickedUp = true; break;
+            case SD_SECRET: pickedUp = true; used = true; break;
         } break;
     }
 }

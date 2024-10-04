@@ -16239,7 +16239,7 @@
                     "g": 108,
                     "r": 35
                 },
-                "texture": "backgrounds/background_1.png"
+                "texture": "background_1.png"
             },
             "colors": [],
             "gamemode": 0,
@@ -16250,7 +16250,7 @@
                     "g": 102,
                     "r": 0
                 },
-                "texture": "grounds/ground_1.png"
+                "texture": "ground_1.png"
             },
             "line": {
                 "color": {
@@ -16258,7 +16258,7 @@
                     "g": 255,
                     "r": 255
                 },
-                "texture": "lines/line_1.png"
+                "texture": "line_1.png"
             },
             "size": 1,
             "song": "stereo_madness.mp3",
@@ -16464,12 +16464,25 @@
     "1": {
         "blocks": [
             {
-                "i": "11_1",
+                "i": "6_6",
                 "p": {
                     "x": 10,
+                    "y": 2
+                }
+            },
+            {
+                "i": "6_6",
+                "p": {
+                    "x": 14,
                     "y": 3
-                },
-                "r": 90
+                }
+            },
+            {
+                "i": "4_1",
+                "p": {
+                    "x": 20,
+                    "y": 0
+                }
             },
             {
                 "i": "1_6",
@@ -16481,7 +16494,7 @@
             {
                 "i": "1_1",
                 "p": {
-                    "x": 150,
+                    "x": 100,
                     "y": 1
                 }
             }
@@ -16493,10 +16506,10 @@
                     "g": 50,
                     "r": 50
                 },
-                "texture": "backgrounds/background_1.png"
+                "texture": "background_1.png"
             },
             "colors": [],
-            "gamemode": 1,
+            "gamemode": 0,
             "gravity": 1,
             "ground": {
                 "color": {
@@ -16504,7 +16517,7 @@
                     "g": 30,
                     "r": 30
                 },
-                "texture": "grounds/ground_1.png"
+                "texture": "ground_1.png"
             },
             "line": {
                 "color": {
@@ -16512,7 +16525,7 @@
                     "g": 100,
                     "r": 100
                 },
-                "texture": "lines/line_1.png"
+                "texture": "line_1.png"
             },
             "size": 1,
             "song": "stereo_madness.mp3",

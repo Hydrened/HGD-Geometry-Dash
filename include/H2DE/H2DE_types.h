@@ -21,7 +21,7 @@ enum H2DE_GraphicObjectType {
 enum H2DE_TimelineEffect {
     LINEAR,
     EASE_IN_OUT,
-    EASE_IN,
+EASE_IN,
     EASE_OUT,
 };
 
@@ -73,6 +73,15 @@ struct H2DE_Color {
 struct H2DE_Scale {
     float x;
     float y;
+};
+
+/**
+ * H2DE click
+ * \since H2DE-1.1.0
+ */
+struct H2DE_SClick {
+    int x;
+    int y;
 };
 
 #endif

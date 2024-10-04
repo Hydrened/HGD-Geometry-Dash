@@ -16,6 +16,8 @@ public:
     H2DE_Pos convertToPx(LevelPos pos, LevelSize size, bool lockX, bool lockY);
     H2DE_Size convertToPx(LevelSize size);
     H2DE_Pos convertToPx(LevelOffset offset);
+    H2DE_Pos convertToPxAbs(LevelPos pos);
+    H2DE_Size convertToPxAbs(LevelSize size);
 };
 
 #endif

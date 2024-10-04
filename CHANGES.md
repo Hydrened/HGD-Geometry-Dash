@@ -1,3 +1,11 @@
+## HGD-1.0.11
+#### ADDED
+- orbs
+- main menu
+- menu transitions
+#### FIXED
+- background x offset on death
+
 ## HGD-1.0.10
 #### ADDED
 - switch levels in level menu
