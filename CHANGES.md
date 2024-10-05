@@ -1,8 +1,21 @@
+## HGD-1.0.12
+#### ADDED
+- pusab font
+- main menu mooving
+- practice mode
+- touch trigger 
+- exit level sfx
+#### FIXED
+- cube rotation
+- trigger with null duration
+- play level sfx
+
 ## HGD-1.0.11
 #### ADDED
 - orbs
 - main menu
 - menu transitions
+- no transition hack
 #### FIXED
 - background x offset on death
 
@@ -47,29 +60,29 @@
 #### ADDED
 - respawn
 - load volume from saves
-- showhitboxes
+- showhitboxes hack
 #### FIXED
 - pause song when paused
 - resume song when resumed
 
 ## HGD-1.0.4
 #### ADDED
-- added color triggers
+- color triggers
 
 ## HGD-1.0.3
 #### ADDED
-- added megahack
-- added noclip
+- megahack
+- noclip
 
 ## HGD-1.0.2
 #### ADDED
-- added startpos
+- startpos
 #### FIXED
-- fixed bugged deaths on solid blocks
+- bugged deaths on solid blocks
 
 ## HGD-1.0.1
 #### ADDED
-- added player deaths
+- player deaths
 
 ## HGD-1.0.0
 #### ADDED

@@ -183,17 +183,22 @@ void LevelLoader::getStartposInfo(LevelData* data, json* level, json* itemsData)
             startpos->gravity = trigger["gr"];
             startpos->size = trigger["si"];
             startpos->gamemode = trigger["ga"];
+
+            startpos->botGroundPosY = -1.0f;
         }
     }
 
     if (!startpos) {
         startpos = new Checkpoint();
         startpos->camPos = gameData->positions->camera;
+        startpos->playerPos = { 0, 0 };
         startpos->velocity = { gameData->physics->speeds[config["speed"]], 0 };
         startpos->speed = config["speed"];
         startpos->gravity = config["gravity"];
         startpos->size = config["size"];
         startpos->gamemode = config["gamemode"];
+
+        startpos->botGroundPosY = 0.0f;
     }
 
     data->startpos = *startpos;

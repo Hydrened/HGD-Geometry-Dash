@@ -22,16 +22,16 @@ private:
     Size size;
     int rotation;
 
-    float percentage = 0.0f;
-    int startingItem = 0;
-
     bool botOnSolid = false;
     bool topOnSolid = false;
     bool clicking = false;
     bool clickInit = false;
     bool orbBuffer = false;
 
+    float percentage = 0.0f;
+    int startingItem = 0;
     std::optional<Block*> hoveredOrb;
+    std::vector<Checkpoint*> practiceCheckpoints;
 
     void click();
     void kill();
@@ -45,6 +45,7 @@ private:
 
     void renderTexture();
     void renderHitboxes();
+    void renderPracticeCheckpoints();
 
 public:
     Player(Game* game, Level* level, Checkpoint* startpos);
@@ -54,12 +55,17 @@ public:
     void render();
     void reset(Checkpoint* checkpoint);
 
+    void addCheckpoint();
+    void removeLastCheckpoint();
+    void clearCheckpoints();
+
     LevelPos getPos() const;
     int getJumps() const;
     int getClicks() const;
     Gamemode getGamemode() const;
     Size getSize() const;
     Gravity getGravity() const;
+    Checkpoint* getLastPracticeCheckpoint() const;
     
     void setClicking(bool value);
     void setGamemode(Gamemode gamemode, float y, unsigned int ms);

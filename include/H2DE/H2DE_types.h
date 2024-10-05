@@ -21,7 +21,7 @@ enum H2DE_GraphicObjectType {
 enum H2DE_TimelineEffect {
     LINEAR,
     EASE_IN_OUT,
-EASE_IN,
+    EASE_IN,
     EASE_OUT,
 };
 

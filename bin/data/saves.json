@@ -2,7 +2,7 @@
     "achievments": {},
     "hacks": [
         {
-            "active": false,
+            "active": true,
             "keycode": 48,
             "name": "noclip"
         },
@@ -12,7 +12,7 @@
             "name": "show-hitboxes"
         },
         {
-            "active": true,
+            "active": false,
             "keycode": 57,
             "name": "no-transition"
         }
@@ -29,28 +29,28 @@
     },
     "levels": {
         "0": {
-            "attempts": 727,
-            "clicks": 4903,
+            "attempts": 914,
+            "clicks": 5702,
             "coins": [
                 true,
                 true,
                 true
             ],
-            "jumps": 3755,
+            "jumps": 4526,
             "progress": {
                 "normal": 0,
                 "practice": 0
             }
         },
         "1": {
-            "attempts": 214,
-            "clicks": 450,
+            "attempts": 263,
+            "clicks": 517,
             "coins": [
                 false,
                 false,
                 false
             ],
-            "jumps": 186,
+            "jumps": 252,
             "progress": {
                 "normal": 0,
                 "practice": 0
@@ -60,7 +60,7 @@
     "shop": {},
     "stats": {},
     "volume": {
-        "sfx": 0,
-        "song": 0
+        "sfx": 20,
+        "song": 20
     }
 }

@@ -202,6 +202,7 @@ void Player::updateClicks() {
 void Player::render() {
     renderTexture();
     if (game->getMegahack()->getHack("show-hitboxes")->active) renderHitboxes();
+    renderPracticeCheckpoints();
 }
 
 void Player::renderTexture() {
@@ -260,6 +261,22 @@ void Player::renderHitboxes() {
     H2DE_AddGraphicObject(engine, blueHitbox);
 }
 
+void Player::renderPracticeCheckpoints() {
+    static Calculator* calculator = game->getCalculator();
+    static GameData* gameData = game->getData();
+    static H2DE_Engine* engine = game->getEngine();
+
+    for (Checkpoint* c : practiceCheckpoints) {
+        H2DE_GraphicObject* checkpoint = new H2DE_GraphicObject();
+        checkpoint->type = IMAGE;
+        checkpoint->texture = "practice-checkpoint.png";
+        checkpoint->pos = calculator->convertToPx({ c->playerPos.x + gameData->offsets->checkpoint.x, c->playerPos.y + gameData->offsets->checkpoint.y }, gameData->sizes->checkpoint, false, false);
+        checkpoint->size = calculator->convertToPx(gameData->sizes->checkpoint);
+        checkpoint->index = Zindex{ T1, -2 }.getIndex();
+        H2DE_AddGraphicObject(engine, checkpoint);
+    }
+}
+
 // EVENTS
 void Player::click() {
     static GameData* gameData = game->getData();
@@ -295,15 +312,16 @@ void Player::click() {
 void Player::kill() {
     static H2DE_Engine* engine = game->getEngine();
 
-    clicking = false;
     game->setState({ LEVEL_DEAD, DEFAULT }, 0, NULL);
-    H2DE_PauseSong(engine);
-    H2DE_PlaySFX(engine, "death-sound.wav", 0);
+    if (level->getMode() == NORMAL_MODE) H2DE_PauseSong(engine);
+    H2DE_PlaySFX(engine, "death-sound.ogg", 0);
 
     Game::delay(1000, [this]() { level->respawn(); });
 }
 
 void Player::reset(Checkpoint* c) {
+    static GameData* gameData = game->getData();
+
     pos.x = c->playerPos.x;
     pos.y = c->playerPos.y;
 
@@ -312,14 +330,48 @@ void Player::reset(Checkpoint* c) {
 
     gravity = c->gravity;
     size = c->size;
-    setGamemode(c->gamemode, pos.y, 0);
+
+    float yGamemode = (c->botGroundPosY == -1.0f) ? ceil((c->botGroundPosY + gameData->sizes->gamemodeHeights[c->gamemode]) / 2) : pos.y;
+    setGamemode(c->gamemode, yGamemode, 0);
 
     rotation = 0;
     percentage = 0;
 
     botOnSolid = false;
     topOnSolid = false;
+    clickInit = false;
+    orbBuffer = false;
+
     startingItem = 0;
+}
+
+// PRACTICE MODE
+void Player::addCheckpoint() {
+    static Camera* camera = game->getCamera();
+
+    Checkpoint* c = new Checkpoint();
+    c->playerPos = pos;
+    c->velocity = velocity;
+    c->size = size;
+    c->gamemode = gamemode;
+    c->gravity = gravity;
+    c->rotation = rotation;
+    c->speed = level->getCurrentSpeed();
+    c->camPos = camera->getPos();
+
+    practiceCheckpoints.push_back(c);
+}
+
+void Player::removeLastCheckpoint() {
+    if (!practiceCheckpoints.empty()) {
+        delete practiceCheckpoints[practiceCheckpoints.size() - 1];
+        practiceCheckpoints.pop_back();
+    }
+}
+
+void Player::clearCheckpoints() {
+    for (Checkpoint* c : practiceCheckpoints) delete c;
+    practiceCheckpoints.clear();
 }
 
 // GETTER
@@ -345,6 +397,11 @@ Size Player::getSize() const {
 
 Gravity Player::getGravity() const {
     return gravity;
+}
+
+Checkpoint* Player::getLastPracticeCheckpoint() const {
+    if (!practiceCheckpoints.empty()) return practiceCheckpoints[practiceCheckpoints.size() - 1];
+    else return nullptr;
 }
 
 // SETTER

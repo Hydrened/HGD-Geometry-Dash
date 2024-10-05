@@ -3,7 +3,11 @@
 // INIT
 Menu::Menu(Game* g) : game(g) {
     static H2DE_Engine* engine = game->getEngine();
+    static GameData* gameData = game->getData();
+    static Camera* camera = game->getCamera();
 
+    camera->setPos(gameData->positions->camera, 0);
+    backgroundPos = gameData->positions->background;
     H2DE_PlaySong(engine, "menu_loop.mp3", -1);
 }
 
@@ -16,9 +20,17 @@ Menu::~Menu() {
 
 // UPDATE
 void Menu::update() {
-    GameState state = game->getState();
-    switch (state.main) {
+    static GameData* gameData = game->getData();
+    Camera* camera = game->getCamera();
 
+    LevelPos camPos = camera->getPos();
+    GameState state = game->getState();
+
+    switch (state.main) {
+        case MAIN_MENU:
+            backgroundPos.x += (gameData->physics->speeds[1] * gameData->physics->backgroundRatio);
+            camera->setPos({ camPos.x + gameData->physics->speeds[1], camPos.y }, 0);
+            break;
     }
 }
 
@@ -60,7 +72,7 @@ void Menu::renderMainMenu() {
     H2DE_GraphicObject* background = new H2DE_GraphicObject();
     background->type = IMAGE;
     background->texture = "background_1.png"; // replace => background_1.png(last background used)
-    background->pos = calculator->convertToPx(gameData->positions->background, gameData->sizes->background, false, false);
+    background->pos = calculator->convertToPx(backgroundPos, gameData->sizes->background, false, false);
     background->size = calculator->convertToPx(gameData->sizes->background);
     background->color = { 35, 108, 221, 255 }; // replace => rgb effect
     background->repeatX = true;

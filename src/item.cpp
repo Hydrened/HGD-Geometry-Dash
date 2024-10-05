@@ -173,14 +173,22 @@ Trigger::~Trigger() {
 
 // UPDATE
 void Trigger::update() {
+    static GameData* gameData = game->getData();
     Player* player = game->getLevel()->getPlayer();
+
+    LevelPos playerPos = player->getPos();
+    LevelSize playerSize = gameData->sizes->redHitboxSizes[player->getGamemode()][player->getSize()];
 
     H2DE_TickTimelineManager(effects);
 
     if (used) return;
-    if (player->getPos().x >= data->pos.x) {
+    if (playerPos.x + playerSize.w >= data->pos.x) {
         if (data->touchTrigger) {
 
+            Rect playerRect = { playerPos.x, playerPos.y, playerSize.w, playerSize.h };
+            Rect triggerRect = { data->pos.x, data->pos.y, 1.0f, 1.0f };
+
+            if (Rect::intersect(&playerRect, &triggerRect)) trigger();
         } else trigger();
     }
 }
@@ -221,7 +229,16 @@ void Trigger::trigger() {
             case LINE: level->setLineColor(bCol); break;
             default: break;
         }
-    }, NULL, 0);
+    }, [this, level]() {
+        Color fCol = data->color;
+
+        switch (data->type) {
+            case BACKGROUND: level->setBackgroundColor(fCol); break;
+            case GROUND: level->setGroundColor(fCol); break;
+            case LINE: level->setLineColor(fCol); break;
+            default: break;
+        }
+    }, 0);
 
     H2DE_AddTimelineToManager(effects, t);
 }

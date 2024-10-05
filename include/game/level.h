@@ -76,12 +76,14 @@ public:
     std::vector<Item*>* getItems();
     int getCurrentSpeed() const;
     int getLevelLength() const;
+    LevelMode getMode() const;
 
     void setBackgroundColor(Color color);
     void setGroundColor(Color color);
     void setLineColor(Color color);
     void setTopGroundPos(LevelPos pos, unsigned int ms);
     void setBotGroundPos(LevelPos pos, unsigned int ms);
+    void setMode(LevelMode mode);
 };
 
 #endif

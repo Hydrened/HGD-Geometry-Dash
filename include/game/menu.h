@@ -10,6 +10,7 @@ private:
     Game* game;
 
     int levelIndex = 0;
+    LevelPos backgroundPos;
 
     void renderMainMenu();
     void renderLevelMenu();

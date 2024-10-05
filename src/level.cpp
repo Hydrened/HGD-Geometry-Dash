@@ -16,8 +16,6 @@ Level::Level(Game* g, int i) : game(g), id(i) {
 
     player = new Player(game, this, &data->startpos);
     updateBackgroundY();
-
-    H2DE_PlaySFX(engine, "test.wav", 0); // replace => test.wav(playing level sound)
     
     std::cout << "Level initialized in " << SDL_GetTicks() - start << "ms" << std::endl;
     std::cout << "Attempt " << attempts << std::endl;
@@ -82,6 +80,8 @@ void Level::initConfig() {
 
 // CLEANUP
 Level::~Level() noexcept(false) {
+    static H2DE_Engine* engine = game->getEngine(); 
+
     saveData();
 
     if (player) delete player;
@@ -92,6 +92,8 @@ Level::~Level() noexcept(false) {
 
     H2DE_ClearTimelineManager(botGroundTM);
     delete botGroundTM;
+
+    H2DE_PlaySFX(engine, "exit-level.ogg", 0);
 }
 
 void Level::saveData() {
@@ -292,6 +294,10 @@ int Level::getLevelLength() const {
     return levelLength;
 }
 
+LevelMode Level::getMode() const {
+    return mode;
+}
+
 // SETTER
 void Level::setBackgroundColor(Color color) {
     backgroundColor.r = color.r;
@@ -345,6 +351,17 @@ void Level::setBotGroundPos(LevelPos pos, unsigned int ms) {
     } else botGroundVisualPos.y = botGroundPos.y;
 }
 
+void Level::setMode(LevelMode m) {
+    static H2DE_Engine* engine = game->getEngine();
+    static std::vector<std::string> modes = { "normal", "practice" };
+    
+    mode = m;
+    if (mode == PRACTICE_MODE) H2DE_PlaySong(engine, "stay-inside-me.mp3", -1);
+    H2DE_PauseSong(engine);
+
+    std::cout << "Now in " << modes[mode] << " mode" << std::endl;
+}
+
 // OTHER
 void Level::finish() {
     static H2DE_Engine* engine = game->getEngine();
@@ -372,6 +389,8 @@ void Level::pause() {
     static H2DE_Engine* engine = game->getEngine();
 
     H2DE_PauseSong(engine);
+
+    GameState oldState = game->getState();
     game->setState({ LEVEL_PAUSE, DEFAULT }, 0, NULL);
 }
 
@@ -390,7 +409,9 @@ void Level::respawn() {
     H2DE_ClearTimelineManager(botGroundTM);
     H2DE_ClearTimelineManager(topGroundTM);
 
-    if (mode == NORMAL_MODE) {
+    Checkpoint* lastPracticeCheckpoint = player->getLastPracticeCheckpoint();
+
+    if (mode == NORMAL_MODE || (mode == PRACTICE_MODE && lastPracticeCheckpoint == nullptr)) {
         camera->reset();
         speed = data->startpos.speed;
 
@@ -404,13 +425,18 @@ void Level::respawn() {
         groundColor = data->groundColor;
         lineColor = data->lineColor;
 
-        for (Item* item : items) item->reset();
         player->reset(&(data->startpos));
 
-        H2DE_PlaySong(engine, data->song, 0);
-    } else {
-        // add => practice respawn
+        if (mode == NORMAL_MODE) H2DE_PlaySong(engine, data->song, 0);
+
+    } else if (mode == PRACTICE_MODE) {
+        camera->setPos(lastPracticeCheckpoint->camPos, 0);
+        speed = lastPracticeCheckpoint->speed;
+
+        player->reset(lastPracticeCheckpoint);
     }
+
+    for (Item* item : items) item->reset();
 
     updateBackgroundY();
     game->setState({ LEVEL_PLAYING, DEFAULT }, 0, NULL);

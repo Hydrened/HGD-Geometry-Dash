@@ -34,7 +34,7 @@ void Game::createWindow(SDL_WindowFlags flag) {
         throw std::runtime_error("HGD-1000: Error creating window => SDL_Init failed: " + std::string(SDL_GetError()));
     }
 
-    window = SDL_CreateWindow("Geometry Dash 1.0 (1.0.11)", x, y, w, h, flag);
+    window = SDL_CreateWindow("Geometry Dash 1.0 (1.0.12)", x, y, w, h, flag);
     if (!window) {
         SDL_Quit();
         throw std::runtime_error("HGD-1001: Error creating window => SDL_CreateWindow failed: " + std::string(SDL_GetError()));
@@ -165,27 +165,97 @@ void Game::run() {
 // EVENTS
 void Game::handleEvents(SDL_Event event) {
     static std::vector<KeyEvent> keyDownEvents = {
-        { SDLK_ESCAPE, { MAIN_MENU, DEFAULT }, [this]() { quit(); } },
-        { SDLK_ESCAPE, { LEVEL_MENU, DEFAULT }, [this]() { setState({ MAIN_MENU, DEFAULT }, getTransitionDuration(500), NULL); } },
-        { SDLK_ESCAPE, { LEVEL_PLAYING, DEFAULT }, [this]() { level->pause(); } },
-        { SDLK_ESCAPE, { LEVEL_PAUSE, DEFAULT }, [this]() { setState({ LEVEL_MENU, DEFAULT }, getTransitionDuration(500), [this]() { closeLevel(); openMenu(); }); } },
-        { SDLK_ESCAPE, { LEVEL_END, DEFAULT }, [this]() { setState({ LEVEL_MENU, DEFAULT }, getTransitionDuration(500), [this]() { closeLevel(); openMenu(); }); } },
+        { SDLK_ESCAPE, { MAIN_MENU, DEFAULT }, [this]() {
+            quit();
+        } },
+        { SDLK_ESCAPE, { LEVEL_MENU, DEFAULT }, [this]() {
+            setState({ MAIN_MENU, DEFAULT }, getTransitionDuration(500), NULL);
+        } },
+        { SDLK_ESCAPE, { LEVEL_PLAYING, DEFAULT }, [this]() {
+            level->pause();
+        } },
+        { SDLK_ESCAPE, { LEVEL_PAUSE, DEFAULT }, [this]() {
+            setState({ LEVEL_MENU, DEFAULT }, getTransitionDuration(500), [this]() {
+                closeLevel();
+                openMenu();
+            });
+        } },
+        { SDLK_ESCAPE, { LEVEL_END, DEFAULT }, [this]() {
+            setState({ LEVEL_MENU, DEFAULT }, getTransitionDuration(500), [this]() {
+            closeLevel(); openMenu(); });
+        } },
 
-        { SDLK_SPACE, { MAIN_MENU, DEFAULT }, [this]() { setState({ LEVEL_MENU, DEFAULT }, getTransitionDuration(500), NULL); } },
-        { SDLK_SPACE, { LEVEL_MENU, DEFAULT }, [this]() { setState({ LEVEL_STARTING_DELAY, DEFAULT }, getTransitionDuration(500), [this]() { openLevel(); closeMenu(); }); } },
-        { SDLK_SPACE, { LEVEL_PLAYING, DEFAULT }, [this]() { level->getPlayer()->setClicking(true); } },
-        { SDLK_SPACE, { LEVEL_PAUSE, DEFAULT }, [this]() { level->resume(); } },
+        { SDLK_SPACE, { MAIN_MENU, DEFAULT }, [this]() {
+            setState({ LEVEL_MENU, DEFAULT }, getTransitionDuration(500), NULL);
+        } },
+        { SDLK_SPACE, { LEVEL_MENU, DEFAULT }, [this]() {
+            H2DE_PlaySFX(engine, "play-level.ogg", 0);
+            setState({ LEVEL_STARTING_DELAY, DEFAULT }, getTransitionDuration(500), [this]() {
+                openLevel();
+                closeMenu();
+            });
+        } },
+        { SDLK_SPACE, { LEVEL_PLAYING, DEFAULT }, [this]() {
+            level->getPlayer()->setClicking(true);
+        } },
+        { SDLK_SPACE, { LEVEL_PAUSE, DEFAULT }, [this]() {
+            level->resume();
+        } },
 
-        { SDLK_UP, { LEVEL_PLAYING, DEFAULT }, [this]() { level->getPlayer()->setClicking(true); } },
-        { SDLK_LEFT, { LEVEL_MENU, DEFAULT }, [this]() { menu->incrLevelIndex(-1); } },
-        { SDLK_RIGHT, { LEVEL_MENU, DEFAULT }, [this]() { menu->incrLevelIndex(1); } },
+        { SDLK_UP, { LEVEL_PLAYING, DEFAULT }, [this]() {
+            level->getPlayer()->setClicking(true);
+        } },
+        { SDLK_LEFT, { LEVEL_MENU, DEFAULT }, [this]() {
+            menu->incrLevelIndex(-1);
+        } },
+        { SDLK_RIGHT, { LEVEL_MENU, DEFAULT }, [this]() {
+            menu->incrLevelIndex(1);
+        } },
 
-        { SDLK_r, { LEVEL_PAUSE, DEFAULT }, [this]() { level->respawn(); } },
+        { SDLK_r, { LEVEL_PAUSE, DEFAULT }, [this]() {
+            level->respawn();
+        } },
+        { SDLK_p, { LEVEL_PAUSE, DEFAULT }, [this]() {
+            level->setMode((level->getMode() == NORMAL_MODE) ? PRACTICE_MODE : NORMAL_MODE);
+            if (level->getMode() == NORMAL_MODE) level->respawn();
+            level->getPlayer()->clearCheckpoints();
+        } },
+        { SDLK_w, { LEVEL_PLAYING, DEFAULT }, [this]() {
+            if (level->getMode() == PRACTICE_MODE && this->canAddCheckpoint) {
+                level->getPlayer()->addCheckpoint();
+                this->canAddCheckpoint = false;
+            }
+        } },
+        { SDLK_x, { LEVEL_PLAYING, DEFAULT }, [this]() {
+            if (level->getMode() == PRACTICE_MODE && this->canRemoveCheckpoint) {
+                level->getPlayer()->removeLastCheckpoint();
+                this->canRemoveCheckpoint = false;
+            }
+        } },
+        { SDLK_x, { LEVEL_DEAD, DEFAULT }, [this]() {
+            if (level->getMode() == PRACTICE_MODE && this->canRemoveCheckpoint) {
+                level->getPlayer()->removeLastCheckpoint();
+                this->canRemoveCheckpoint = false;
+            }
+        } },
     };
 
     static std::vector<KeyEvent> keyUpEvents = {
-        { SDLK_SPACE, { LEVEL_PLAYING, DEFAULT }, [this]() { level->getPlayer()->setClicking(false); } },
-        { SDLK_UP, { LEVEL_PLAYING, DEFAULT }, [this]() { level->getPlayer()->setClicking(false); } },
+        { SDLK_SPACE, { LEVEL_PLAYING, DEFAULT }, [this]() {
+            level->getPlayer()->setClicking(false);
+        } },
+        { SDLK_UP, { LEVEL_PLAYING, DEFAULT }, [this]() {
+            level->getPlayer()->setClicking(false);
+        } },
+        { SDLK_w, { LEVEL_PLAYING, DEFAULT }, [this]() {
+            if (level->getMode() == PRACTICE_MODE) this->canAddCheckpoint = true;
+        } },
+        { SDLK_x, { LEVEL_PLAYING, DEFAULT }, [this]() {
+            if (level->getMode() == PRACTICE_MODE) this->canRemoveCheckpoint = true;
+        } },
+        { SDLK_x, { LEVEL_DEAD, DEFAULT }, [this]() {
+            if (level->getMode() == PRACTICE_MODE) this->canRemoveCheckpoint = true;
+        } },
     };
 
     while (SDL_PollEvent(&event)) switch (event.type) {

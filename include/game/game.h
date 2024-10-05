@@ -42,7 +42,10 @@ private:
     Menu* menu = nullptr;
     Level* level = nullptr;
     GameState state;
+
     Uint8 transitionOpacity = 0;
+    bool canAddCheckpoint = true;
+    bool canRemoveCheckpoint = true;
 
     void createWindow(SDL_WindowFlags flag);
     void loadVolumes();

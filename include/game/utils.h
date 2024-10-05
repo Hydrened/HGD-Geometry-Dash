@@ -205,6 +205,7 @@ struct Checkpoint {
     Size size = BIG;
     Gamemode gamemode = CUBE;
     int rotation = 0;
+    float botGroundPosY = -1.0;
 };
 
 class Zindex {
