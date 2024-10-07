@@ -3,6 +3,7 @@
 
 struct GameData {
     struct Positions {
+        // level
         LevelPos camera = { -6.5f, -3.0f };
         LevelPos background = { -6.5f, -4.0f };
         LevelPos botGround = { -6.5f, -4.0f };
@@ -13,10 +14,14 @@ struct GameData {
         float cameraMaxY = 80.0f;
         float backgroundMinY = -4.0f;
         float backgroundMaxY = 70.0f;
+
+        // main menu
         LevelPos gameTitle = { 13.05f, 8.89f };
         LevelPos levelMenuButton = { 41.33f, 31.67f };
         LevelPos shopMenuButton = { 25.16f, 37.22f };
         LevelPos onlineMenuButton = { 63.83f, 37.22f };
+        LevelPos closeGameButton = { 0.57f, 0.83f };
+
         LevelPos progressBar = { 0.0f, 0.0f };
     };
 
@@ -33,11 +38,14 @@ struct GameData {
         std::unordered_map<Gamemode, std::unordered_map<Size, LevelSize>> iconSizes;
         std::unordered_map<Gamemode, std::unordered_map<Size, LevelSize>> redHitboxSizes;
         std::unordered_map<Gamemode, std::unordered_map<Size, LevelSize>> blueHitboxSizes;
+
+        // main menu
         LevelSize gameTitle = { 74.61f, 14.86f };
         LevelSize levelMenuButton = { 18.28f, 32.5f };
         LevelSize shopMenuButton = { 11.79f, 20.97f };
         LevelSize onlineMenuButton = { 11.79f, 20.97f };
         LevelSize progressBar = { 100.0f, 2.0f };
+        LevelSize closeGameButton = { 5.52f, 10.0f };
 
         Sizes() {
             gamemodeHeights[CUBE] = -1;
@@ -87,7 +95,7 @@ struct GameData {
     };
 
     struct Physics { // replace => everything
-        std::vector<float> speeds = { 0.0f, 0.1723f, 0.0f, 0.0f, 0.0f };
+        std::vector<float> speeds = { 0.0f, 0.1723, 0.0f, 0.0f, 0.0f }; // 0.1723 // 0.17175
         float backgroundRatio = 0.9f;
         std::unordered_map<Gamemode, std::unordered_map<Size, float>> gravities;
         std::unordered_map<Gamemode, std::unordered_map<Size, float>> maxGravities;
@@ -100,7 +108,7 @@ struct GameData {
         std::unordered_map<Gamemode, bool> canMoveCamera;
 
         Physics() {
-            gravities[CUBE][BIG] = -0.0244f;
+            gravities[CUBE][BIG] = -0.0244; // -0.0244
             gravities[CUBE][MINI] = 0.0f;
             gravities[SHIP][BIG] = -0.013f;
             gravities[SHIP][MINI] = 0.0f;
@@ -110,7 +118,7 @@ struct GameData {
             maxGravities[SHIP][BIG] = 0.22f;
             maxGravities[SHIP][MINI] = 0.0f;
 
-            clicks[CUBE][BIG] = 0.3332f;
+            clicks[CUBE][BIG] = 0.3332; // 0.3332
             clicks[CUBE][MINI] = 0.0f;
             clicks[SHIP][BIG] = 0.03f;
             clicks[SHIP][MINI] = 0.0f;
@@ -163,6 +171,20 @@ struct GameData {
 
     struct Colors {
         std::unordered_map<BlockType, Color> hitboxes;
+        std::vector<Color> icons = {
+            { 125, 255, 0, 255 },
+            { 0, 255, 0, 255 },
+            { 0, 255, 125, 255 },
+            { 0, 255, 255, 255 },
+            { 0, 125, 255, 255 },
+            { 0, 0, 255, 255 },
+            { 125, 0, 255, 255 },
+            { 255, 0, 255, 255 },
+            { 255, 0, 125, 255 },
+            { 255, 0, 0, 255 },
+            { 255, 125, 0, 255 },
+            { 255, 225, 0, 255 },
+        };
 
         Colors() {
             hitboxes[SOLID] = { 128, 128, 255, 255 };

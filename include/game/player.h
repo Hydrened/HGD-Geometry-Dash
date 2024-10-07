@@ -11,6 +11,8 @@ private:
     Game* game;
     Level* level;
 
+    Icons icons;
+
     Checkpoint* startpos;
     int jumps = 0;
     int clicks = 0;

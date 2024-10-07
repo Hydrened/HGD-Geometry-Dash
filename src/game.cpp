@@ -18,7 +18,9 @@ Game::Game(int f, int argc, char** argv) : FPS(f) {
     megahack = new Megahack(this);
 
     camera = new Camera(this);
-    setState({ MAIN_MENU, DEFAULT }, getTransitionDuration(500), [this]() { openMenu(); });
+    setState({ MAIN_MENU, DEFAULT }, getTransitionDuration(500), [this]() {
+        openMenu();
+    });
 }
 
 void Game::createWindow(SDL_WindowFlags flag) {
@@ -34,7 +36,7 @@ void Game::createWindow(SDL_WindowFlags flag) {
         throw std::runtime_error("HGD-1000: Error creating window => SDL_Init failed: " + std::string(SDL_GetError()));
     }
 
-    window = SDL_CreateWindow("Geometry Dash 1.0 (1.0.12)", x, y, w, h, flag);
+    window = SDL_CreateWindow("Geometry Dash 1.0 (1.0.13)", x, y, w, h, flag);
     if (!window) {
         SDL_Quit();
         throw std::runtime_error("HGD-1001: Error creating window => SDL_CreateWindow failed: " + std::string(SDL_GetError()));
@@ -117,7 +119,7 @@ void Game::saveSettings() {
 void Game::run() {
     const int timePerFrame = 1000 / FPS;
     Uint32 now, fpsTimer, strt, handleEventsTime, updateTime, renderTime = SDL_GetTicks();
-    int frameTime, frameCounter = 0, currentFPS = 0;
+    int frameTime;
     SDL_Event event;
 
     while (isRunning) {
@@ -150,15 +152,8 @@ void Game::run() {
 
         H2DE_RenderEngine(engine);
         
-        frameCounter++;
         frameTime = SDL_GetTicks() - now;
         if (timePerFrame >= frameTime) SDL_Delay(timePerFrame - frameTime);
-        if (SDL_GetTicks() - fpsTimer >= 1000) {
-            currentFPS = frameCounter / ((SDL_GetTicks() - fpsTimer) / 1000.0f);
-            // std::cout << "FPS: " << currentFPS << std::endl;
-            frameCounter = 0;
-            fpsTimer = SDL_GetTicks();
-        }
     }
 }
 
@@ -184,6 +179,11 @@ void Game::handleEvents(SDL_Event event) {
             setState({ LEVEL_MENU, DEFAULT }, getTransitionDuration(500), [this]() {
             closeLevel(); openMenu(); });
         } },
+        { SDLK_ESCAPE, { MAIN_MENU, MODAL_EXIT }, [this]() {
+            closeModal();
+        } },
+
+
 
         { SDLK_SPACE, { MAIN_MENU, DEFAULT }, [this]() {
             setState({ LEVEL_MENU, DEFAULT }, getTransitionDuration(500), NULL);
@@ -199,10 +199,22 @@ void Game::handleEvents(SDL_Event event) {
             level->getPlayer()->setClicking(true);
         } },
         { SDLK_SPACE, { LEVEL_PAUSE, DEFAULT }, [this]() {
+            level->getPlayer()->setClicking(true);
             level->resume();
         } },
+        { SDLK_SPACE, { LEVEL_DEAD, DEFAULT }, [this]() {
+            level->getPlayer()->setClicking(true);
+        } },
+
+
 
         { SDLK_UP, { LEVEL_PLAYING, DEFAULT }, [this]() {
+            level->getPlayer()->setClicking(true);
+        } },
+        { SDLK_UP, { LEVEL_DEAD, DEFAULT }, [this]() {
+            level->getPlayer()->setClicking(true);
+        } },
+        { SDLK_UP, { LEVEL_PAUSE, DEFAULT }, [this]() {
             level->getPlayer()->setClicking(true);
         } },
         { SDLK_LEFT, { LEVEL_MENU, DEFAULT }, [this]() {
@@ -211,6 +223,8 @@ void Game::handleEvents(SDL_Event event) {
         { SDLK_RIGHT, { LEVEL_MENU, DEFAULT }, [this]() {
             menu->incrLevelIndex(1);
         } },
+
+
 
         { SDLK_r, { LEVEL_PAUSE, DEFAULT }, [this]() {
             level->respawn();
@@ -244,9 +258,27 @@ void Game::handleEvents(SDL_Event event) {
         { SDLK_SPACE, { LEVEL_PLAYING, DEFAULT }, [this]() {
             level->getPlayer()->setClicking(false);
         } },
+        { SDLK_SPACE, { LEVEL_DEAD, DEFAULT }, [this]() {
+            level->getPlayer()->setClicking(false);
+        } },
+        { SDLK_SPACE, { LEVEL_PAUSE, DEFAULT }, [this]() {
+            level->getPlayer()->setClicking(false);
+        } },
+
+
+
         { SDLK_UP, { LEVEL_PLAYING, DEFAULT }, [this]() {
             level->getPlayer()->setClicking(false);
         } },
+        { SDLK_UP, { LEVEL_DEAD, DEFAULT }, [this]() {
+            level->getPlayer()->setClicking(false);
+        } },
+        { SDLK_UP, { LEVEL_PAUSE, DEFAULT }, [this]() {
+            level->getPlayer()->setClicking(false);
+        } },
+
+
+
         { SDLK_w, { LEVEL_PLAYING, DEFAULT }, [this]() {
             if (level->getMode() == PRACTICE_MODE) this->canAddCheckpoint = true;
         } },
@@ -269,6 +301,7 @@ void Game::handleEvents(SDL_Event event) {
             switch (state.main) {
                 case LEVEL_STARTING_DELAY: level->getPlayer()->setClicking(true); break;
                 case LEVEL_PLAYING: level->getPlayer()->setClicking(true); break;
+                case LEVEL_PAUSE: level->getPlayer()->setClicking(true); break;
                 case LEVEL_DEAD: level->getPlayer()->setClicking(true); break;
             }
             H2DE_Click(engine, event.button.x, event.button.y);
@@ -277,6 +310,7 @@ void Game::handleEvents(SDL_Event event) {
         case SDL_MOUSEBUTTONUP: if (event.button.button == SDL_BUTTON_LEFT) switch (state.main) {
             case LEVEL_STARTING_DELAY: level->getPlayer()->setClicking(false); break;
             case LEVEL_PLAYING: level->getPlayer()->setClicking(false); break;
+            case LEVEL_PAUSE: level->getPlayer()->setClicking(false); break;
             case LEVEL_DEAD: level->getPlayer()->setClicking(false); break;
         } break;
 
@@ -288,7 +322,7 @@ void Game::handleEvents(SDL_Event event) {
 
             for (KeyEvent e : keyDownEvents) {
                 bool sameKey = (event.key.keysym.sym == e.keycode);
-                bool sameState = (state.main == e.state.main && state.sub == e.state.sub);
+                bool sameState = (state == e.state);
                 if (sameKey && sameState) {
                     e.call();
                     break;
@@ -298,7 +332,7 @@ void Game::handleEvents(SDL_Event event) {
 
         case SDL_KEYUP: for (KeyEvent e : keyUpEvents) {
             bool sameKey = (event.key.keysym.sym == e.keycode);
-            bool sameState = (state.main == e.state.main && state.sub == e.state.sub);
+            bool sameState = (state == e.state);
             if (sameKey && sameState) {
                 e.call();
                 break;
@@ -339,6 +373,16 @@ void Game::closeLevel() {
     }
 }
 
+void Game::openModal(GameState state) {
+    modal = new Modal(this, state);
+}
+
+void Game::closeModal() {
+    delete modal;
+    modal = nullptr;
+    setState({ state.main, DEFAULT });
+}
+
 // UPDATE
 void Game::update() {
     static std::vector<UpdateInstruction> updateInstructions = {
@@ -350,6 +394,8 @@ void Game::update() {
         bool sameState = (state.main == u.state.main && (u.state.sub == DEFAULT || state.sub == u.state.sub));
         if (sameState) u.call();
     }
+
+    if (modal) modal->update();
 }
 
 // RENDER
@@ -368,6 +414,8 @@ void Game::render() {
         bool sameState = (state.main == u.state.main && (u.state.sub == DEFAULT || state.sub == u.state.sub));
         if (sameState) u.call();
     }
+
+    if (modal) modal->render();
 
     H2DE_TickTimelineManager(tm);
 
@@ -432,6 +480,11 @@ unsigned int Game::getTransitionDuration(unsigned int ms) const {
 }
 
 // SETTER
+void Game::setState(GameState s) {
+    state.main = s.main;
+    state.sub = s.sub;
+}
+
 void Game::setState(GameState s, unsigned int ms, std::function<void()> then) {
     if (state.sub == TRANSITION_IN || state.sub == TRANSITION_OUT) return;
     
@@ -450,6 +503,7 @@ void Game::setState(GameState s, unsigned int ms, std::function<void()> then) {
         "default",
         "transition in",
         "transition out",
+        "modal exit",
     };
 
     state.sub = TRANSITION_IN;

@@ -26,7 +26,10 @@ private:
     int attempts = 0;
     int speed;
     int levelLength;
+
     LevelMode mode = NORMAL_MODE;
+    float bestNormalMode;
+    float bestPracticeMode;
 
     LevelPos backgroundPos;
     LevelPos botGroundPos;
@@ -84,6 +87,8 @@ public:
     void setTopGroundPos(LevelPos pos, unsigned int ms);
     void setBotGroundPos(LevelPos pos, unsigned int ms);
     void setMode(LevelMode mode);
+    void setBestNormalMode(float percentage);
+    void setBestPracticeMode(float percentage);
 };
 
 #endif

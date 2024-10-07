@@ -2,6 +2,15 @@
 
 // INIT
 Player::Player(Game* g, Level* l, Checkpoint* s) : game(g), level(l), startpos(s), pos(s->playerPos), velocity(s->velocity), gamemode(s->gamemode), gravity(s->gravity), size(s->size), rotation(s->rotation) {
+    json* saves = H2DE_Json::read("data/saves.json");
+
+    icons = Icons();
+    icons.cube = (*saves)["icons"]["textures"]["cube"];
+    icons.ship = (*saves)["icons"]["textures"]["ship"];
+    icons.colorIDs.push_back((*saves)["icons"]["colors"][0]);
+    icons.colorIDs.push_back((*saves)["icons"]["colors"][1]);
+    icons.glow = (*saves)["icons"]["glow"];
+    
     setGamemode(s->gamemode, pos.y, 0);
 }
 
@@ -210,18 +219,26 @@ void Player::renderTexture() {
     static GameData* gameData = game->getData();
     static H2DE_Engine* engine = game->getEngine();
 
-    H2DE_Size absRedHitboxSize = calculator->convertToPx(gameData->sizes->redHitboxSizes[gamemode][size]);
-    LevelPos offsetIconPos = { pos.x + gameData->offsets->iconOffsets[gamemode][size].x, pos.y + gameData->offsets->iconOffsets[gamemode][size].y };
     if (game->getState().main != LEVEL_DEAD) {
-        H2DE_GraphicObject* icon = new H2DE_GraphicObject();
-        icon->type = IMAGE;
-        icon->texture = "cube_59.png"; // replace => 59(player's cube ID)
-        icon->pos = calculator->convertToPx(offsetIconPos, gameData->sizes->iconSizes[gamemode][size], false, false);
-        icon->size = calculator->convertToPx(gameData->sizes->iconSizes[gamemode][size]);
-        icon->rotation = rotation;
-        icon->rotationOrigin = { absRedHitboxSize.w / 2, absRedHitboxSize.h / 2 };
-        icon->index = Zindex{ T1, 0 }.getIndex();
-        H2DE_AddGraphicObject(engine, icon);
+        LevelPos offsetIconPos = { pos.x + gameData->offsets->iconOffsets[gamemode][size].x, pos.y + gameData->offsets->iconOffsets[gamemode][size].y };
+        H2DE_Size absRedHitboxSize = calculator->convertToPx(gameData->sizes->redHitboxSizes[gamemode][size]);
+
+        H2DE_GraphicObject* col1 = new H2DE_GraphicObject();
+        col1->type = IMAGE;
+        col1->texture = "cube-" + std::to_string(icons.cube) + "-1.png";
+        col1->pos = calculator->convertToPx(offsetIconPos, gameData->sizes->iconSizes[gamemode][size], false, false);
+        col1->size = calculator->convertToPx(gameData->sizes->iconSizes[gamemode][size]);
+        col1->rotation = rotation;
+        col1->rotationOrigin = { absRedHitboxSize.w / 2, absRedHitboxSize.h / 2 };
+        col1->color = (H2DE_Color)(gameData->colors->icons[icons.colorIDs[0]]);
+        col1->index = Zindex{ T1, 1 }.getIndex();
+        H2DE_AddGraphicObject(engine, col1);
+
+        H2DE_GraphicObject* col2 = new H2DE_GraphicObject(*col1);
+        col2->texture = "cube-" + std::to_string(icons.cube) + "-2.png";
+        col2->color = (H2DE_Color)(gameData->colors->icons[icons.colorIDs[1]]);
+        col2->index = Zindex{ T1, 0 }.getIndex();
+        H2DE_AddGraphicObject(engine, col2);
     }
 }
 
@@ -312,7 +329,7 @@ void Player::click() {
 void Player::kill() {
     static H2DE_Engine* engine = game->getEngine();
 
-    game->setState({ LEVEL_DEAD, DEFAULT }, 0, NULL);
+    game->setState({ LEVEL_DEAD, DEFAULT });
     if (level->getMode() == NORMAL_MODE) H2DE_PauseSong(engine);
     H2DE_PlaySFX(engine, "death-sound.ogg", 0);
 
@@ -321,6 +338,9 @@ void Player::kill() {
 
 void Player::reset(Checkpoint* c) {
     static GameData* gameData = game->getData();
+
+    if (level->getMode() == NORMAL_MODE) level->setBestNormalMode(percentage);
+    else level->setBestPracticeMode(percentage);
 
     pos.x = c->playerPos.x;
     pos.y = c->playerPos.y;

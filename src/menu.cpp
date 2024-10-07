@@ -94,7 +94,9 @@ void Menu::renderMainMenu() {
     levelMenuButton->pos = calculator->convertToPxAbs(gameData->positions->levelMenuButton);
     levelMenuButton->size = calculator->convertToPxAbs(gameData->sizes->levelMenuButton);
     levelMenuButton->index = Zindex{UI, 0}.getIndex();
-    levelMenuButton->onclick = [this]() { this->game->setState({ LEVEL_MENU, DEFAULT }, game->getTransitionDuration(500), NULL); };
+    levelMenuButton->onclick = [this]() {
+        this->game->setState({ LEVEL_MENU, DEFAULT }, game->getTransitionDuration(500), NULL);
+    };
     H2DE_AddGraphicObject(engine, levelMenuButton);
 
     H2DE_GraphicObject* shopMenuButton = new H2DE_GraphicObject();
@@ -111,8 +113,21 @@ void Menu::renderMainMenu() {
     onlineMenuButton->pos = calculator->convertToPxAbs(gameData->positions->onlineMenuButton);
     onlineMenuButton->size = calculator->convertToPxAbs(gameData->sizes->onlineMenuButton);
     onlineMenuButton->index = Zindex{UI, 0}.getIndex();
-    onlineMenuButton->onclick = [this]() { throw std::runtime_error("Abuse pas"); };
+    onlineMenuButton->onclick = [this]() {
+        throw std::runtime_error("Abuse pas");
+    };
     H2DE_AddGraphicObject(engine, onlineMenuButton);
+
+    H2DE_GraphicObject* closeGameButton = new H2DE_GraphicObject();
+    closeGameButton->type = IMAGE;
+    closeGameButton->texture = "close-game-button.png";
+    closeGameButton->pos = calculator->convertToPxAbs(gameData->positions->closeGameButton);
+    closeGameButton->size = calculator->convertToPxAbs(gameData->sizes->closeGameButton);
+    closeGameButton->index = Zindex{UI, 0}.getIndex();
+    closeGameButton->onclick = [this]() {
+        game->openModal({ MAIN_MENU, MODAL_EXIT });
+    };
+    H2DE_AddGraphicObject(engine, closeGameButton);
 }
 
 void Menu::renderLevelMenu() {

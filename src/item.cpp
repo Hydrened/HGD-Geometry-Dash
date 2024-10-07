@@ -229,16 +229,7 @@ void Trigger::trigger() {
             case LINE: level->setLineColor(bCol); break;
             default: break;
         }
-    }, [this, level]() {
-        Color fCol = data->color;
-
-        switch (data->type) {
-            case BACKGROUND: level->setBackgroundColor(fCol); break;
-            case GROUND: level->setGroundColor(fCol); break;
-            case LINE: level->setLineColor(fCol); break;
-            default: break;
-        }
-    }, 0);
+    }, NULL, 0);
 
     H2DE_AddTimelineToManager(effects, t);
 }

@@ -1,3 +1,11 @@
+## HGD-1.0.13
+#### ADDED
+- save percentages (normal and practice)
+- cube icons
+- icons colors
+#### FIXED
+- cancel jump when died during click
+
 ## HGD-1.0.12
 #### ADDED
 - pusab font
@@ -12,7 +20,7 @@
 
 ## HGD-1.0.11
 #### ADDED
-- orbs
+- yellow orb
 - main menu
 - menu transitions
 - no transition hack

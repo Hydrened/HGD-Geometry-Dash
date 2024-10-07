@@ -2,7 +2,7 @@
     "achievments": {},
     "hacks": [
         {
-            "active": true,
+            "active": false,
             "keycode": 48,
             "name": "noclip"
         },
@@ -18,39 +18,40 @@
         }
     ],
     "icons": {
-        "color": [
-            0,
+        "colors": [
+            3,
             0
         ],
+        "glow": false,
         "textures": {
-            "cube": 59,
+            "cube": 1,
             "ship": 1
         }
     },
     "levels": {
         "0": {
-            "attempts": 914,
-            "clicks": 5702,
+            "attempts": 1027,
+            "clicks": 7159,
             "coins": [
                 true,
                 true,
                 true
             ],
-            "jumps": 4526,
+            "jumps": 6253,
             "progress": {
-                "normal": 0,
-                "practice": 0
+                "normal": 100.0,
+                "practice": 100.0
             }
         },
         "1": {
-            "attempts": 263,
-            "clicks": 517,
+            "attempts": 287,
+            "clicks": 567,
             "coins": [
                 false,
                 false,
                 false
             ],
-            "jumps": 252,
+            "jumps": 288,
             "progress": {
                 "normal": 0,
                 "practice": 0
@@ -60,7 +61,7 @@
     "shop": {},
     "stats": {},
     "volume": {
-        "sfx": 20,
-        "song": 20
+        "sfx": 0,
+        "song": 0
     }
 }

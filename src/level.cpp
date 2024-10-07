@@ -21,7 +21,7 @@ Level::Level(Game* g, int i) : game(g), id(i) {
     std::cout << "Attempt " << attempts << std::endl;
 
     Game::delay(1000, [this]() {
-        game->setState({ LEVEL_PLAYING, DEFAULT }, 0, NULL);
+        game->setState({ LEVEL_PLAYING, DEFAULT });
         H2DE_PlaySong(engine, data->song, 0);
     }); // error => rare crash
 }
@@ -33,10 +33,14 @@ void Level::initFromSave() {
     if ((*saves)["levels"].contains(stingifiedID)) {
         attempts = static_cast<int>((*saves)["levels"][stingifiedID]["attempts"]) + 1;
         for (bool c : (*saves)["levels"][stingifiedID]["coins"]) coins.push_back(c);
+        bestNormalMode = (*saves)["levels"][stingifiedID]["progress"]["normal"];
+        bestPracticeMode = (*saves)["levels"][stingifiedID]["progress"]["practice"];
 
     } else {
         attempts = 1;
         coins = { false, false, false };
+        bestNormalMode = 0.0f;
+        bestPracticeMode = 0.0f;
     }
 }
 
@@ -126,6 +130,9 @@ void Level::saveData() {
     (*saves)["levels"][stingifiedID]["coins"][0] = coins[0];
     (*saves)["levels"][stingifiedID]["coins"][1] = coins[1];
     (*saves)["levels"][stingifiedID]["coins"][2] = coins[2];
+
+    (*saves)["levels"][stingifiedID]["progress"]["normal"] = bestNormalMode;
+    (*saves)["levels"][stingifiedID]["progress"]["practice"] = bestPracticeMode;
 
     if (!H2DE_Json::write(SAVESpath, saves)) {
         throw std::runtime_error("HGD-3002: Error saving player data => Writing player data failed");
@@ -362,12 +369,23 @@ void Level::setMode(LevelMode m) {
     std::cout << "Now in " << modes[mode] << " mode" << std::endl;
 }
 
+void Level::setBestNormalMode(float percentage) {
+    if (bestNormalMode < percentage) bestNormalMode = percentage;
+}
+
+void Level::setBestPracticeMode(float percentage) {
+    if (bestPracticeMode < percentage) bestPracticeMode = percentage;
+}
+
 // OTHER
 void Level::finish() {
     static H2DE_Engine* engine = game->getEngine();
 
-    game->setState({ LEVEL_END, DEFAULT }, 0, NULL);
+    game->setState({ LEVEL_END, DEFAULT });
     H2DE_PauseSong(engine);
+
+    if (mode == NORMAL_MODE) bestNormalMode = 100.0f;
+    else bestPracticeMode = 100.0f;
 
     if (mode == NORMAL_MODE && data->startpos.playerPos.x == 0) {
         int coinNb = 0;
@@ -389,16 +407,14 @@ void Level::pause() {
     static H2DE_Engine* engine = game->getEngine();
 
     H2DE_PauseSong(engine);
-
-    GameState oldState = game->getState();
-    game->setState({ LEVEL_PAUSE, DEFAULT }, 0, NULL);
+    game->setState({ LEVEL_PAUSE, DEFAULT });
 }
 
 void Level::resume() {
     static H2DE_Engine* engine = game->getEngine();
     
     H2DE_ResumeSong(engine);
-    game->setState({ LEVEL_PLAYING, DEFAULT }, 0, NULL);
+    game->setState({ LEVEL_PLAYING, DEFAULT });
 }
 
 void Level::respawn() {
@@ -439,7 +455,7 @@ void Level::respawn() {
     for (Item* item : items) item->reset();
 
     updateBackgroundY();
-    game->setState({ LEVEL_PLAYING, DEFAULT }, 0, NULL);
+    game->setState({ LEVEL_PLAYING, DEFAULT });
 
     attempts++;
     std::cout << "Attempt " << attempts << std::endl;

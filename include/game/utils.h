@@ -15,8 +15,9 @@ enum MainGameState {
 
 enum SubGameState {
     DEFAULT,
-    TRANSITION_OUT,
     TRANSITION_IN,
+    TRANSITION_OUT,
+    MODAL_EXIT,
 };
 
 enum Gravity {
@@ -121,6 +122,10 @@ enum ItemSpecialDataDesc {
 struct GameState {
     MainGameState main;
     SubGameState sub;
+
+    bool operator==(const GameState& other) const {
+        return (main == other.main && sub == other.sub);
+    }
 };
 
 struct KeyEvent {
@@ -276,6 +281,14 @@ struct LevelData {
 struct Hack {
     bool active;
     SDL_KeyCode keycode;
+};
+
+struct Icons {
+    int cube;
+    int ship;
+
+    std::vector<int> colorIDs;
+    bool glow;
 };
 
 #endif
