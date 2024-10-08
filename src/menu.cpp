@@ -69,15 +69,15 @@ void Menu::renderMainMenu() {
     line->index = Zindex{G, 1}.getIndex();
     H2DE_AddGraphicObject(engine, line);
 
-    H2DE_GraphicObject* background = new H2DE_GraphicObject();
-    background->type = IMAGE;
+    H2DE_GraphicObject* background = new H2DE_GraphicObject(*ground);
     background->texture = "background_1.png"; // replace => background_1.png(last background used)
     background->pos = calculator->convertToPx(backgroundPos, gameData->sizes->background, false, false);
     background->size = calculator->convertToPx(gameData->sizes->background);
     background->color = { 35, 108, 221, 255 }; // replace => rgb effect
-    background->repeatX = true;
     background->index = Zindex{BG, 0}.getIndex();
     H2DE_AddGraphicObject(engine, background);
+
+
 
     // Menu elements
     H2DE_GraphicObject* gameTitle = new H2DE_GraphicObject();
@@ -88,42 +88,34 @@ void Menu::renderMainMenu() {
     gameTitle->index = Zindex{UI, 0}.getIndex();
     H2DE_AddGraphicObject(engine, gameTitle);
 
-    H2DE_GraphicObject* levelMenuButton = new H2DE_GraphicObject();
-    levelMenuButton->type = IMAGE;
+    H2DE_GraphicObject* levelMenuButton = new H2DE_GraphicObject(*gameTitle);
     levelMenuButton->texture = "level-menu-button.png";
     levelMenuButton->pos = calculator->convertToPxAbs(gameData->positions->levelMenuButton);
     levelMenuButton->size = calculator->convertToPxAbs(gameData->sizes->levelMenuButton);
-    levelMenuButton->index = Zindex{UI, 0}.getIndex();
     levelMenuButton->onclick = [this]() {
         this->game->setState({ LEVEL_MENU, DEFAULT }, game->getTransitionDuration(500), NULL);
     };
     H2DE_AddGraphicObject(engine, levelMenuButton);
 
-    H2DE_GraphicObject* shopMenuButton = new H2DE_GraphicObject();
-    shopMenuButton->type = IMAGE;
+    H2DE_GraphicObject* shopMenuButton = new H2DE_GraphicObject(*gameTitle);
     shopMenuButton->texture = "shop-menu-button.png";
     shopMenuButton->pos = calculator->convertToPxAbs(gameData->positions->shopMenuButton);
     shopMenuButton->size = calculator->convertToPxAbs(gameData->sizes->shopMenuButton);
-    shopMenuButton->index = Zindex{UI, 0}.getIndex();
     H2DE_AddGraphicObject(engine, shopMenuButton);
 
-    H2DE_GraphicObject* onlineMenuButton = new H2DE_GraphicObject();
-    onlineMenuButton->type = IMAGE;
+    H2DE_GraphicObject* onlineMenuButton = new H2DE_GraphicObject(*gameTitle);
     onlineMenuButton->texture = "online-menu-button.png";
     onlineMenuButton->pos = calculator->convertToPxAbs(gameData->positions->onlineMenuButton);
     onlineMenuButton->size = calculator->convertToPxAbs(gameData->sizes->onlineMenuButton);
-    onlineMenuButton->index = Zindex{UI, 0}.getIndex();
     onlineMenuButton->onclick = [this]() {
         throw std::runtime_error("Abuse pas");
     };
     H2DE_AddGraphicObject(engine, onlineMenuButton);
 
-    H2DE_GraphicObject* closeGameButton = new H2DE_GraphicObject();
-    closeGameButton->type = IMAGE;
+    H2DE_GraphicObject* closeGameButton = new H2DE_GraphicObject(*gameTitle);
     closeGameButton->texture = "close-game-button.png";
     closeGameButton->pos = calculator->convertToPxAbs(gameData->positions->closeGameButton);
     closeGameButton->size = calculator->convertToPxAbs(gameData->sizes->closeGameButton);
-    closeGameButton->index = Zindex{UI, 0}.getIndex();
     closeGameButton->onclick = [this]() {
         game->openModal({ MAIN_MENU, MODAL_EXIT });
     };

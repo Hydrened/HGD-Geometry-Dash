@@ -200,46 +200,33 @@ void Level::render() {
     H2DE_AddGraphicObject(engine, background);
 
     // render bot ground
-    H2DE_GraphicObject* botGround = new H2DE_GraphicObject();
-    botGround->type = IMAGE;
+    H2DE_GraphicObject* botGround = new H2DE_GraphicObject(*background);
     botGround->pos = calculator->convertToPx(botGroundVisualPos, gameData->sizes->ground, false, false);
     botGround->size = absGroundSize;
     botGround->texture = data->groundTexture;
-    botGround->repeatX = true;
     botGround->color = static_cast<H2DE_Color>(groundColor);
     botGround->index = groundIndex;
     H2DE_AddGraphicObject(engine, botGround);
 
     // render bot line
-    H2DE_GraphicObject* botLine = new H2DE_GraphicObject();
-    botLine->type = IMAGE;
+    H2DE_GraphicObject* botLine = new H2DE_GraphicObject(*background);
     botLine->pos = calculator->convertToPx({ gameData->offsets->botLine.x, botGroundVisualPos.y + gameData->offsets->botLine.y }, gameData->sizes->line, true, false);
     botLine->size = absLineSize;
     botLine->texture = data->lineTexture;
+    botLine->repeatX = false;
     botLine->color = static_cast<H2DE_Color>(lineColor);
     botLine->index = lineIndex;
     H2DE_AddGraphicObject(engine, botLine);
 
     // render top ground
-    H2DE_GraphicObject* topGround = new H2DE_GraphicObject();
-    topGround->type = IMAGE;
+    H2DE_GraphicObject* topGround = new H2DE_GraphicObject(*botGround);
     topGround->pos = calculator->convertToPx(topGroundVisualPos, gameData->sizes->ground, false, false);
-    topGround->size = absGroundSize;
-    topGround->texture = data->groundTexture;
-    topGround->repeatX = true;
-    topGround->color = static_cast<H2DE_Color>(groundColor);
     topGround->flip = SDL_FLIP_VERTICAL;
-    topGround->index = groundIndex;
     H2DE_AddGraphicObject(engine, topGround);
 
     // render top line
-    H2DE_GraphicObject* topLine = new H2DE_GraphicObject();
-    topLine->type = IMAGE;
+    H2DE_GraphicObject* topLine = new H2DE_GraphicObject(*botLine);
     topLine->pos = calculator->convertToPx({ gameData->offsets->topLine.x, topGroundVisualPos.y + gameData->offsets->topLine.y }, gameData->sizes->line, true, false);
-    topLine->size = absLineSize;
-    topLine->texture = data->lineTexture;
-    topLine->color = static_cast<H2DE_Color>(lineColor);
-    topLine->index = lineIndex;
     H2DE_AddGraphicObject(engine, topLine);
 
     for (Item* item : items) item->render();
@@ -453,6 +440,8 @@ void Level::respawn() {
     }
 
     for (Item* item : items) item->reset();
+
+    game->getMegahack()->resetHitboxTrail();
 
     updateBackgroundY();
     game->setState({ LEVEL_PLAYING, DEFAULT });

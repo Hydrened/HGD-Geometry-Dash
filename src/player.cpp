@@ -249,6 +249,7 @@ void Player::renderHitboxes() {
 
     H2DE_Size absRedHitboxSize = calculator->convertToPx(gameData->sizes->redHitboxSizes[gamemode][size]);
     LevelPos offsetRedHitboxPos = { pos.x + gameData->offsets->redHitboxOffsets[gamemode][size].x, pos.y + gameData->offsets->redHitboxOffsets[gamemode][size].y };
+    
     H2DE_GraphicObject* redHitbox = new H2DE_GraphicObject();
     redHitbox->type = POLYGON;
     redHitbox->pos = calculator->convertToPx(offsetRedHitboxPos, gameData->sizes->iconSizes[gamemode][size], false, false);
@@ -264,8 +265,8 @@ void Player::renderHitboxes() {
 
     LevelPos offsetBlueHitboxPos = { pos.x + gameData->offsets->blueHitboxOffsets[gamemode][size].x, pos.y + gameData->offsets->blueHitboxOffsets[gamemode][size].y };
     H2DE_Size blueHitboxSize = calculator->convertToPx(gameData->sizes->blueHitboxSizes[gamemode][size]);
-    H2DE_GraphicObject* blueHitbox = new H2DE_GraphicObject();
-    blueHitbox->type = POLYGON;
+
+    H2DE_GraphicObject* blueHitbox = new H2DE_GraphicObject(*redHitbox);
     blueHitbox->pos = calculator->convertToPx(offsetBlueHitboxPos, gameData->sizes->iconSizes[gamemode][size], false, false);
     blueHitbox->points = {
         { 0, 0 },

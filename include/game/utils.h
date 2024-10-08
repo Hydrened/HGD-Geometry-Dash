@@ -130,17 +130,17 @@ struct GameState {
 
 struct KeyEvent {
     SDL_Keycode keycode;
-    GameState state;
+    std::vector<GameState> states;
     std::function<void()> call;
 };
 
 struct UpdateInstruction {
-    GameState state;
+    std::vector<GameState> states;
     std::function<void()> call;
 };
 
 struct RenderInstruction {
-    GameState state;
+    std::vector<GameState> states;
     std::function<void()> call;
 };
 
@@ -289,6 +289,12 @@ struct Icons {
 
     std::vector<int> colorIDs;
     bool glow;
+};
+
+struct Hitbox {
+    LevelPos pos;
+    Gamemode gamemode;
+    Size size;
 };
 
 #endif

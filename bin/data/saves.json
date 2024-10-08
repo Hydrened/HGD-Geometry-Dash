@@ -2,7 +2,7 @@
     "achievments": {},
     "hacks": [
         {
-            "active": false,
+            "active": true,
             "keycode": 48,
             "name": "noclip"
         },
@@ -15,6 +15,11 @@
             "active": false,
             "keycode": 57,
             "name": "no-transition"
+        },
+        {
+            "active": true,
+            "keycode": 56,
+            "name": "hitbox-trail"
         }
     ],
     "icons": {
@@ -30,14 +35,14 @@
     },
     "levels": {
         "0": {
-            "attempts": 1027,
-            "clicks": 7159,
+            "attempts": 1088,
+            "clicks": 7670,
             "coins": [
                 true,
                 true,
                 true
             ],
-            "jumps": 6253,
+            "jumps": 6892,
             "progress": {
                 "normal": 100.0,
                 "practice": 100.0
@@ -58,6 +63,7 @@
             }
         }
     },
+    "options": {},
     "shop": {},
     "stats": {},
     "volume": {

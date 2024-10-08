@@ -36,7 +36,7 @@ void Game::createWindow(SDL_WindowFlags flag) {
         throw std::runtime_error("HGD-1000: Error creating window => SDL_Init failed: " + std::string(SDL_GetError()));
     }
 
-    window = SDL_CreateWindow("Geometry Dash 1.0 (1.0.13)", x, y, w, h, flag);
+    window = SDL_CreateWindow("Geometry Dash 1.0 (1.0.14)", x, y, w, h, flag);
     if (!window) {
         SDL_Quit();
         throw std::runtime_error("HGD-1001: Error creating window => SDL_CreateWindow failed: " + std::string(SDL_GetError()));
@@ -160,93 +160,74 @@ void Game::run() {
 // EVENTS
 void Game::handleEvents(SDL_Event event) {
     static std::vector<KeyEvent> keyDownEvents = {
-        { SDLK_ESCAPE, { MAIN_MENU, DEFAULT }, [this]() {
+        { SDLK_ESCAPE, { { MAIN_MENU, DEFAULT } }, [this]() {
             quit();
         } },
-        { SDLK_ESCAPE, { LEVEL_MENU, DEFAULT }, [this]() {
+        { SDLK_ESCAPE, { { LEVEL_MENU, DEFAULT } }, [this]() {
             setState({ MAIN_MENU, DEFAULT }, getTransitionDuration(500), NULL);
         } },
-        { SDLK_ESCAPE, { LEVEL_PLAYING, DEFAULT }, [this]() {
+        { SDLK_ESCAPE, { { LEVEL_PLAYING, DEFAULT } }, [this]() {
             level->pause();
         } },
-        { SDLK_ESCAPE, { LEVEL_PAUSE, DEFAULT }, [this]() {
+        { SDLK_ESCAPE, { { LEVEL_PAUSE, DEFAULT }, { LEVEL_END, DEFAULT } }, [this]() {
             setState({ LEVEL_MENU, DEFAULT }, getTransitionDuration(500), [this]() {
                 closeLevel();
                 openMenu();
             });
         } },
-        { SDLK_ESCAPE, { LEVEL_END, DEFAULT }, [this]() {
-            setState({ LEVEL_MENU, DEFAULT }, getTransitionDuration(500), [this]() {
-            closeLevel(); openMenu(); });
-        } },
-        { SDLK_ESCAPE, { MAIN_MENU, MODAL_EXIT }, [this]() {
+        { SDLK_ESCAPE, { { MAIN_MENU, MODAL_EXIT } }, [this]() {
             closeModal();
         } },
 
 
 
-        { SDLK_SPACE, { MAIN_MENU, DEFAULT }, [this]() {
+        { SDLK_SPACE, { { MAIN_MENU, DEFAULT } }, [this]() {
             setState({ LEVEL_MENU, DEFAULT }, getTransitionDuration(500), NULL);
         } },
-        { SDLK_SPACE, { LEVEL_MENU, DEFAULT }, [this]() {
+        { SDLK_SPACE, { { LEVEL_MENU, DEFAULT } }, [this]() {
             H2DE_PlaySFX(engine, "play-level.ogg", 0);
             setState({ LEVEL_STARTING_DELAY, DEFAULT }, getTransitionDuration(500), [this]() {
                 openLevel();
                 closeMenu();
             });
         } },
-        { SDLK_SPACE, { LEVEL_PLAYING, DEFAULT }, [this]() {
+        { SDLK_SPACE, { { LEVEL_PLAYING, DEFAULT }, { LEVEL_DEAD, DEFAULT } }, [this]() {
             level->getPlayer()->setClicking(true);
         } },
-        { SDLK_SPACE, { LEVEL_PAUSE, DEFAULT }, [this]() {
+        { SDLK_SPACE, { { LEVEL_PAUSE, DEFAULT } }, [this]() {
             level->getPlayer()->setClicking(true);
             level->resume();
         } },
-        { SDLK_SPACE, { LEVEL_DEAD, DEFAULT }, [this]() {
-            level->getPlayer()->setClicking(true);
-        } },
 
 
 
-        { SDLK_UP, { LEVEL_PLAYING, DEFAULT }, [this]() {
+        { SDLK_UP, { { LEVEL_PLAYING, DEFAULT }, { LEVEL_DEAD, DEFAULT }, { LEVEL_PAUSE, DEFAULT } }, [this]() {
             level->getPlayer()->setClicking(true);
         } },
-        { SDLK_UP, { LEVEL_DEAD, DEFAULT }, [this]() {
-            level->getPlayer()->setClicking(true);
-        } },
-        { SDLK_UP, { LEVEL_PAUSE, DEFAULT }, [this]() {
-            level->getPlayer()->setClicking(true);
-        } },
-        { SDLK_LEFT, { LEVEL_MENU, DEFAULT }, [this]() {
+        { SDLK_LEFT, { { LEVEL_MENU, DEFAULT } }, [this]() {
             menu->incrLevelIndex(-1);
         } },
-        { SDLK_RIGHT, { LEVEL_MENU, DEFAULT }, [this]() {
+        { SDLK_RIGHT, { { LEVEL_MENU, DEFAULT } }, [this]() {
             menu->incrLevelIndex(1);
         } },
 
 
 
-        { SDLK_r, { LEVEL_PAUSE, DEFAULT }, [this]() {
+        { SDLK_r, { { LEVEL_PAUSE, DEFAULT } }, [this]() {
             level->respawn();
         } },
-        { SDLK_p, { LEVEL_PAUSE, DEFAULT }, [this]() {
+        { SDLK_p, { { LEVEL_PAUSE, DEFAULT } }, [this]() {
             level->setMode((level->getMode() == NORMAL_MODE) ? PRACTICE_MODE : NORMAL_MODE);
             if (level->getMode() == NORMAL_MODE) level->respawn();
             level->getPlayer()->clearCheckpoints();
         } },
-        { SDLK_w, { LEVEL_PLAYING, DEFAULT }, [this]() {
+        { SDLK_w, { { LEVEL_PLAYING, DEFAULT } }, [this]() {
             if (level->getMode() == PRACTICE_MODE && this->canAddCheckpoint) {
                 level->getPlayer()->addCheckpoint();
                 this->canAddCheckpoint = false;
             }
         } },
-        { SDLK_x, { LEVEL_PLAYING, DEFAULT }, [this]() {
-            if (level->getMode() == PRACTICE_MODE && this->canRemoveCheckpoint) {
-                level->getPlayer()->removeLastCheckpoint();
-                this->canRemoveCheckpoint = false;
-            }
-        } },
-        { SDLK_x, { LEVEL_DEAD, DEFAULT }, [this]() {
+        { SDLK_x, { { LEVEL_PLAYING, DEFAULT }, { LEVEL_DEAD, DEFAULT } }, [this]() {
             if (level->getMode() == PRACTICE_MODE && this->canRemoveCheckpoint) {
                 level->getPlayer()->removeLastCheckpoint();
                 this->canRemoveCheckpoint = false;
@@ -255,37 +236,18 @@ void Game::handleEvents(SDL_Event event) {
     };
 
     static std::vector<KeyEvent> keyUpEvents = {
-        { SDLK_SPACE, { LEVEL_PLAYING, DEFAULT }, [this]() {
-            level->getPlayer()->setClicking(false);
-        } },
-        { SDLK_SPACE, { LEVEL_DEAD, DEFAULT }, [this]() {
-            level->getPlayer()->setClicking(false);
-        } },
-        { SDLK_SPACE, { LEVEL_PAUSE, DEFAULT }, [this]() {
+        { SDLK_SPACE, { { LEVEL_PLAYING, DEFAULT }, { LEVEL_DEAD, DEFAULT }, { LEVEL_PAUSE, DEFAULT } }, [this]() {
             level->getPlayer()->setClicking(false);
         } },
 
-
-
-        { SDLK_UP, { LEVEL_PLAYING, DEFAULT }, [this]() {
-            level->getPlayer()->setClicking(false);
-        } },
-        { SDLK_UP, { LEVEL_DEAD, DEFAULT }, [this]() {
-            level->getPlayer()->setClicking(false);
-        } },
-        { SDLK_UP, { LEVEL_PAUSE, DEFAULT }, [this]() {
+        { SDLK_UP, { { LEVEL_PLAYING, DEFAULT }, { LEVEL_DEAD, DEFAULT }, { LEVEL_PAUSE, DEFAULT } }, [this]() {
             level->getPlayer()->setClicking(false);
         } },
 
-
-
-        { SDLK_w, { LEVEL_PLAYING, DEFAULT }, [this]() {
+        { SDLK_w, { { LEVEL_PLAYING, DEFAULT } }, [this]() {
             if (level->getMode() == PRACTICE_MODE) this->canAddCheckpoint = true;
         } },
-        { SDLK_x, { LEVEL_PLAYING, DEFAULT }, [this]() {
-            if (level->getMode() == PRACTICE_MODE) this->canRemoveCheckpoint = true;
-        } },
-        { SDLK_x, { LEVEL_DEAD, DEFAULT }, [this]() {
+        { SDLK_x, { { LEVEL_PLAYING, DEFAULT }, { LEVEL_DEAD, DEFAULT } }, [this]() {
             if (level->getMode() == PRACTICE_MODE) this->canRemoveCheckpoint = true;
         } },
     };
@@ -322,7 +284,7 @@ void Game::handleEvents(SDL_Event event) {
 
             for (KeyEvent e : keyDownEvents) {
                 bool sameKey = (event.key.keysym.sym == e.keycode);
-                bool sameState = (state == e.state);
+                bool sameState = (std::find(e.states.begin(), e.states.end(), state) != e.states.end());
                 if (sameKey && sameState) {
                     e.call();
                     break;
@@ -332,7 +294,7 @@ void Game::handleEvents(SDL_Event event) {
 
         case SDL_KEYUP: for (KeyEvent e : keyUpEvents) {
             bool sameKey = (event.key.keysym.sym == e.keycode);
-            bool sameState = (state == e.state);
+            bool sameState = (std::find(e.states.begin(), e.states.end(), state) != e.states.end());
             if (sameKey && sameState) {
                 e.call();
                 break;
@@ -386,12 +348,26 @@ void Game::closeModal() {
 // UPDATE
 void Game::update() {
     static std::vector<UpdateInstruction> updateInstructions = {
-        { { MAIN_MENU, DEFAULT }, [this]() { if (menu) menu->update(); } },
-        { { LEVEL_PLAYING, DEFAULT }, [this]() { if (level) level->update(); } },
+        { { { MAIN_MENU, DEFAULT } }, [this]() {
+            if (menu) menu->update();
+        } },
+        { { { LEVEL_PLAYING, DEFAULT } }, [this]() {
+            if (level) {
+                level->update();
+                megahack->update();
+            }
+        } },
     };
 
     for (UpdateInstruction u : updateInstructions) {
-        bool sameState = (state.main == u.state.main && (u.state.sub == DEFAULT || state.sub == u.state.sub));
+        bool sameState = false;
+        for (GameState us : u.states) {
+            if (state.main == us.main && (us.sub == DEFAULT || state.sub == us.sub)) {
+                sameState = true;
+                break;
+            }
+        }
+
         if (sameState) u.call();
     }
 
@@ -401,18 +377,27 @@ void Game::update() {
 // RENDER
 void Game::render() {
     static std::vector<RenderInstruction> renderInstructions = {
-        { { MAIN_MENU, DEFAULT }, [this]() { if (menu) menu->render(); } },
-        { { LEVEL_MENU, DEFAULT }, [this]() { if (menu) menu->render(); } },
-        { { LEVEL_STARTING_DELAY, DEFAULT }, [this]() { if (level) level->render(); } },
-        { { LEVEL_PLAYING, DEFAULT }, [this]() { if (level) level->render(); } },
-        { { LEVEL_PAUSE, DEFAULT }, [this]() { if (level) level->render(); } },
-        { { LEVEL_END, DEFAULT }, [this]() { if (level) level->render(); } },
-        { { LEVEL_DEAD, DEFAULT }, [this]() { if (level) level->render(); } },
+        { { { MAIN_MENU, DEFAULT }, { LEVEL_MENU, DEFAULT } }, [this]() {
+            if (menu) menu->render();
+        } },
+        { { { LEVEL_STARTING_DELAY, DEFAULT }, { LEVEL_PLAYING, DEFAULT }, { LEVEL_PAUSE, DEFAULT }, { LEVEL_END, DEFAULT }, { LEVEL_DEAD, DEFAULT } }, [this]() {
+            if (level) {
+                level->render();
+                megahack->render();
+            }
+        } },
     };
 
-    for (RenderInstruction u : renderInstructions) {
-        bool sameState = (state.main == u.state.main && (u.state.sub == DEFAULT || state.sub == u.state.sub));
-        if (sameState) u.call();
+    for (RenderInstruction r : renderInstructions) {
+        bool sameState = false;
+        for (GameState us : r.states) {
+            if (state.main == us.main && (us.sub == DEFAULT || state.sub == us.sub)) {
+                sameState = true;
+                break;
+            }
+        }
+
+        if (sameState) r.call();
     }
 
     if (modal) modal->render();

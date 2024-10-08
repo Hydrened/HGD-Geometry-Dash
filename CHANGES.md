@@ -1,3 +1,8 @@
+## HGD-1.0.14
+#### ADDED
+- hitbox trail hack
+- all cubes
+
 ## HGD-1.0.13
 #### ADDED
 - save percentages (normal and practice)
