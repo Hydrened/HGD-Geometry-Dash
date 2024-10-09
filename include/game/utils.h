@@ -297,4 +297,22 @@ struct Hitbox {
     Size size;
 };
 
+struct MenuIcon {
+    int id;
+
+    LevelPos pos;
+    Velocity velocity;
+    Gamemode gamemode;
+    Size size;
+    int speed;
+    int rotation;
+
+    int col1;
+    int col2;
+    bool glow;
+
+    bool onSolid;
+    bool holding;
+};
+
 #endif

@@ -9,8 +9,7 @@ Camera::Camera(Game* g) : game(g) {
 
 // CLEANUP
 Camera::~Camera() {
-    H2DE_ClearTimelineManager(tm);
-    delete tm;
+    H2DE_DestroyTimelineManager(tm);
 }
 
 // EACH FRAME

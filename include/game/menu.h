@@ -11,9 +11,14 @@ private:
 
     int levelIndex = 0;
     LevelPos backgroundPos;
+    MenuIcon* icon = nullptr;
 
+    H2DE_TimelineManager* tm = H2DE_CreateTimelineManager();
+
+    void updateIcon();
     void renderMainMenu();
     void renderLevelMenu();
+    void renderIcon();
 
 public:
     Menu(Game* game);

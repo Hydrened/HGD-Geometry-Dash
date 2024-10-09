@@ -8,12 +8,56 @@ Menu::Menu(Game* g) : game(g) {
 
     camera->setPos(gameData->positions->camera, 0);
     backgroundPos = gameData->positions->background;
+
+    std::function<void()> spawnIcon = [this]() {
+        std::random_device rd;
+        std::mt19937 gen(rd());
+
+        static std::vector<Gamemode> gamemodes = { CUBE, SHIP };
+
+        std::uniform_int_distribution<> rdmCubes(1, 13);
+        std::uniform_int_distribution<> rdmGamemodes(0, 1);
+        std::uniform_int_distribution<> rdmSizes(1, 1);
+        std::uniform_int_distribution<> rdmSpeeds(1, 1);
+        std::uniform_int_distribution<> rdmCol(0, gameData->colors->icons.size() - 1);
+        std::uniform_int_distribution<> rdmGlow(0, 0);
+
+        int speed = rdmSpeeds(gen);
+        int size = rdmSizes(gen);
+        int glow = rdmGlow(gen);
+
+        icon = new MenuIcon();
+        icon->id = rdmCubes(gen);
+        icon->pos = { -2.0f, 0 };
+        icon->velocity = { gameData->physics->speeds[speed], 0.0f };
+        icon->gamemode = gamemodes[rdmGamemodes(gen)];
+        icon->size = (size == 0) ? MINI : BIG;
+        icon->speed = speed;
+        icon->col1 = rdmCol(gen);
+        icon->col2 = rdmCol(gen);
+        icon->glow = (glow == 0) ? false : true;
+        icon->rotation = 0;
+        icon->onSolid = true;
+        icon->holding = false;
+    };
+
+    H2DE_Timeline* iconLoop = H2DE_CreateTimeline(engine, 3000, LINEAR, NULL, spawnIcon, -1);
+    H2DE_AddTimelineToManager(tm, iconLoop);
+
+    // H2DE_Timeline* colorLoop = H2DE_CreateTimeline(engine, 10000, LINEAR, [this](float blend) {
+
+    // }, NULL, -1);
+    // H2DE_AddTimelineToManager(tm, colorLoop);
+
+    spawnIcon();
+
     H2DE_PlaySong(engine, "menu_loop.mp3", -1);
 }
 
 // CLEANUP
 Menu::~Menu() {
     static H2DE_Engine* engine = game->getEngine();
+    H2DE_DestroyTimelineManager(tm);
     
     H2DE_PauseSong(engine);
 }
@@ -30,7 +74,87 @@ void Menu::update() {
         case MAIN_MENU:
             backgroundPos.x += (gameData->physics->speeds[1] * gameData->physics->backgroundRatio);
             camera->setPos({ camPos.x + gameData->physics->speeds[1], camPos.y }, 0);
+
+            H2DE_TickTimelineManager(tm);
+            updateIcon();
             break;
+
+        default: icon = nullptr; break;
+    }
+}
+
+void Menu::updateIcon() {
+    static int FPS = H2DE_GetEngineFPS(game->getEngine());
+    static GameData* gameData = game->getData();
+    static float groundHeight = gameData->sizes->ground.h;
+    static float bottomGroundsTop = gameData->positions->botGround.y + groundHeight;
+    static std::random_device rd;
+
+    if (icon) {
+        Gamemode gamemode = icon->gamemode;
+        Size size = icon->size;
+
+        icon->velocity.x = gameData->physics->speeds[icon->speed];
+        icon->velocity.y += gameData->physics->gravities[gamemode][size];
+        icon->pos.x += icon->velocity.x;
+        icon->pos.y += icon->velocity.y;
+
+        float maxGravity = gameData->physics->maxGravities[gamemode][size];
+        if (icon->velocity.y > maxGravity) icon->velocity.y = maxGravity;
+        else if (icon->velocity.y * -1.0f > maxGravity) icon->velocity.y = maxGravity * -1.0f;
+
+        if (icon->velocity.y < 0.0f) {
+            if (icon->pos.y < bottomGroundsTop) {
+                icon->onSolid = true;
+                icon->velocity.y = 0.0f;
+                icon->pos.y = bottomGroundsTop;
+            }
+        }
+
+        float gmRotation = gameData->physics->rotations[gamemode][size];
+        float defaultRotationIncr = gameData->physics->rotations[CUBE][size];
+
+        if (icon->onSolid) {
+            int remain = 90 - fmod(std::abs(icon->rotation), 90);
+
+            if (remain != 0) {
+                if (remain < 45) icon->rotation += ((remain > defaultRotationIncr) ? defaultRotationIncr : remain);
+                else icon->rotation -= ((90 - remain > defaultRotationIncr) ? defaultRotationIncr : 90 - remain);
+            }
+        } else switch (gamemode) {
+            case CUBE: icon->rotation += gmRotation; break;
+            case SHIP: icon->rotation = icon->velocity.y * gmRotation; break;
+        }
+
+        if (icon->rotation > 360) icon->rotation -= 360;
+        else if (icon->rotation < -360) icon->rotation += 360;
+
+        std::mt19937 gen(rd());
+        std::uniform_int_distribution<> rdmJump(0, FPS);
+        std::uniform_int_distribution<> rdmHoldDuration(50, 300);
+
+        if (!icon->holding) {
+            if (rdmJump(gen) == 0) {
+                switch (gamemode) {
+                    case CUBE: if (icon->onSolid) {
+                        icon->onSolid = false;
+                        icon->velocity.y = gameData->physics->clicks[CUBE][size];
+                    } break;
+                    case SHIP: if (!icon->holding) {
+                        icon->onSolid = false;
+                        icon->holding = true;
+                        Game::delay(rdmHoldDuration(gen), [this]() {
+                            icon->holding = false;
+                        });
+                        icon->velocity.y += (gameData->physics->clicks[SHIP][size]);
+                    } break;
+                }
+            }
+        } else {
+            switch (gamemode) {
+                case SHIP: icon->velocity.y += (gameData->physics->clicks[SHIP][size]); break;
+            }
+        }
     }
 }
 
@@ -39,7 +163,7 @@ void Menu::render() {
     GameState state = game->getState();
 
     switch (state.main) {
-        case MAIN_MENU: renderMainMenu(); break;
+        case MAIN_MENU: renderMainMenu(); renderIcon(); break;
         case LEVEL_MENU: renderLevelMenu(); break;
     }
 }
@@ -50,7 +174,7 @@ void Menu::renderMainMenu() {
     static Calculator* calculator = game->getCalculator();
 
     // Level elements
-    H2DE_GraphicObject* ground = new H2DE_GraphicObject();
+    H2DE_GraphicObject* ground = H2DE_CreateGraphicObject();
     ground->type = IMAGE;
     ground->texture = "ground_1.png"; // replace => ground_1.png(last ground used)
     ground->pos = calculator->convertToPx(gameData->positions->botGround, gameData->sizes->ground, false, false);
@@ -60,7 +184,7 @@ void Menu::renderMainMenu() {
     ground->index = Zindex{G, 0}.getIndex();
     H2DE_AddGraphicObject(engine, ground);
 
-    H2DE_GraphicObject* line = new H2DE_GraphicObject();
+    H2DE_GraphicObject* line = H2DE_CreateGraphicObject();
     line->type = IMAGE;
     line->texture = "line_1.png";
     line->pos = calculator->convertToPx({ gameData->offsets->botLine.x, gameData->positions->botGround.y + gameData->offsets->botLine.y }, gameData->sizes->line, true, false);
@@ -69,7 +193,7 @@ void Menu::renderMainMenu() {
     line->index = Zindex{G, 1}.getIndex();
     H2DE_AddGraphicObject(engine, line);
 
-    H2DE_GraphicObject* background = new H2DE_GraphicObject(*ground);
+    H2DE_GraphicObject* background = H2DE_CreateGraphicObject(*ground);
     background->texture = "background_1.png"; // replace => background_1.png(last background used)
     background->pos = calculator->convertToPx(backgroundPos, gameData->sizes->background, false, false);
     background->size = calculator->convertToPx(gameData->sizes->background);
@@ -80,7 +204,7 @@ void Menu::renderMainMenu() {
 
 
     // Menu elements
-    H2DE_GraphicObject* gameTitle = new H2DE_GraphicObject();
+    H2DE_GraphicObject* gameTitle = H2DE_CreateGraphicObject();
     gameTitle->type = IMAGE;
     gameTitle->texture = "game-title.png";
     gameTitle->pos = calculator->convertToPxAbs(gameData->positions->gameTitle);
@@ -88,7 +212,7 @@ void Menu::renderMainMenu() {
     gameTitle->index = Zindex{UI, 0}.getIndex();
     H2DE_AddGraphicObject(engine, gameTitle);
 
-    H2DE_GraphicObject* levelMenuButton = new H2DE_GraphicObject(*gameTitle);
+    H2DE_GraphicObject* levelMenuButton = H2DE_CreateGraphicObject(*gameTitle);
     levelMenuButton->texture = "level-menu-button.png";
     levelMenuButton->pos = calculator->convertToPxAbs(gameData->positions->levelMenuButton);
     levelMenuButton->size = calculator->convertToPxAbs(gameData->sizes->levelMenuButton);
@@ -97,13 +221,13 @@ void Menu::renderMainMenu() {
     };
     H2DE_AddGraphicObject(engine, levelMenuButton);
 
-    H2DE_GraphicObject* shopMenuButton = new H2DE_GraphicObject(*gameTitle);
+    H2DE_GraphicObject* shopMenuButton = H2DE_CreateGraphicObject(*gameTitle);
     shopMenuButton->texture = "shop-menu-button.png";
     shopMenuButton->pos = calculator->convertToPxAbs(gameData->positions->shopMenuButton);
     shopMenuButton->size = calculator->convertToPxAbs(gameData->sizes->shopMenuButton);
     H2DE_AddGraphicObject(engine, shopMenuButton);
 
-    H2DE_GraphicObject* onlineMenuButton = new H2DE_GraphicObject(*gameTitle);
+    H2DE_GraphicObject* onlineMenuButton = H2DE_CreateGraphicObject(*gameTitle);
     onlineMenuButton->texture = "online-menu-button.png";
     onlineMenuButton->pos = calculator->convertToPxAbs(gameData->positions->onlineMenuButton);
     onlineMenuButton->size = calculator->convertToPxAbs(gameData->sizes->onlineMenuButton);
@@ -112,7 +236,7 @@ void Menu::renderMainMenu() {
     };
     H2DE_AddGraphicObject(engine, onlineMenuButton);
 
-    H2DE_GraphicObject* closeGameButton = new H2DE_GraphicObject(*gameTitle);
+    H2DE_GraphicObject* closeGameButton = H2DE_CreateGraphicObject(*gameTitle);
     closeGameButton->texture = "close-game-button.png";
     closeGameButton->pos = calculator->convertToPxAbs(gameData->positions->closeGameButton);
     closeGameButton->size = calculator->convertToPxAbs(gameData->sizes->closeGameButton);
@@ -127,7 +251,7 @@ void Menu::renderLevelMenu() {
     static GameData* gameData = game->getData();
     static Calculator* calculator = game->getCalculator();
 
-    H2DE_GraphicObject* ground = new H2DE_GraphicObject();
+    H2DE_GraphicObject* ground = H2DE_CreateGraphicObject();
     ground->type = IMAGE;
     ground->texture = "ground_1.png"; // replace => ground_1.png(last ground used)
     ground->pos = calculator->convertToPx(gameData->positions->botGround, gameData->sizes->ground, false, false);
@@ -136,6 +260,33 @@ void Menu::renderLevelMenu() {
     ground->repeatX = true;
     ground->index = Zindex{G, 0}.getIndex();
     H2DE_AddGraphicObject(engine, ground);
+}
+
+void Menu::renderIcon() {
+    static H2DE_Engine* engine = game->getEngine();
+    static GameData* gameData = game->getData();
+    static Calculator* calculator = game->getCalculator();
+
+    if (icon) {
+        H2DE_Size absRedHitboxSize = calculator->convertToPx(gameData->sizes->redHitboxSizes[icon->gamemode][icon->size]);
+
+        H2DE_GraphicObject* col1 = H2DE_CreateGraphicObject();
+        col1->type = IMAGE;
+        col1->texture = "cube-" + std::to_string(icon->id) + "-1.png";
+        col1->pos = calculator->convertToPx(icon->pos, gameData->sizes->iconSizes[icon->gamemode][icon->size], true, false);
+        col1->size = calculator->convertToPx(gameData->sizes->iconSizes[icon->gamemode][icon->size]);
+        col1->color = (H2DE_Color)(gameData->colors->icons[icon->col1]);
+        col1->rotationOrigin = { absRedHitboxSize.w / 2, absRedHitboxSize.h / 2 };
+        col1->rotation = icon->rotation;
+        col1->index = Zindex{ T1, 2 }.getIndex();
+        H2DE_AddGraphicObject(engine, col1);
+
+        H2DE_GraphicObject* col2 = H2DE_CreateGraphicObject(*col1);
+        col2->texture = "cube-" + std::to_string(icon->id) + "-2.png";
+        col2->color = (H2DE_Color)(gameData->colors->icons[icon->col2]);
+        col2->index = Zindex{ T1, 1 }.getIndex();
+        H2DE_AddGraphicObject(engine, col2);
+    }
 }
 
 // GETTER

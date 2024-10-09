@@ -1,3 +1,7 @@
+## HGD-1.0.15
+#### ADDED
+- icon on main menu
+
 ## HGD-1.0.14
 #### ADDED
 - hitbox trail hack

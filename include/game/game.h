@@ -2,23 +2,20 @@
 #define GAME_H
 
 #include <H2DE/H2DE.h>
-#include <cstdlib>
-#include <fstream>
 #include <functional>
 #include <iostream>
 #include <optional>
-#include <sstream>
+#include <random>
 #include <thread>
 #include <unordered_map>
 #include <vector>
 #include "utils.h"
-#include "camera.h"
+#include "camera.h" 
 #include "megahack.h"
 #include "menu.h"
-#include "level_loader.h"
 #include "level.h"
 #include "data.h"
-#include "calculator.h"
+#include "calculator.h" 
 #include "modal.h"
 class Camera;
 class Megahack;
@@ -37,7 +34,7 @@ private:
     bool debug = false;
     GameData* data = new GameData();
     Calculator* calculator;
-    H2DE_TimelineManager* tm = new H2DE_TimelineManager();
+    H2DE_TimelineManager* tm = H2DE_CreateTimelineManager();
 
     Camera* camera = nullptr;
     Megahack* megahack = nullptr;

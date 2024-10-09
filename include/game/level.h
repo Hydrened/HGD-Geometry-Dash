@@ -3,15 +3,16 @@
 
 #define BLOCKS_ON_WIDTH 19
 
-class Game;
-class Item;
-class Player;
-
 #include "game.h"
+#include "level_loader.h"
 #include "item.h"
 #include "player.h"
 #include "data.h"
 #include "calculator.h"
+
+class Game;
+class Item;
+class Player;
 
 class Level {
 private:
@@ -19,8 +20,8 @@ private:
     LevelData* data = nullptr;
     GameData* gameData = new GameData();
     
-    H2DE_TimelineManager* topGroundTM = new H2DE_TimelineManager();
-    H2DE_TimelineManager* botGroundTM = new H2DE_TimelineManager();
+    H2DE_TimelineManager* topGroundTM = H2DE_CreateTimelineManager();
+    H2DE_TimelineManager* botGroundTM = H2DE_CreateTimelineManager();
 
     int id;
     int attempts = 0;

@@ -223,7 +223,7 @@ void Player::renderTexture() {
         LevelPos offsetIconPos = { pos.x + gameData->offsets->iconOffsets[gamemode][size].x, pos.y + gameData->offsets->iconOffsets[gamemode][size].y };
         H2DE_Size absRedHitboxSize = calculator->convertToPx(gameData->sizes->redHitboxSizes[gamemode][size]);
 
-        H2DE_GraphicObject* col1 = new H2DE_GraphicObject();
+        H2DE_GraphicObject* col1 = H2DE_CreateGraphicObject();
         col1->type = IMAGE;
         col1->texture = "cube-" + std::to_string(icons.cube) + "-1.png";
         col1->pos = calculator->convertToPx(offsetIconPos, gameData->sizes->iconSizes[gamemode][size], false, false);
@@ -234,7 +234,7 @@ void Player::renderTexture() {
         col1->index = Zindex{ T1, 1 }.getIndex();
         H2DE_AddGraphicObject(engine, col1);
 
-        H2DE_GraphicObject* col2 = new H2DE_GraphicObject(*col1);
+        H2DE_GraphicObject* col2 = H2DE_CreateGraphicObject(*col1);
         col2->texture = "cube-" + std::to_string(icons.cube) + "-2.png";
         col2->color = (H2DE_Color)(gameData->colors->icons[icons.colorIDs[1]]);
         col2->index = Zindex{ T1, 0 }.getIndex();
@@ -250,7 +250,7 @@ void Player::renderHitboxes() {
     H2DE_Size absRedHitboxSize = calculator->convertToPx(gameData->sizes->redHitboxSizes[gamemode][size]);
     LevelPos offsetRedHitboxPos = { pos.x + gameData->offsets->redHitboxOffsets[gamemode][size].x, pos.y + gameData->offsets->redHitboxOffsets[gamemode][size].y };
     
-    H2DE_GraphicObject* redHitbox = new H2DE_GraphicObject();
+    H2DE_GraphicObject* redHitbox = H2DE_CreateGraphicObject();
     redHitbox->type = POLYGON;
     redHitbox->pos = calculator->convertToPx(offsetRedHitboxPos, gameData->sizes->iconSizes[gamemode][size], false, false);
     redHitbox->points = {
@@ -266,7 +266,7 @@ void Player::renderHitboxes() {
     LevelPos offsetBlueHitboxPos = { pos.x + gameData->offsets->blueHitboxOffsets[gamemode][size].x, pos.y + gameData->offsets->blueHitboxOffsets[gamemode][size].y };
     H2DE_Size blueHitboxSize = calculator->convertToPx(gameData->sizes->blueHitboxSizes[gamemode][size]);
 
-    H2DE_GraphicObject* blueHitbox = new H2DE_GraphicObject(*redHitbox);
+    H2DE_GraphicObject* blueHitbox = H2DE_CreateGraphicObject(*redHitbox);
     blueHitbox->pos = calculator->convertToPx(offsetBlueHitboxPos, gameData->sizes->iconSizes[gamemode][size], false, false);
     blueHitbox->points = {
         { 0, 0 },
@@ -285,7 +285,7 @@ void Player::renderPracticeCheckpoints() {
     static H2DE_Engine* engine = game->getEngine();
 
     for (Checkpoint* c : practiceCheckpoints) {
-        H2DE_GraphicObject* checkpoint = new H2DE_GraphicObject();
+        H2DE_GraphicObject* checkpoint = H2DE_CreateGraphicObject();
         checkpoint->type = IMAGE;
         checkpoint->texture = "practice-checkpoint.png";
         checkpoint->pos = calculator->convertToPx({ c->playerPos.x + gameData->offsets->checkpoint.x, c->playerPos.y + gameData->offsets->checkpoint.y }, gameData->sizes->checkpoint, false, false);

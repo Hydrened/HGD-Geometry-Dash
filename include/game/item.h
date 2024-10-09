@@ -25,7 +25,7 @@ class Block : public Item {
 private:
     BufferedBlock* data;
     int currentSprite = -1;
-    H2DE_TimelineManager* sprites = new H2DE_TimelineManager();
+    H2DE_TimelineManager* sprites = H2DE_CreateTimelineManager();
     bool pickedUp = false;
 
 public:
@@ -50,7 +50,7 @@ public:
 class Trigger : public Item {
 private:
     BufferedTrigger* data;
-    H2DE_TimelineManager* effects = new H2DE_TimelineManager();
+    H2DE_TimelineManager* effects = H2DE_CreateTimelineManager();
 
 public:
     Trigger(Game* game, BufferedTrigger* data);

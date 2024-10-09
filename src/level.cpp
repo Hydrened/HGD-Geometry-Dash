@@ -91,11 +91,8 @@ Level::~Level() noexcept(false) {
     if (player) delete player;
     if (data) delete data;
 
-    H2DE_ClearTimelineManager(topGroundTM);
-    delete topGroundTM;
-
-    H2DE_ClearTimelineManager(botGroundTM);
-    delete botGroundTM;
+    H2DE_DestroyTimelineManager(topGroundTM);
+    H2DE_DestroyTimelineManager(botGroundTM);
 
     H2DE_PlaySFX(engine, "exit-level.ogg", 0);
 }
@@ -134,7 +131,7 @@ void Level::saveData() {
     (*saves)["levels"][stingifiedID]["progress"]["normal"] = bestNormalMode;
     (*saves)["levels"][stingifiedID]["progress"]["practice"] = bestPracticeMode;
 
-    if (!H2DE_Json::write(SAVESpath, saves)) {
+    if (!H2DE_Json::write(SAVESpath, saves, 2)) {
         throw std::runtime_error("HGD-3002: Error saving player data => Writing player data failed");
     }
 }
@@ -189,7 +186,7 @@ void Level::render() {
     int lineIndex = Zindex{ G, 1 }.getIndex();
 
     // render background
-    H2DE_GraphicObject* background = new H2DE_GraphicObject();
+    H2DE_GraphicObject* background = H2DE_CreateGraphicObject();
     background->type = IMAGE;
     background->pos = calculator->convertToPx(backgroundPos, gameData->sizes->background, false, false);
     background->size = calculator->convertToPx(gameData->sizes->background);
@@ -200,7 +197,7 @@ void Level::render() {
     H2DE_AddGraphicObject(engine, background);
 
     // render bot ground
-    H2DE_GraphicObject* botGround = new H2DE_GraphicObject(*background);
+    H2DE_GraphicObject* botGround = H2DE_CreateGraphicObject(*background);
     botGround->pos = calculator->convertToPx(botGroundVisualPos, gameData->sizes->ground, false, false);
     botGround->size = absGroundSize;
     botGround->texture = data->groundTexture;
@@ -209,7 +206,7 @@ void Level::render() {
     H2DE_AddGraphicObject(engine, botGround);
 
     // render bot line
-    H2DE_GraphicObject* botLine = new H2DE_GraphicObject(*background);
+    H2DE_GraphicObject* botLine = H2DE_CreateGraphicObject(*background);
     botLine->pos = calculator->convertToPx({ gameData->offsets->botLine.x, botGroundVisualPos.y + gameData->offsets->botLine.y }, gameData->sizes->line, true, false);
     botLine->size = absLineSize;
     botLine->texture = data->lineTexture;
@@ -219,13 +216,13 @@ void Level::render() {
     H2DE_AddGraphicObject(engine, botLine);
 
     // render top ground
-    H2DE_GraphicObject* topGround = new H2DE_GraphicObject(*botGround);
+    H2DE_GraphicObject* topGround = H2DE_CreateGraphicObject(*botGround);
     topGround->pos = calculator->convertToPx(topGroundVisualPos, gameData->sizes->ground, false, false);
     topGround->flip = SDL_FLIP_VERTICAL;
     H2DE_AddGraphicObject(engine, topGround);
 
     // render top line
-    H2DE_GraphicObject* topLine = new H2DE_GraphicObject(*botLine);
+    H2DE_GraphicObject* topLine = H2DE_CreateGraphicObject(*botLine);
     topLine->pos = calculator->convertToPx({ gameData->offsets->topLine.x, topGroundVisualPos.y + gameData->offsets->topLine.y }, gameData->sizes->line, true, false);
     H2DE_AddGraphicObject(engine, topLine);
 

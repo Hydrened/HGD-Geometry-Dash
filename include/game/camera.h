@@ -8,7 +8,7 @@ class Camera {
 private:
     Game* game;
 
-    H2DE_TimelineManager* tm = new H2DE_TimelineManager();
+    H2DE_TimelineManager* tm = H2DE_CreateTimelineManager();
 
     LevelPos initalPos;
     LevelPos currentPos;

@@ -36,7 +36,7 @@ void Game::createWindow(SDL_WindowFlags flag) {
         throw std::runtime_error("HGD-1000: Error creating window => SDL_Init failed: " + std::string(SDL_GetError()));
     }
 
-    window = SDL_CreateWindow("Geometry Dash 1.0 (1.0.14)", x, y, w, h, flag);
+    window = SDL_CreateWindow("Geometry Dash 1.0 (1.0.15)", x, y, w, h, flag);
     if (!window) {
         SDL_Quit();
         throw std::runtime_error("HGD-1001: Error creating window => SDL_CreateWindow failed: " + std::string(SDL_GetError()));
@@ -81,8 +81,7 @@ Game::~Game() {
     delete megahack;
     delete data;
 
-    H2DE_ClearTimelineManager(tm);
-    delete tm;
+    H2DE_DestroyTimelineManager(tm);
 
     SDL_DestroyWindow(window);
     SDL_DestroyRenderer(renderer);
@@ -109,7 +108,7 @@ void Game::saveSettings() {
         (*settings)["window"]["w"] = winW;
         (*settings)["window"]["h"] = winH;
 
-        if (!H2DE_Json::write(SETTINGSpath, settings)) {
+        if (!H2DE_Json::write(SETTINGSpath, settings, 2)) {
             throw std::runtime_error("HGD-3001: Error updating settings => Writing settings failed");
         }
     }
@@ -348,7 +347,7 @@ void Game::closeModal() {
 // UPDATE
 void Game::update() {
     static std::vector<UpdateInstruction> updateInstructions = {
-        { { { MAIN_MENU, DEFAULT } }, [this]() {
+        { { { MAIN_MENU, DEFAULT }, { LEVEL_MENU, DEFAULT } }, [this]() {
             if (menu) menu->update();
         } },
         { { { LEVEL_PLAYING, DEFAULT } }, [this]() {
@@ -407,7 +406,7 @@ void Game::render() {
     if (transitionOpacity != 0) {
         H2DE_Size engineSize = H2DE_GetEngineSize(engine);
 
-        H2DE_GraphicObject* transition = new H2DE_GraphicObject();
+        H2DE_GraphicObject* transition = H2DE_CreateGraphicObject();
         transition->type = POLYGON;
         transition->pos = { 0, 0 };
         transition->points = {

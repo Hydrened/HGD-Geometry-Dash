@@ -41,7 +41,7 @@ void Megahack::saveHacks() {
         }
     }
 
-    if (!H2DE_Json::write(SAVESpath, saves)) {
+    if (!H2DE_Json::write(SAVESpath, saves, 2)) {
         throw std::runtime_error("HGD-3003: Error saving hacks => Writing hacks failed");
     }
 }   
@@ -99,7 +99,7 @@ void Megahack::render() {
             H2DE_Size absRedHitboxSize = calculator->convertToPx(gameData->sizes->redHitboxSizes[gamemode][size]);
             LevelPos offsetRedHitboxPos = { pos.x + gameData->offsets->redHitboxOffsets[gamemode][size].x, pos.y + gameData->offsets->redHitboxOffsets[gamemode][size].y };
             
-            H2DE_GraphicObject* redHitbox = new H2DE_GraphicObject();
+            H2DE_GraphicObject* redHitbox = H2DE_CreateGraphicObject();
             redHitbox->type = POLYGON;
             redHitbox->pos = calculator->convertToPx(offsetRedHitboxPos, gameData->sizes->iconSizes[gamemode][size], false, false);
             redHitbox->points = {
@@ -115,7 +115,7 @@ void Megahack::render() {
             LevelPos offsetBlueHitboxPos = { pos.x + gameData->offsets->blueHitboxOffsets[gamemode][size].x, pos.y + gameData->offsets->blueHitboxOffsets[gamemode][size].y };
             H2DE_Size blueHitboxSize = calculator->convertToPx(gameData->sizes->blueHitboxSizes[gamemode][size]);
 
-            H2DE_GraphicObject* blueHitbox = new H2DE_GraphicObject(*redHitbox);
+            H2DE_GraphicObject* blueHitbox = H2DE_CreateGraphicObject(*redHitbox);
             blueHitbox->pos = calculator->convertToPx(offsetBlueHitboxPos, gameData->sizes->iconSizes[gamemode][size], false, false);
             blueHitbox->points = {
                 { 0, 0 },

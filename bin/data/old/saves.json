@@ -35,14 +35,14 @@
   },
   "levels": {
     "0": {
-      "attempts": 1105,
-      "clicks": 7988,
+      "attempts": 1095,
+      "clicks": 7985,
       "coins": [
         true,
         true,
         true
       ],
-      "jumps": 7192,
+      "jumps": 7186,
       "progress": {
         "normal": 100.0,
         "practice": 100.0

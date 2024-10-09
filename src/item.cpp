@@ -35,8 +35,8 @@ Block::Block(Game* game, BufferedBlock* d) : Item(game), data(d) {
 
 // CLEANUP
 Block::~Block() {
-    H2DE_ClearTimelineManager(sprites);
-    delete sprites;
+    H2DE_DestroyTimelineManager(sprites);
+
 }
 
 // UPDATE
@@ -70,7 +70,7 @@ void Block::renderTexture() {
         std::string tex = data->texture.substr(0, data->texture.size() - 4).append(((data->sprites != 0) ? std::string("-").append(std::to_string(currentSprite)) : "")).append(".png");
         H2DE_Size absTexOri = calculator->convertToPx(LevelSize{ data->rotationOrigin.x, data->rotationOrigin.y });
 
-        H2DE_GraphicObject* texture = new H2DE_GraphicObject();
+        H2DE_GraphicObject* texture = H2DE_CreateGraphicObject();
         texture->type = IMAGE;
         texture->texture = tex;
         texture->pos = calculator->convertToPx({ data->pos.x + data->textureOffset.x, data->pos.y + data->textureOffset.y }, data->textureSize, false, false);
@@ -94,7 +94,7 @@ void Block::renderHitbox() {
     if (hitboxOnCamX && data->type != DECORATION) {
         H2DE_Size absHitboxSize = calculator->convertToPx(data->hitboxSize);
         H2DE_Pos absHitboxOffset = calculator->convertToPx(data->hitboxOffset);
-        H2DE_GraphicObject* hitbox = new H2DE_GraphicObject();
+        H2DE_GraphicObject* hitbox = H2DE_CreateGraphicObject();
         hitbox->type = POLYGON;
         hitbox->pos = calculator->convertToPx({ data->pos.x + data->hitboxOffset.x, data->pos.y + data->hitboxOffset.y }, data->hitboxSize, false, false);
         hitbox->points = {
@@ -167,8 +167,7 @@ Trigger::Trigger(Game* game, BufferedTrigger* d) : Item(game), data(d) {
 
 // CLEANUP
 Trigger::~Trigger() {
-    H2DE_ClearTimelineManager(effects);
-    delete effects;
+    H2DE_DestroyTimelineManager(effects);
 }
 
 // UPDATE

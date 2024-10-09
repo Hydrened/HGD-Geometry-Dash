@@ -9,7 +9,7 @@ private:
     GameState state;
 
     float scaleMultiplier = 0;
-    H2DE_TimelineManager* tm = new H2DE_TimelineManager();
+    H2DE_TimelineManager* tm = H2DE_CreateTimelineManager();
 
 public:
     Modal(Game* game, GameState state);

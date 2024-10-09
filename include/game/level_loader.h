@@ -1,6 +1,9 @@
 #ifndef LEVEL_LOADER_H
 #define LEVEL_LOADER_H
 
+#include <fstream>
+#include <cstdlib>
+#include <sstream>
 #include "game.h"
 
 class LevelLoader {

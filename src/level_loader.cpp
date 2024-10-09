@@ -223,7 +223,7 @@ void LevelLoader::initLevelsInfos(std::string content, int id) {
     level["config"]["song"] = songID;
 
     (*levels)[std::to_string(id)] = level;
-    if (!H2DE_Json::write(levelsPATH, levels)) {
+    if (!H2DE_Json::write(levelsPATH, levels, 2)) {
         throw std::runtime_error("HGD-3004: Error loading extern level => Writing data in levels failed");
     }
 }
@@ -254,7 +254,7 @@ void LevelLoader::initSaveInfos(std::string content, int id) {
     levelSave["coins"].push_back(coin3);
 
     (*saves)["levels"][std::to_string(id)] = levelSave;
-    if (!H2DE_Json::write(savesPATH, saves)) {
+    if (!H2DE_Json::write(savesPATH, saves, 2)) {
         throw std::runtime_error("HGD-3005: Error loading extern level => Writing data in saves failed");
     }
 }

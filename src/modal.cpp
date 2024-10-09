@@ -13,8 +13,7 @@ Modal::Modal(Game* g, GameState s) : game(g), state(s) {
 
 // CLEANUP
 Modal::~Modal() {
-    H2DE_ClearTimelineManager(tm);
-    delete tm;
+    H2DE_DestroyTimelineManager(tm);
 }
 
 // UPDATE
@@ -30,7 +29,7 @@ void Modal::render() {
     if (state == currentState) {
         H2DE_Size engineSize = H2DE_GetEngineSize(engine);
 
-        H2DE_GraphicObject* modal = new H2DE_GraphicObject();
+        H2DE_GraphicObject* modal = H2DE_CreateGraphicObject();
         modal->type = IMAGE;
         modal->texture = "1_1.png";
         modal->pos = { engineSize.w / 2 - 250, engineSize.h / 2 - 250 };
