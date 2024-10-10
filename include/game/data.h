@@ -181,6 +181,8 @@ struct GameData {
     };
 
     struct Colors {
+        Color menuBackground = { 0, 102, 255, 255 };
+        Color menuGround = { 0, 0, 216, 255 };
         std::unordered_map<BlockType, Color> hitboxes;
         std::vector<Color> icons = {
             { 125, 255, 0, 255 },

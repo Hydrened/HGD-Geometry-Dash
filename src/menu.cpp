@@ -8,49 +8,32 @@ Menu::Menu(Game* g) : game(g) {
 
     camera->setPos(gameData->positions->camera, 0);
     backgroundPos = gameData->positions->background;
+    backgroundColor = gameData->colors->menuBackground;
+    groundColor = gameData->colors->menuGround;
 
-    std::function<void()> spawnIcon = [this]() {
-        std::random_device rd;
-        std::mt19937 gen(rd());
-
-        static std::vector<Gamemode> gamemodes = { CUBE, SHIP };
-
-        std::uniform_int_distribution<> rdmCubes(1, 13);
-        std::uniform_int_distribution<> rdmGamemodes(0, 1);
-        std::uniform_int_distribution<> rdmSizes(1, 1);
-        std::uniform_int_distribution<> rdmSpeeds(1, 1);
-        std::uniform_int_distribution<> rdmCol(0, gameData->colors->icons.size() - 1);
-        std::uniform_int_distribution<> rdmGlow(0, 0);
-
-        int speed = rdmSpeeds(gen);
-        int size = rdmSizes(gen);
-        int glow = rdmGlow(gen);
-
-        icon = new MenuIcon();
-        icon->id = rdmCubes(gen);
-        icon->pos = { -2.0f, 0 };
-        icon->velocity = { gameData->physics->speeds[speed], 0.0f };
-        icon->gamemode = gamemodes[rdmGamemodes(gen)];
-        icon->size = (size == 0) ? MINI : BIG;
-        icon->speed = speed;
-        icon->col1 = rdmCol(gen);
-        icon->col2 = rdmCol(gen);
-        icon->glow = (glow == 0) ? false : true;
-        icon->rotation = 0;
-        icon->onSolid = true;
-        icon->holding = false;
-    };
-
-    H2DE_Timeline* iconLoop = H2DE_CreateTimeline(engine, 3000, LINEAR, NULL, spawnIcon, -1);
+    H2DE_Timeline* iconLoop = H2DE_CreateTimeline(engine, 3000, LINEAR, NULL, [this]() {
+        spawnIcon();
+    }, -1);
     H2DE_AddTimelineToManager(tm, iconLoop);
 
-    // H2DE_Timeline* colorLoop = H2DE_CreateTimeline(engine, 10000, LINEAR, [this](float blend) {
+    Color defaultBackgroundColor = backgroundColor;
+    Color defaultGroundColor = groundColor;
+    H2DE_Timeline* colorLoop = H2DE_CreateTimeline(engine, 30000, LINEAR, [this, defaultBackgroundColor, defaultGroundColor](float blend) {
 
-    // }, NULL, -1);
-    // H2DE_AddTimelineToManager(tm, colorLoop);
+        H2DE_RGB rgbBG = H2DE_AddHueToRGB(static_cast<H2DE_RGB>(defaultBackgroundColor), blend * 360);
+        backgroundColor.r = rgbBG.r;
+        backgroundColor.g = rgbBG.g;
+        backgroundColor.b = rgbBG.b;
+
+        H2DE_RGB rgbG = H2DE_AddHueToRGB(static_cast<H2DE_RGB>(defaultGroundColor), blend * 360 - 25);
+        groundColor.r = rgbG.r;
+        groundColor.g = rgbG.g;
+        groundColor.b = rgbG.b;
+        
+    }, NULL, -1);
+    H2DE_AddTimelineToManager(tm, colorLoop);
 
     spawnIcon();
-
     H2DE_PlaySong(engine, "menu_loop.mp3", -1);
 }
 
@@ -60,6 +43,13 @@ Menu::~Menu() {
     H2DE_DestroyTimelineManager(tm);
     
     H2DE_PauseSong(engine);
+}
+
+void Menu::resetMainMenu() {
+    H2DE_ResetTimelineManager(tm);
+    Game::delay(100, [this]() {
+        spawnIcon();
+    });
 }
 
 // UPDATE
@@ -179,7 +169,7 @@ void Menu::renderMainMenu() {
     ground->texture = "ground_1.png"; // replace => ground_1.png(last ground used)
     ground->pos = calculator->convertToPx(gameData->positions->botGround, gameData->sizes->ground, false, false);
     ground->size = calculator->convertToPx(gameData->sizes->ground);
-    ground->color = { 0, 102, 255, 255 }; // replace => rgb effect
+    ground->rgb = static_cast<H2DE_RGB>(groundColor);
     ground->repeatX = true;
     ground->index = Zindex{G, 0}.getIndex();
     H2DE_AddGraphicObject(engine, ground);
@@ -189,7 +179,7 @@ void Menu::renderMainMenu() {
     line->texture = "line_1.png";
     line->pos = calculator->convertToPx({ gameData->offsets->botLine.x, gameData->positions->botGround.y + gameData->offsets->botLine.y }, gameData->sizes->line, true, false);
     line->size = calculator->convertToPx(gameData->sizes->line);
-    line->color = { 255, 255, 255, 255 };
+    line->rgb = { 255, 255, 255, 255 };
     line->index = Zindex{G, 1}.getIndex();
     H2DE_AddGraphicObject(engine, line);
 
@@ -197,7 +187,7 @@ void Menu::renderMainMenu() {
     background->texture = "background_1.png"; // replace => background_1.png(last background used)
     background->pos = calculator->convertToPx(backgroundPos, gameData->sizes->background, false, false);
     background->size = calculator->convertToPx(gameData->sizes->background);
-    background->color = { 35, 108, 221, 255 }; // replace => rgb effect
+    background->rgb = static_cast<H2DE_RGB>(backgroundColor);
     background->index = Zindex{BG, 0}.getIndex();
     H2DE_AddGraphicObject(engine, background);
 
@@ -256,7 +246,7 @@ void Menu::renderLevelMenu() {
     ground->texture = "ground_1.png"; // replace => ground_1.png(last ground used)
     ground->pos = calculator->convertToPx(gameData->positions->botGround, gameData->sizes->ground, false, false);
     ground->size = calculator->convertToPx(gameData->sizes->ground);
-    ground->color = { 0, 102, 255, 255 }; // replace => rgb effect
+    ground->rgb = { 0, 102, 255, 255 }; // replace => rgb effect
     ground->repeatX = true;
     ground->index = Zindex{G, 0}.getIndex();
     H2DE_AddGraphicObject(engine, ground);
@@ -290,7 +280,7 @@ void Menu::renderMainTexture() {
     col1->texture = gamemodeStrigified + "-" + std::to_string(icon->id) + "-1.png";
     col1->pos = calculator->convertToPx(iconPos, iconSize, true, false);
     col1->size = calculator->convertToPx(iconSize);
-    col1->color = (H2DE_Color)(gameData->colors->icons[icon->col1]);
+    col1->rgb = (H2DE_RGB)(gameData->colors->icons[icon->col1]);
     col1->rotationOrigin = center;
     col1->rotation = icon->rotation;
     col1->index = Zindex{ T1, 2 }.getIndex();
@@ -298,7 +288,7 @@ void Menu::renderMainTexture() {
 
     H2DE_GraphicObject* col2 = H2DE_CreateGraphicObject(*col1);
     col2->texture = gamemodeStrigified + "-" + std::to_string(icon->id) + "-2.png";
-    col2->color = (H2DE_Color)(gameData->colors->icons[icon->col2]);
+    col2->rgb = (H2DE_RGB)(gameData->colors->icons[icon->col2]);
     col2->index = Zindex{ T1, 1 }.getIndex();
     H2DE_AddGraphicObject(engine, col2);
 }
@@ -323,13 +313,13 @@ void Menu::renderSecondTexture() {
     col1->size = calculator->convertToPx(iconSize);
     col1->rotation = icon->rotation;
     col1->rotationOrigin = center;
-    col1->color = (H2DE_Color)(gameData->colors->icons[icon->col1]);
+    col1->rgb = (H2DE_RGB)(gameData->colors->icons[icon->col1]);
     col1->index = Zindex{ T1, -2 }.getIndex();
     H2DE_AddGraphicObject(engine, col1);
 
     H2DE_GraphicObject* col2 = H2DE_CreateGraphicObject(*col1);
     col2->texture = "cube-0-2.png";
-    col2->color = (H2DE_Color)(gameData->colors->icons[icon->col2]);
+    col2->rgb = (H2DE_RGB)(gameData->colors->icons[icon->col2]);
     col2->index = Zindex{ T1, -1 }.getIndex();
     H2DE_AddGraphicObject(engine, col2);
 }
@@ -346,4 +336,38 @@ void Menu::incrLevelIndex(int incr) {
     if (levelIndex + incr < 0) levelIndex = max;
     else if (levelIndex + incr > max) levelIndex = 0;
     else levelIndex += incr;
+}
+
+// OTHER
+void Menu::spawnIcon() {
+    static GameData* gameData = game->getData();
+    static std::random_device rd;
+    static std::vector<Gamemode> gamemodes = { CUBE, SHIP };
+
+    std::mt19937 gen(rd());
+
+    std::uniform_int_distribution<> rdmCubes(1, 13);
+    std::uniform_int_distribution<> rdmGamemodes(0, 1);
+    std::uniform_int_distribution<> rdmSizes(1, 1);
+    std::uniform_int_distribution<> rdmSpeeds(1, 1);
+    std::uniform_int_distribution<> rdmCol(0, gameData->colors->icons.size() - 1);
+    std::uniform_int_distribution<> rdmGlow(0, 0);
+
+    int speed = rdmSpeeds(gen);
+    int size = rdmSizes(gen);
+    int glow = rdmGlow(gen);
+
+    icon = new MenuIcon();
+    icon->id = rdmCubes(gen);
+    icon->pos = { -2.0f, 0 };
+    icon->velocity = { gameData->physics->speeds[speed], 0.0f };
+    icon->gamemode = gamemodes[rdmGamemodes(gen)];
+    icon->size = (size == 0) ? MINI : BIG;
+    icon->speed = speed;
+    icon->col1 = rdmCol(gen);
+    icon->col2 = rdmCol(gen);
+    icon->glow = (glow == 0) ? false : true;
+    icon->rotation = 0;
+    icon->onSolid = true;
+    icon->holding = false;
 }

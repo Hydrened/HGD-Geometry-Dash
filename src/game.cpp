@@ -36,7 +36,7 @@ void Game::createWindow(SDL_WindowFlags flag) {
         throw std::runtime_error("HGD-1000: Error creating window => SDL_Init failed: " + std::string(SDL_GetError()));
     }
 
-    window = SDL_CreateWindow("Geometry Dash 1.0 (1.0.16)", x, y, w, h, flag);
+    window = SDL_CreateWindow("Geometry Dash 1.0 (1.0.17)", x, y, w, h, flag);
     if (!window) {
         SDL_Quit();
         throw std::runtime_error("HGD-1001: Error creating window => SDL_CreateWindow failed: " + std::string(SDL_GetError()));
@@ -163,6 +163,7 @@ void Game::handleEvents(SDL_Event event) {
             quit();
         } },
         { SDLK_ESCAPE, { { LEVEL_MENU, DEFAULT } }, [this]() {
+            menu->resetMainMenu();
             setState({ MAIN_MENU, DEFAULT }, getTransitionDuration(500), NULL);
         } },
         { SDLK_ESCAPE, { { LEVEL_PLAYING, DEFAULT } }, [this]() {
@@ -414,7 +415,7 @@ void Game::render() {
             { engineSize.w, engineSize.h },
             { 0, engineSize.h },
         };
-        transition->color = { 0, 0, 0, transitionOpacity };
+        transition->rgb = { 0, 0, 0, transitionOpacity };
         transition->filled = true;
         transition->index = 99999;
         H2DE_AddGraphicObject(engine, transition);

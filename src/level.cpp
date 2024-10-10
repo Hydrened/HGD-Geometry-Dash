@@ -195,7 +195,7 @@ void Level::render() {
     background->size = calculator->convertToPx(gameData->sizes->background);
     background->texture = data->backgroundTexture;
     background->repeatX = true;
-    background->color = static_cast<H2DE_Color>(backgroundColor);
+    background->rgb = static_cast<H2DE_RGB>(backgroundColor);
     background->index = Zindex{ BG, 0 }.getIndex();
     H2DE_AddGraphicObject(engine, background);
 
@@ -204,7 +204,7 @@ void Level::render() {
     botGround->pos = calculator->convertToPx(botGroundVisualPos, gameData->sizes->ground, false, false);
     botGround->size = absGroundSize;
     botGround->texture = data->groundTexture;
-    botGround->color = static_cast<H2DE_Color>(groundColor);
+    botGround->rgb = static_cast<H2DE_RGB>(groundColor);
     botGround->index = groundIndex;
     H2DE_AddGraphicObject(engine, botGround);
 
@@ -214,7 +214,7 @@ void Level::render() {
     botLine->size = absLineSize;
     botLine->texture = data->lineTexture;
     botLine->repeatX = false;
-    botLine->color = static_cast<H2DE_Color>(lineColor);
+    botLine->rgb = static_cast<H2DE_RGB>(lineColor);
     botLine->index = lineIndex;
     H2DE_AddGraphicObject(engine, botLine);
 

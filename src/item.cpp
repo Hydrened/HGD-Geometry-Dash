@@ -78,7 +78,7 @@ void Block::renderTexture() {
         texture->rotation = data->rotation;
         texture->rotationOrigin = { absTexOri.w, absTexOri.h };
         texture->flip = data->flip;
-        texture->color = static_cast<H2DE_Color>(level->getData()->colors[data->colorID]);
+        texture->rgb = static_cast<H2DE_RGB>(level->getData()->colors[data->colorID]);
         texture->index = data->zIndex->getIndex();
         H2DE_AddGraphicObject(engine, texture);
     }
@@ -103,7 +103,7 @@ void Block::renderHitbox() {
             { absHitboxSize.w, absHitboxSize.h },
             { 0, absHitboxSize.h },
         };
-        hitbox->color = static_cast<H2DE_Color>(gameData->colors->hitboxes[data->type]);
+        hitbox->rgb = static_cast<H2DE_RGB>(gameData->colors->hitboxes[data->type]);
         hitbox->index = Zindex{ H, -1 }.getIndex();
         H2DE_AddGraphicObject(engine, hitbox);
     }

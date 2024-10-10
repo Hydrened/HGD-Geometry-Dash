@@ -167,7 +167,7 @@ struct Velocity {
 struct Color {
     Uint8 r, g, b, a;
 
-    explicit operator H2DE_Color() const {
+    explicit operator H2DE_RGB() const {
         return { r, g, b, a };
     }
 };

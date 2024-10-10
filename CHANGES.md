@@ -1,3 +1,9 @@
+## HGD-1.0.17
+#### ADDED
+- main menu rgb effect
+#### FIXED
+- icon spawning when coming back to main menu
+
 ## HGD-1.0.16
 #### ADDED
 - ship texture
