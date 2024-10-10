@@ -1,3 +1,8 @@
+## HGD-1.0.16
+#### ADDED
+- ship texture
+- ships on main menu
+
 ## HGD-1.0.15
 #### ADDED
 - icon on main menu

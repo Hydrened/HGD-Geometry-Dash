@@ -5,8 +5,8 @@ Player::Player(Game* g, Level* l, Checkpoint* s) : game(g), level(l), startpos(s
     json* saves = H2DE_Json::read("data/saves.json");
 
     icons = Icons();
-    icons.cube = (*saves)["icons"]["textures"]["cube"];
-    icons.ship = (*saves)["icons"]["textures"]["ship"];
+    icons.ids[CUBE] = (*saves)["icons"]["textures"]["cube"];
+    icons.ids[SHIP] = (*saves)["icons"]["textures"]["ship"];
     icons.colorIDs.push_back((*saves)["icons"]["colors"][0]);
     icons.colorIDs.push_back((*saves)["icons"]["colors"][1]);
     icons.glow = (*saves)["icons"]["glow"];
@@ -64,11 +64,11 @@ void Player::checkGroundCollisions() {
     } else if (velocity.y > 0.0f) {
         float topGroundsBottom = level->getTopGroundPos().y;
         
-        if (pos.y + gameData->sizes->redHitboxSizes[gamemode][size].h > topGroundsBottom) {
+        if (pos.y + gameData->sizes->redHitbox[gamemode][size].h > topGroundsBottom) {
             if (gravity == UPSIDE_DOWN) botOnSolid = true;
             else topOnSolid = true;
             velocity.y = 0.0f;
-            pos.y = topGroundsBottom - gameData->sizes->redHitboxSizes[gamemode][size].h;
+            pos.y = topGroundsBottom - gameData->sizes->redHitbox[gamemode][size].h;
         }
     }
 }
@@ -80,8 +80,8 @@ void Player::checkBlocksCollisions() {
     std::vector<Item*>* items = level->getItems();
     LevelPos camPos = camera->getPos();
 
-    Rect redPlayerRect = { pos.x + gameData->offsets->redHitboxOffsets[gamemode][size].x, pos.y + gameData->offsets->redHitboxOffsets[gamemode][size].y, gameData->sizes->redHitboxSizes[gamemode][size].w, gameData->sizes->redHitboxSizes[gamemode][size].h };
-    Rect bluePlayerRect = { pos.x + gameData->offsets->blueHitboxOffsets[gamemode][size].x, pos.y - gameData->offsets->blueHitboxOffsets[gamemode][size].y, gameData->sizes->blueHitboxSizes[gamemode][size].w, gameData->sizes->blueHitboxSizes[gamemode][size].h };
+    Rect redPlayerRect = { pos.x + gameData->offsets->redHitbox[gamemode][size].x, pos.y + gameData->offsets->redHitbox[gamemode][size].y, gameData->sizes->redHitbox[gamemode][size].w, gameData->sizes->redHitbox[gamemode][size].h };
+    Rect bluePlayerRect = { pos.x + gameData->offsets->blueHitbox[gamemode][size].x, pos.y + gameData->offsets->blueHitbox[gamemode][size].y, gameData->sizes->blueHitbox[gamemode][size].w, gameData->sizes->blueHitbox[gamemode][size].h };
     
     for (int i = startingItem; i < items->size(); i++) {
         Item* item = items->at(i);
@@ -116,7 +116,7 @@ void Player::checkBlocksCollisions() {
                             botOnSolid = (gravity == UPSIDE_DOWN);
                             topOnSolid = !botOnSolid;
                             velocity.y = 0;
-                            pos.y = blockData->pos.y - gameData->sizes->redHitboxSizes[gamemode][size].h + blockData->hitboxOffset.y;
+                            pos.y = blockData->pos.y - gameData->sizes->redHitbox[gamemode][size].h + blockData->hitboxOffset.y;
                         } break;
 
                         case BOTTOM: if ((gravity == RIGHT_SIDE_UP && canHitBottom) || (gravity == UPSIDE_DOWN && canHitTop)) {
@@ -131,8 +131,8 @@ void Player::checkBlocksCollisions() {
                         block->enter();
                     } break;
 
-                    redPlayerRect = { pos.x + gameData->offsets->redHitboxOffsets[gamemode][size].x, pos.y + gameData->offsets->redHitboxOffsets[gamemode][size].y, gameData->sizes->redHitboxSizes[gamemode][size].w, gameData->sizes->redHitboxSizes[gamemode][size].h };
-                    bluePlayerRect = { pos.x + gameData->offsets->blueHitboxOffsets[gamemode][size].x, pos.y - gameData->offsets->blueHitboxOffsets[gamemode][size].y, gameData->sizes->blueHitboxSizes[gamemode][size].w, gameData->sizes->blueHitboxSizes[gamemode][size].h };
+                    redPlayerRect = { pos.x + gameData->offsets->redHitbox[gamemode][size].x, pos.y + gameData->offsets->redHitbox[gamemode][size].y, gameData->sizes->redHitbox[gamemode][size].w, gameData->sizes->redHitbox[gamemode][size].h };
+                    bluePlayerRect = { pos.x + gameData->offsets->blueHitbox[gamemode][size].x, pos.y + gameData->offsets->blueHitbox[gamemode][size].y, gameData->sizes->blueHitbox[gamemode][size].w, gameData->sizes->blueHitbox[gamemode][size].h };
                 }
             }
         }
@@ -209,37 +209,72 @@ void Player::updateClicks() {
 
 // RENDER
 void Player::render() {
-    renderTexture();
+    static GameData* gameData = game->getData();
+
+    if (game->getState().main != LEVEL_DEAD) {
+        renderMainTexture();
+        if (gameData->other->iconSecondTexture[gamemode]) renderSecondTexture();
+    }
+
     if (game->getMegahack()->getHack("show-hitboxes")->active) renderHitboxes();
     renderPracticeCheckpoints();
 }
 
-void Player::renderTexture() {
+void Player::renderMainTexture() {
     static Calculator* calculator = game->getCalculator();
     static GameData* gameData = game->getData();
     static H2DE_Engine* engine = game->getEngine();
 
-    if (game->getState().main != LEVEL_DEAD) {
-        LevelPos offsetIconPos = { pos.x + gameData->offsets->iconOffsets[gamemode][size].x, pos.y + gameData->offsets->iconOffsets[gamemode][size].y };
-        H2DE_Size absRedHitboxSize = calculator->convertToPx(gameData->sizes->redHitboxSizes[gamemode][size]);
+    LevelSize iconSize = gameData->sizes->mainIcon[gamemode][size];
+    LevelOffset iconOffset = gameData->offsets->mainIcon[gamemode][size];
+    LevelPos iconPos = { pos.x + iconOffset.x, pos.y + iconOffset.y };
+    std::string gamemodeStrigified = gameData->other->gamemodeStringified[gamemode];
+    H2DE_Pos center = calculator->convertToPx(LevelOffset{ -iconOffset.x + gameData->sizes->redHitbox[gamemode][size].w / 2, iconOffset.y + gameData->sizes->redHitbox[gamemode][size].h / 2 });
 
-        H2DE_GraphicObject* col1 = H2DE_CreateGraphicObject();
-        col1->type = IMAGE;
-        col1->texture = "cube-" + std::to_string(icons.cube) + "-1.png";
-        col1->pos = calculator->convertToPx(offsetIconPos, gameData->sizes->iconSizes[gamemode][size], false, false);
-        col1->size = calculator->convertToPx(gameData->sizes->iconSizes[gamemode][size]);
-        col1->rotation = rotation;
-        col1->rotationOrigin = { absRedHitboxSize.w / 2, absRedHitboxSize.h / 2 };
-        col1->color = (H2DE_Color)(gameData->colors->icons[icons.colorIDs[0]]);
-        col1->index = Zindex{ T1, 1 }.getIndex();
-        H2DE_AddGraphicObject(engine, col1);
+    H2DE_GraphicObject* col1 = H2DE_CreateGraphicObject();
+    col1->type = IMAGE;
+    col1->texture = gamemodeStrigified + "-" + std::to_string(icons.ids[gamemode]) + "-1.png";
+    col1->pos = calculator->convertToPx(iconPos, iconSize, false, false);
+    col1->size = calculator->convertToPx(iconSize);
+    col1->rotation = rotation;
+    col1->rotationOrigin = center;
+    col1->color = (H2DE_Color)(gameData->colors->icons[icons.colorIDs[0]]);
+    col1->index = Zindex{ T1, 0 }.getIndex();
+    H2DE_AddGraphicObject(engine, col1);
 
-        H2DE_GraphicObject* col2 = H2DE_CreateGraphicObject(*col1);
-        col2->texture = "cube-" + std::to_string(icons.cube) + "-2.png";
-        col2->color = (H2DE_Color)(gameData->colors->icons[icons.colorIDs[1]]);
-        col2->index = Zindex{ T1, 0 }.getIndex();
-        H2DE_AddGraphicObject(engine, col2);
-    }
+    H2DE_GraphicObject* col2 = H2DE_CreateGraphicObject(*col1);
+    col2->texture = gamemodeStrigified + "-" + std::to_string(icons.ids[gamemode]) + "-2.png";
+    col2->color = (H2DE_Color)(gameData->colors->icons[icons.colorIDs[1]]);
+    col2->index = Zindex{ T1, 1 }.getIndex();
+    H2DE_AddGraphicObject(engine, col2);
+}
+
+void Player::renderSecondTexture() {
+    static Calculator* calculator = game->getCalculator();
+    static GameData* gameData = game->getData();
+    static H2DE_Engine* engine = game->getEngine();
+
+    LevelSize iconSize = { gameData->sizes->secondIcon[gamemode][size].w, gameData->sizes->secondIcon[gamemode][size].h };
+    LevelOffset iconOffset = gameData->offsets->secondIcon[gamemode][size];
+    LevelPos iconPos = { pos.x + iconOffset.x, pos.y + iconOffset.y };
+    H2DE_Pos center = calculator->convertToPx(LevelOffset{ -iconOffset.x + gameData->sizes->redHitbox[gamemode][size].w / 2, iconSize.h + iconOffset.y - gameData->sizes->redHitbox[gamemode][size].h / 2 });
+
+    H2DE_GraphicObject* col1 = H2DE_CreateGraphicObject();
+    col1->type = IMAGE;
+    col1->texture = "cube-0-1.png";
+    col1->pos = calculator->convertToPx(iconPos, iconSize, false, false);
+    col1->size = calculator->convertToPx(iconSize);
+    col1->rotation = rotation;
+    col1->rotationOrigin = center;
+    col1->color = (H2DE_Color)(gameData->colors->icons[icons.colorIDs[0]]);
+    col1->index = Zindex{ T1, -2 }.getIndex();
+    H2DE_AddGraphicObject(engine, col1);
+
+    H2DE_GraphicObject* col2 = H2DE_CreateGraphicObject(*col1);
+    col2->texture = "cube-0-2.png";
+    col2->color = (H2DE_Color)(gameData->colors->icons[icons.colorIDs[1]]);
+    col2->index = Zindex{ T1, -1 }.getIndex();
+    H2DE_AddGraphicObject(engine, col2);
 }
 
 void Player::renderHitboxes() {
@@ -247,12 +282,12 @@ void Player::renderHitboxes() {
     static GameData* gameData = game->getData();
     static H2DE_Engine* engine = game->getEngine();
 
-    H2DE_Size absRedHitboxSize = calculator->convertToPx(gameData->sizes->redHitboxSizes[gamemode][size]);
-    LevelPos offsetRedHitboxPos = { pos.x + gameData->offsets->redHitboxOffsets[gamemode][size].x, pos.y + gameData->offsets->redHitboxOffsets[gamemode][size].y };
+    H2DE_Size absRedHitboxSize = calculator->convertToPx(gameData->sizes->redHitbox[gamemode][size]);
+    LevelPos offsetRedHitboxPos = { pos.x + gameData->offsets->redHitbox[gamemode][size].x, pos.y + gameData->offsets->redHitbox[gamemode][size].y };
     
     H2DE_GraphicObject* redHitbox = H2DE_CreateGraphicObject();
     redHitbox->type = POLYGON;
-    redHitbox->pos = calculator->convertToPx(offsetRedHitboxPos, gameData->sizes->iconSizes[gamemode][size], false, false);
+    redHitbox->pos = calculator->convertToPx(offsetRedHitboxPos, gameData->sizes->redHitbox[gamemode][size], false, false);
     redHitbox->points = {
         { 0, 0 },
         { absRedHitboxSize.w, 0 },
@@ -263,11 +298,11 @@ void Player::renderHitboxes() {
     redHitbox->index = Zindex{ H, 0 }.getIndex();
     H2DE_AddGraphicObject(engine, redHitbox);
 
-    LevelPos offsetBlueHitboxPos = { pos.x + gameData->offsets->blueHitboxOffsets[gamemode][size].x, pos.y + gameData->offsets->blueHitboxOffsets[gamemode][size].y };
-    H2DE_Size blueHitboxSize = calculator->convertToPx(gameData->sizes->blueHitboxSizes[gamemode][size]);
+    LevelPos offsetBlueHitboxPos = { pos.x + gameData->offsets->blueHitbox[gamemode][size].x, pos.y + gameData->offsets->blueHitbox[gamemode][size].y };
+    H2DE_Size blueHitboxSize = calculator->convertToPx(gameData->sizes->blueHitbox[gamemode][size]);
 
     H2DE_GraphicObject* blueHitbox = H2DE_CreateGraphicObject(*redHitbox);
-    blueHitbox->pos = calculator->convertToPx(offsetBlueHitboxPos, gameData->sizes->iconSizes[gamemode][size], false, false);
+    blueHitbox->pos = calculator->convertToPx(offsetBlueHitboxPos, gameData->sizes->blueHitbox[gamemode][size], false, false);
     blueHitbox->points = {
         { 0, 0 },
         { blueHitboxSize.w, 0 },

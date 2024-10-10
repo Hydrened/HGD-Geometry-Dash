@@ -19,6 +19,8 @@ private:
     void renderMainMenu();
     void renderLevelMenu();
     void renderIcon();
+    void renderMainTexture();
+    void renderSecondTexture();
 
 public:
     Menu(Game* game);

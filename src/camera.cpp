@@ -52,6 +52,10 @@ void Camera::reset() {
     currentPos.y = initalPos.y;
 }
 
+void Camera::clearTM() {
+    H2DE_ClearTimelineManager(tm);
+}
+
 // GETTER
 LevelPos Camera::getPos() {
     return currentPos;

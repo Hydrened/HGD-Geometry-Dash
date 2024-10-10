@@ -36,7 +36,7 @@ void Game::createWindow(SDL_WindowFlags flag) {
         throw std::runtime_error("HGD-1000: Error creating window => SDL_Init failed: " + std::string(SDL_GetError()));
     }
 
-    window = SDL_CreateWindow("Geometry Dash 1.0 (1.0.15)", x, y, w, h, flag);
+    window = SDL_CreateWindow("Geometry Dash 1.0 (1.0.16)", x, y, w, h, flag);
     if (!window) {
         SDL_Quit();
         throw std::runtime_error("HGD-1001: Error creating window => SDL_CreateWindow failed: " + std::string(SDL_GetError()));
@@ -108,7 +108,7 @@ void Game::saveSettings() {
         (*settings)["window"]["w"] = winW;
         (*settings)["window"]["h"] = winH;
 
-        if (!H2DE_Json::write(SETTINGSpath, settings, 2)) {
+        if (!H2DE_Json::write(SETTINGSpath, settings, 4)) {
             throw std::runtime_error("HGD-3001: Error updating settings => Writing settings failed");
         }
     }
@@ -194,7 +194,6 @@ void Game::handleEvents(SDL_Event event) {
             level->getPlayer()->setClicking(true);
         } },
         { SDLK_SPACE, { { LEVEL_PAUSE, DEFAULT } }, [this]() {
-            level->getPlayer()->setClicking(true);
             level->resume();
         } },
 

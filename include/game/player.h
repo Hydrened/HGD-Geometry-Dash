@@ -45,7 +45,8 @@ private:
     void updatePercentage();
     void updateClicks();
 
-    void renderTexture();
+    void renderMainTexture();
+    void renderSecondTexture();
     void renderHitboxes();
     void renderPracticeCheckpoints();
 

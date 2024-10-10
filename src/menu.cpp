@@ -263,30 +263,75 @@ void Menu::renderLevelMenu() {
 }
 
 void Menu::renderIcon() {
+    static GameData* gameData = game->getData();
+
+    if (icon) {
+        renderMainTexture();
+        if (gameData->other->iconSecondTexture[icon->gamemode]) renderSecondTexture();
+    }
+}
+
+void Menu::renderMainTexture() {
     static H2DE_Engine* engine = game->getEngine();
     static GameData* gameData = game->getData();
     static Calculator* calculator = game->getCalculator();
 
-    if (icon) {
-        H2DE_Size absRedHitboxSize = calculator->convertToPx(gameData->sizes->redHitboxSizes[icon->gamemode][icon->size]);
+    Gamemode gamemode = icon->gamemode;
+    Size size = icon->size;
 
-        H2DE_GraphicObject* col1 = H2DE_CreateGraphicObject();
-        col1->type = IMAGE;
-        col1->texture = "cube-" + std::to_string(icon->id) + "-1.png";
-        col1->pos = calculator->convertToPx(icon->pos, gameData->sizes->iconSizes[icon->gamemode][icon->size], true, false);
-        col1->size = calculator->convertToPx(gameData->sizes->iconSizes[icon->gamemode][icon->size]);
-        col1->color = (H2DE_Color)(gameData->colors->icons[icon->col1]);
-        col1->rotationOrigin = { absRedHitboxSize.w / 2, absRedHitboxSize.h / 2 };
-        col1->rotation = icon->rotation;
-        col1->index = Zindex{ T1, 2 }.getIndex();
-        H2DE_AddGraphicObject(engine, col1);
+    LevelSize iconSize = gameData->sizes->mainIcon[gamemode][size];
+    LevelOffset iconOffset = gameData->offsets->mainIcon[gamemode][size];
+    LevelPos iconPos = { icon->pos.x + iconOffset.x, icon->pos.y + iconOffset.y };
+    std::string gamemodeStrigified = gameData->other->gamemodeStringified[gamemode];
+    H2DE_Pos center = calculator->convertToPx(LevelOffset{ -iconOffset.x + gameData->sizes->redHitbox[gamemode][size].w / 2, iconOffset.y + gameData->sizes->redHitbox[gamemode][size].h / 2 });
 
-        H2DE_GraphicObject* col2 = H2DE_CreateGraphicObject(*col1);
-        col2->texture = "cube-" + std::to_string(icon->id) + "-2.png";
-        col2->color = (H2DE_Color)(gameData->colors->icons[icon->col2]);
-        col2->index = Zindex{ T1, 1 }.getIndex();
-        H2DE_AddGraphicObject(engine, col2);
-    }
+    H2DE_GraphicObject* col1 = H2DE_CreateGraphicObject();
+    col1->type = IMAGE;
+    col1->texture = gamemodeStrigified + "-" + std::to_string(icon->id) + "-1.png";
+    col1->pos = calculator->convertToPx(iconPos, iconSize, true, false);
+    col1->size = calculator->convertToPx(iconSize);
+    col1->color = (H2DE_Color)(gameData->colors->icons[icon->col1]);
+    col1->rotationOrigin = center;
+    col1->rotation = icon->rotation;
+    col1->index = Zindex{ T1, 2 }.getIndex();
+    H2DE_AddGraphicObject(engine, col1);
+
+    H2DE_GraphicObject* col2 = H2DE_CreateGraphicObject(*col1);
+    col2->texture = gamemodeStrigified + "-" + std::to_string(icon->id) + "-2.png";
+    col2->color = (H2DE_Color)(gameData->colors->icons[icon->col2]);
+    col2->index = Zindex{ T1, 1 }.getIndex();
+    H2DE_AddGraphicObject(engine, col2);
+}
+
+void Menu::renderSecondTexture() {
+    static Calculator* calculator = game->getCalculator();
+    static GameData* gameData = game->getData();
+    static H2DE_Engine* engine = game->getEngine();
+
+    Gamemode gamemode = icon->gamemode;
+    Size size = icon->size;
+
+    LevelSize iconSize = { gameData->sizes->secondIcon[gamemode][size].w, gameData->sizes->secondIcon[gamemode][size].h };
+    LevelOffset iconOffset = gameData->offsets->secondIcon[gamemode][size];
+    LevelPos iconPos = { icon->pos.x + iconOffset.x, icon->pos.y + iconOffset.y };
+    H2DE_Pos center = calculator->convertToPx(LevelOffset{ -iconOffset.x + gameData->sizes->redHitbox[gamemode][size].w / 2, iconSize.h + iconOffset.y - gameData->sizes->redHitbox[gamemode][size].h / 2 });
+
+    H2DE_GraphicObject* col1 = H2DE_CreateGraphicObject();
+    col1->type = IMAGE;
+    col1->texture = "cube-0-1.png";
+    col1->pos = calculator->convertToPx(iconPos, iconSize, true, false);
+    col1->size = calculator->convertToPx(iconSize);
+    col1->rotation = icon->rotation;
+    col1->rotationOrigin = center;
+    col1->color = (H2DE_Color)(gameData->colors->icons[icon->col1]);
+    col1->index = Zindex{ T1, -2 }.getIndex();
+    H2DE_AddGraphicObject(engine, col1);
+
+    H2DE_GraphicObject* col2 = H2DE_CreateGraphicObject(*col1);
+    col2->texture = "cube-0-2.png";
+    col2->color = (H2DE_Color)(gameData->colors->icons[icon->col2]);
+    col2->index = Zindex{ T1, -1 }.getIndex();
+    H2DE_AddGraphicObject(engine, col2);
 }
 
 // GETTER

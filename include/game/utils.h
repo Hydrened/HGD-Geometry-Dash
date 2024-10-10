@@ -284,8 +284,7 @@ struct Hack {
 };
 
 struct Icons {
-    int cube;
-    int ship;
+    std::unordered_map<Gamemode, int> ids;
 
     std::vector<int> colorIDs;
     bool glow;

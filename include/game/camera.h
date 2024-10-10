@@ -20,6 +20,7 @@ public:
 
     void update();
     void reset();
+    void clearTM();
 
     LevelPos getPos();
 

@@ -94,6 +94,9 @@ Level::~Level() noexcept(false) {
     H2DE_DestroyTimelineManager(topGroundTM);
     H2DE_DestroyTimelineManager(botGroundTM);
 
+    game->getCamera()->clearTM();
+    game->getMegahack()->resetHitboxTrail();
+
     H2DE_PlaySFX(engine, "exit-level.ogg", 0);
 }
 
@@ -131,7 +134,7 @@ void Level::saveData() {
     (*saves)["levels"][stingifiedID]["progress"]["normal"] = bestNormalMode;
     (*saves)["levels"][stingifiedID]["progress"]["practice"] = bestPracticeMode;
 
-    if (!H2DE_Json::write(SAVESpath, saves, 2)) {
+    if (!H2DE_Json::write(SAVESpath, saves, 4)) {
         throw std::runtime_error("HGD-3002: Error saving player data => Writing player data failed");
     }
 }

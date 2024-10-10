@@ -41,7 +41,7 @@ void Megahack::saveHacks() {
         }
     }
 
-    if (!H2DE_Json::write(SAVESpath, saves, 2)) {
+    if (!H2DE_Json::write(SAVESpath, saves, 4)) {
         throw std::runtime_error("HGD-3003: Error saving hacks => Writing hacks failed");
     }
 }   
@@ -74,7 +74,7 @@ void Megahack::update() {
             for (int i = 0; i < hitboxTrail.size(); i++) {
                 Hitbox* hitbox = hitboxTrail[i];
 
-                if (hitbox->pos.x + gameData->sizes->redHitboxSizes[hitbox->gamemode][hitbox->size].w < camPos.x) {
+                if (hitbox->pos.x + gameData->sizes->redHitbox[hitbox->gamemode][hitbox->size].w < camPos.x) {
                     delete hitboxTrail[i];
                     hitboxTrail.erase(hitboxTrail.begin() + i);
                 } else break;
@@ -96,12 +96,12 @@ void Megahack::render() {
             Gamemode gamemode = hitbox->gamemode;
             Size size = hitbox->size;
 
-            H2DE_Size absRedHitboxSize = calculator->convertToPx(gameData->sizes->redHitboxSizes[gamemode][size]);
-            LevelPos offsetRedHitboxPos = { pos.x + gameData->offsets->redHitboxOffsets[gamemode][size].x, pos.y + gameData->offsets->redHitboxOffsets[gamemode][size].y };
+            H2DE_Size absRedHitboxSize = calculator->convertToPx(gameData->sizes->redHitbox[gamemode][size]);
+            LevelPos offsetRedHitboxPos = { pos.x + gameData->offsets->redHitbox[gamemode][size].x, pos.y + gameData->offsets->redHitbox[gamemode][size].y };
             
             H2DE_GraphicObject* redHitbox = H2DE_CreateGraphicObject();
             redHitbox->type = POLYGON;
-            redHitbox->pos = calculator->convertToPx(offsetRedHitboxPos, gameData->sizes->iconSizes[gamemode][size], false, false);
+            redHitbox->pos = calculator->convertToPx(offsetRedHitboxPos, gameData->sizes->redHitbox[gamemode][size], false, false);
             redHitbox->points = {
                 { 0, 0 },
                 { absRedHitboxSize.w, 0 },
@@ -112,11 +112,11 @@ void Megahack::render() {
             redHitbox->index = Zindex{ H, 0 }.getIndex();
             H2DE_AddGraphicObject(engine, redHitbox);
 
-            LevelPos offsetBlueHitboxPos = { pos.x + gameData->offsets->blueHitboxOffsets[gamemode][size].x, pos.y + gameData->offsets->blueHitboxOffsets[gamemode][size].y };
-            H2DE_Size blueHitboxSize = calculator->convertToPx(gameData->sizes->blueHitboxSizes[gamemode][size]);
+            LevelPos offsetBlueHitboxPos = { pos.x + gameData->offsets->blueHitbox[gamemode][size].x, pos.y + gameData->offsets->blueHitbox[gamemode][size].y };
+            H2DE_Size blueHitboxSize = calculator->convertToPx(gameData->sizes->blueHitbox[gamemode][size]);
 
             H2DE_GraphicObject* blueHitbox = H2DE_CreateGraphicObject(*redHitbox);
-            blueHitbox->pos = calculator->convertToPx(offsetBlueHitboxPos, gameData->sizes->iconSizes[gamemode][size], false, false);
+            blueHitbox->pos = calculator->convertToPx(offsetBlueHitboxPos, gameData->sizes->blueHitbox[gamemode][size], false, false);
             blueHitbox->points = {
                 { 0, 0 },
                 { blueHitboxSize.w, 0 },

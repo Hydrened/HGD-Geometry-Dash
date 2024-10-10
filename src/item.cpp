@@ -176,7 +176,7 @@ void Trigger::update() {
     Player* player = game->getLevel()->getPlayer();
 
     LevelPos playerPos = player->getPos();
-    LevelSize playerSize = gameData->sizes->redHitboxSizes[player->getGamemode()][player->getSize()];
+    LevelSize playerSize = gameData->sizes->redHitbox[player->getGamemode()][player->getSize()];
 
     H2DE_TickTimelineManager(effects);
 
