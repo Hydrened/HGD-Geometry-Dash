@@ -34,6 +34,7 @@ private:
     int startingItem = 0;
     std::optional<Block*> hoveredOrb;
     std::vector<Checkpoint*> practiceCheckpoints;
+    std::unordered_map<int, Face> collidedBlockFace;
 
     void click();
     void kill();

@@ -20,6 +20,11 @@
             "active": true,
             "keycode": 56,
             "name": "hitbox-trail"
+        },
+        {
+            "active": false,
+            "keycode": 61,
+            "name": "speedhack"
         }
     ],
     "icons": {
@@ -35,31 +40,31 @@
     },
     "levels": {
         "0": {
-            "attempts": 1358,
-            "clicks": 13116,
+            "attempts": 1483,
+            "clicks": 15507,
             "coins": [
                 true,
                 true,
                 true
             ],
-            "jumps": 7862,
+            "jumps": 8578,
             "progress": {
                 "normal": 100.0,
                 "practice": 100.0
             }
         },
         "1": {
-            "attempts": 287,
-            "clicks": 567,
+            "attempts": 305,
+            "clicks": 584,
             "coins": [
                 false,
                 false,
                 false
             ],
-            "jumps": 288,
+            "jumps": 303,
             "progress": {
-                "normal": 0,
-                "practice": 0
+                "normal": 8.614999771118164,
+                "practice": 0.0
             }
         },
         "1222": {

@@ -121,7 +121,7 @@ struct GameData {
         Physics() {
             gravities[CUBE][BIG] = -0.0244;
             gravities[CUBE][MINI] = 0.0f;
-            gravities[SHIP][BIG] = -0.011f;
+            gravities[SHIP][BIG] = -0.009;
             gravities[SHIP][MINI] = 0.0f;
 
             maxGravities[CUBE][BIG] = 0.4f;
@@ -131,13 +131,13 @@ struct GameData {
 
             clicks[CUBE][BIG] = 0.3332;
             clicks[CUBE][MINI] = 0.0f;
-            clicks[SHIP][BIG] = 0.03;
+            clicks[SHIP][BIG] = 0.023;
             clicks[SHIP][MINI] = 0.0f;
 
             rotations[CUBE][BIG] = 7.0f;
             rotations[CUBE][MINI] = 7.0f;
-            rotations[SHIP][BIG] = -200.0f;
-            rotations[SHIP][MINI] = -200.0f;
+            rotations[SHIP][BIG] = -44.5;
+            rotations[SHIP][MINI] = -44.5;
 
             pads[YELLOW_PAD][CUBE][BIG] = 1.3f;
             pads[YELLOW_PAD][CUBE][MINI] = 0.0f;

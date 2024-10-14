@@ -101,19 +101,24 @@ void Menu::updateIcon() {
             }
         }
 
-        float gmRotation = gameData->physics->rotations[gamemode][size];
-        float defaultRotationIncr = gameData->physics->rotations[CUBE][size];
-
         if (icon->onSolid) {
+            float defaultRotationIncr = gameData->physics->rotations[CUBE][size];
             int remain = 90 - fmod(std::abs(icon->rotation), 90);
 
             if (remain != 0) {
                 if (remain < 45) icon->rotation += ((remain > defaultRotationIncr) ? defaultRotationIncr : remain);
                 else icon->rotation -= ((90 - remain > defaultRotationIncr) ? defaultRotationIncr : 90 - remain);
             }
-        } else switch (gamemode) {
-            case CUBE: icon->rotation += gmRotation; break;
-            case SHIP: icon->rotation = icon->velocity.y * gmRotation; break;
+        } else {
+            float gmRotation = gameData->physics->rotations[gamemode][size];
+            
+            switch (gamemode) {
+                case CUBE: icon->rotation += gmRotation; break;
+                case SHIP:
+                    float a = icon->velocity.y / maxGravity;
+                    icon->rotation = pow(abs(a), 1.15f) * (a < 0 ? -1 : 1) * gmRotation;
+                    break;
+            }
         }
 
         if (icon->rotation > 360) icon->rotation -= 360;

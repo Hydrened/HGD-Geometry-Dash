@@ -105,18 +105,24 @@ void Player::checkBlocksCollisions() {
             Rect{ blockPos.x + blockOffset.x - 0.01f, blockPos.y + blockOffset.y - 0.01f, blockSize.w + 0.01f, blockSize.h + 0.01f } :
             Rect{ blockPos.x + blockOffset.x, blockPos.y + blockOffset.y, blockSize.w, blockSize.h };
 
+        bool positionChanged = false;
+
         if (blockData->type != OBSTACLE) {
             if (Rect::intersect(&redPlayerRect, &blockRect)) {
                 bool canHitTop = gameData->physics->canHitTop[gamemode];
                 bool canHitBottom = gameData->physics->canHitBottom[gamemode];
 
+                Face collidedFace = Rect::getCollidedFace(&redPlayerRect, &blockRect);
+                if (collidedBlockFace.find(i) == collidedBlockFace.end()) collidedBlockFace[i] = collidedFace;
+
                 switch (blockData->type) {
-                    case SOLID: switch (Rect::getCollidedFace(&redPlayerRect, &blockRect)) {
+                    case SOLID: switch (collidedBlockFace[i]) {
                         case TOP: if ((gravity == RIGHT_SIDE_UP && canHitTop) || (gravity == UPSIDE_DOWN && canHitBottom)) {
                             botOnSolid = (gravity == UPSIDE_DOWN);
                             topOnSolid = !botOnSolid;
                             velocity.y = 0;
                             pos.y = blockData->pos.y - gameData->sizes->redHitbox[gamemode][size].h + blockData->hitboxOffset.y;
+                            positionChanged = true;
                         } break;
 
                         case BOTTOM: if ((gravity == RIGHT_SIDE_UP && canHitBottom) || (gravity == UPSIDE_DOWN && canHitTop)) {
@@ -124,6 +130,7 @@ void Player::checkBlocksCollisions() {
                             topOnSolid = !botOnSolid;
                             velocity.y = 0;
                             pos.y = blockData->pos.y + blockData->hitboxSize.h + blockData->hitboxOffset.y;
+                            positionChanged = true;
                         } break;
                     } break;
 
@@ -134,10 +141,10 @@ void Player::checkBlocksCollisions() {
                     redPlayerRect = { pos.x + gameData->offsets->redHitbox[gamemode][size].x, pos.y + gameData->offsets->redHitbox[gamemode][size].y, gameData->sizes->redHitbox[gamemode][size].w, gameData->sizes->redHitbox[gamemode][size].h };
                     bluePlayerRect = { pos.x + gameData->offsets->blueHitbox[gamemode][size].x, pos.y + gameData->offsets->blueHitbox[gamemode][size].y, gameData->sizes->blueHitbox[gamemode][size].w, gameData->sizes->blueHitbox[gamemode][size].h };
                 }
-            }
+            } else if (collidedBlockFace.find(i) != collidedBlockFace.end()) collidedBlockFace.erase(i);
         }
 
-        if (!hacks["noclip"]->active) {
+        if (!hacks["noclip"]->active && !positionChanged) {
             if (blockData->type != SPECIAL) {
                 Rect playerRect = (blockData->type == SOLID) ? bluePlayerRect : redPlayerRect;
 
@@ -171,10 +178,10 @@ void Player::checkBlocksCollisions() {
 
 void Player::updateRotation() {
     static GameData* gameData = game->getData();
-    float gmRotation = gameData->physics->rotations[gamemode][size];
-    float defaultRotationIncr = gameData->physics->rotations[CUBE][size];
 
     if (botOnSolid || topOnSolid) {
+        float defaultRotationIncr = gameData->physics->rotations[CUBE][size];
+
         int remain = (gravity == RIGHT_SIDE_UP) ? 90 - fmod(std::abs(rotation), 90) : fmod(std::abs(rotation), 90);
         int rotationSense = (botOnSolid) ? 1 : -1;
 
@@ -182,9 +189,17 @@ void Player::updateRotation() {
             if (remain < 45) rotation += ((remain > defaultRotationIncr) ? defaultRotationIncr : remain) * rotationSense;
             else rotation -= ((90 - remain > defaultRotationIncr) ? defaultRotationIncr : 90 - remain) * rotationSense;
         }
-    } else switch (gamemode) {
-        case CUBE: rotation += gmRotation * gravity; break;
-        case SHIP: rotation = velocity.y * gmRotation; break;
+    } else {
+        float maxGravity = gameData->physics->maxGravities[gamemode][size];
+        float gmRotation = gameData->physics->rotations[gamemode][size];
+
+        switch (gamemode) {
+            case CUBE: rotation += gmRotation * gravity; break;
+            case SHIP:
+                float a = velocity.y / maxGravity;
+                rotation = pow(abs(a), 1.15f) * (a < 0 ? -1 : 1) * gmRotation;
+                break;
+        }
     }
 
     if (rotation > 360) rotation -= 360;
@@ -399,6 +414,7 @@ void Player::reset(Checkpoint* c) {
     orbBuffer = false;
 
     startingItem = 0;
+    collidedBlockFace.clear();
 }
 
 // PRACTICE MODE

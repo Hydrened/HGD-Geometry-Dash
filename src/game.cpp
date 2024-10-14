@@ -36,7 +36,7 @@ void Game::createWindow(SDL_WindowFlags flag) {
         throw std::runtime_error("HGD-1000: Error creating window => SDL_Init failed: " + std::string(SDL_GetError()));
     }
 
-    window = SDL_CreateWindow("Geometry Dash 1.0 (1.0.17)", x, y, w, h, flag);
+    window = SDL_CreateWindow("Geometry Dash 1.0 (1.0.18)", x, y, w, h, flag);
     if (!window) {
         SDL_Quit();
         throw std::runtime_error("HGD-1001: Error creating window => SDL_CreateWindow failed: " + std::string(SDL_GetError()));
@@ -116,12 +116,14 @@ void Game::saveSettings() {
 
 // RUN
 void Game::run() {
-    const int timePerFrame = 1000 / FPS;
     Uint32 now, fpsTimer, strt, handleEventsTime, updateTime, renderTime = SDL_GetTicks();
     int frameTime;
     SDL_Event event;
 
     while (isRunning) {
+        float speed = (megahack->getHack("speedhack")->active) ? 0.5f: 1.0f;
+        int timePerFrame = 1000 / FPS / speed;
+
         now = SDL_GetTicks();
         strt = SDL_GetTicks();
 

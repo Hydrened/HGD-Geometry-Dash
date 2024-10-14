@@ -1,3 +1,13 @@
+## HGD-1.0.18
+#### ADDED
+- speedhack
+#### FIXED
+- ship rotation
+- cube landing bug
+- ship physics
+- ship tp on corner overlap
+- noclip tp
+
 ## HGD-1.0.17
 #### ADDED
 - main menu rgb effect
