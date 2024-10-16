@@ -18,8 +18,8 @@ H2DE_Pos Calculator::convertToPx(LevelPos p, LevelSize s, bool lx, bool ly) {
     LevelPos c = game->getCamera()->getPos();
 
     return {
-        static_cast<int>((lx) ? p.x * blockSize : (p.x - c.x) * blockSize),
-        engineSize.h - static_cast<int>((p.y - c.y + s.h) * blockSize)
+        (int)((lx) ? p.x * blockSize : (p.x - c.x) * blockSize),
+        (int)((ly) ? engineSize.h - (p.y + s.h) * blockSize : engineSize.h - (p.y - c.y + s.h) * blockSize)
     };
 }
 

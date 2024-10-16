@@ -190,14 +190,21 @@ struct Rect {
     };
 
     static Face getCollidedFace(Rect* rect1, Rect* rect2) {
-        float overlapLeft = rect1->x + rect1->w - rect2->x;
-        float overlapTop = rect1->y + rect1->h - rect2->y;
-        float overlapBottom = rect2->y + rect2->h - rect1->y;
-        float minOverlap = std::min({ overlapLeft, overlapTop, overlapBottom });
-        
-        if (minOverlap == overlapTop) return TOP;
-        else if (minOverlap == overlapBottom) return BOTTOM;
-        else return RIGHT;
+        float dr = rect1->getMaxX() - rect2->getMinX();
+        float dl = rect2->getMaxX() - rect1->getMinX();
+        float dt = rect1->getMaxY() - rect2->getMinY();
+        float db = rect2->getMaxY() - rect1->getMinY();
+
+        float dmin = std::min({ dr, dl, db, dt });
+
+        if (dr == dmin) return RIGHT;
+        else if (dt == dmin) return TOP;
+        else if (db == dmin) return BOTTOM;
+        else {
+            if (db > dt) return TOP;
+            else return BOTTOM;
+            return LEFT;
+        }
     }
 };
 

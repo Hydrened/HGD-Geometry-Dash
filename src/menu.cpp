@@ -34,15 +34,13 @@ Menu::Menu(Game* g) : game(g) {
     H2DE_AddTimelineToManager(tm, colorLoop);
 
     spawnIcon();
-    H2DE_PlaySong(engine, "menu_loop.mp3", -1);
+    H2DE_PlaySound(engine, 0, "menu_loop.mp3", -1);
 }
 
 // CLEANUP
 Menu::~Menu() {
     static H2DE_Engine* engine = game->getEngine();
     H2DE_DestroyTimelineManager(tm);
-    
-    H2DE_PauseSong(engine);
 }
 
 void Menu::resetMainMenu() {

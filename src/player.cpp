@@ -137,7 +137,9 @@ void Player::checkBlocksCollisions() {
                     case SPECIAL: if (!block->entered()) {
                         block->enter();
                     } break;
+                }
 
+                if (positionChanged) {
                     redPlayerRect = { pos.x + gameData->offsets->redHitbox[gamemode][size].x, pos.y + gameData->offsets->redHitbox[gamemode][size].y, gameData->sizes->redHitbox[gamemode][size].w, gameData->sizes->redHitbox[gamemode][size].h };
                     bluePlayerRect = { pos.x + gameData->offsets->blueHitbox[gamemode][size].x, pos.y + gameData->offsets->blueHitbox[gamemode][size].y, gameData->sizes->blueHitbox[gamemode][size].w, gameData->sizes->blueHitbox[gamemode][size].h };
                 }
@@ -381,8 +383,8 @@ void Player::kill() {
     static H2DE_Engine* engine = game->getEngine();
 
     game->setState({ LEVEL_DEAD, DEFAULT });
-    if (level->getMode() == NORMAL_MODE) H2DE_PauseSong(engine);
-    H2DE_PlaySFX(engine, "death-sound.ogg", 0);
+    if (level->getMode() == NORMAL_MODE) H2DE_PauseSound(engine, 0);
+    H2DE_PlaySound(engine, 1, "death-sound.ogg", 0);
 
     Game::delay(1000, [this]() { level->respawn(); });
 }
@@ -493,6 +495,7 @@ void Player::setGamemode(Gamemode g, float y, unsigned int ms) {
     LevelPos camPos = camera->getPos();
 
     gamemode = g;
+    rotation = 0;
     int gamemodeHeight = gameData->sizes->gamemodeHeights[g];
 
     float newTopGroundPosY, newBotGroundPosY;

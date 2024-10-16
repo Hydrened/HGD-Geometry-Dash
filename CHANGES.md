@@ -1,6 +1,16 @@
+## HGD-1.0.19
+#### ADDED
+- practice buttons
+- respawn shortcut (r)
+#### FIXED
+- going though blocks
+- multiple sound playing at the same time
+- rotation reset when updating gamemode
+- all unvalid textures
+
 ## HGD-1.0.18
 #### ADDED
-- speedhack
+- speedhack ("=")
 #### FIXED
 - ship rotation
 - cube landing bug
@@ -25,7 +35,7 @@
 
 ## HGD-1.0.14
 #### ADDED
-- hitbox trail hack
+- hitbox trail hack ("_")
 - all cubes
 
 ## HGD-1.0.13
@@ -40,7 +50,7 @@
 #### ADDED
 - pusab font
 - main menu mooving
-- practice mode
+- practice mode (p)
 - touch trigger 
 - exit level sfx
 #### FIXED
@@ -53,7 +63,7 @@
 - yellow orb
 - main menu
 - menu transitions
-- no transition hack
+- no transition hack ("ç")
 #### FIXED
 - background x offset on death
 
@@ -98,7 +108,7 @@
 #### ADDED
 - respawn
 - load volume from saves
-- showhitboxes hack
+- showhitboxes hack (")")
 #### FIXED
 - pause song when paused
 - resume song when resumed
@@ -110,7 +120,7 @@
 ## HGD-1.0.3
 #### ADDED
 - megahack
-- noclip
+- noclip ("à")
 
 ## HGD-1.0.2
 #### ADDED

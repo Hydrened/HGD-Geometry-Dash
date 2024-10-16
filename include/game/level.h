@@ -55,6 +55,8 @@ private:
 
     void updateBackground();
     void updateBackgroundY();
+    void renderElements();
+    void renderPracticeUI();
 
     static bool sortItems(Item* item1, Item* item2);
 

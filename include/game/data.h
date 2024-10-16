@@ -14,7 +14,9 @@ struct GameData {
         float cameraMaxY = 80.0f;
         float backgroundMinY = -4.0f;
         float backgroundMaxY = 70.0f;
+
         LevelPos progressBar = { 0.0f, 0.0f };
+        LevelPos practiceButtons = { 7.3f, 0.5f };
 
         // main menu
         LevelPos gameTitle = { 13.05f, 8.89f };
@@ -38,6 +40,8 @@ struct GameData {
         std::unordered_map<Gamemode, std::unordered_map<Size, LevelSize>> redHitbox;
         std::unordered_map<Gamemode, std::unordered_map<Size, LevelSize>> blueHitbox;
         std::unordered_map<Gamemode, std::unordered_map<Size, LevelSize>> secondIcon;
+
+        LevelSize practiceButtons = { 4.25f, 1.6f };
 
         // main menu
         LevelSize gameTitle = { 74.61f, 14.86f };
@@ -200,9 +204,9 @@ struct GameData {
         };
 
         Colors() {
-            hitboxes[SOLID] = { 128, 128, 255, 255 };
-            hitboxes[OBSTACLE] = { 255, 128, 128, 255 };
-            hitboxes[SPECIAL] = { 128, 255, 128, 255 };
+            hitboxes[SOLID] = { 0, 0, 255, 255 };
+            hitboxes[OBSTACLE] = { 255, 0, 0, 255 };
+            hitboxes[SPECIAL] = { 0, 255, 0, 255 };
             hitboxes[DECORATION] = { 0, 0, 0, 0 };
         }
     };

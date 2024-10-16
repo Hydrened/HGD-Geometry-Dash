@@ -22,7 +22,7 @@ Level::Level(Game* g, int i) : game(g), id(i) {
 
     Game::delay(1000, [this]() {
         game->setState({ LEVEL_PLAYING, DEFAULT });
-        H2DE_PlaySong(engine, data->song, 0);
+        H2DE_PlaySound(engine, 0, data->song, 0);
     }); // error => rare crash
 }
 
@@ -96,8 +96,6 @@ Level::~Level() noexcept(false) {
 
     game->getCamera()->clearTM();
     game->getMegahack()->resetHitboxTrail();
-
-    H2DE_PlaySFX(engine, "exit-level.ogg", 0);
 }
 
 void Level::saveData() {
@@ -179,6 +177,14 @@ void Level::updateBackgroundY() {
 
 // RENDER
 void Level::render() {
+    renderElements();
+    if (mode == PRACTICE_MODE) renderPracticeUI();
+
+    for (Item* item : items) item->render();
+    player->render();
+}
+
+void Level::renderElements() {
     static GameData* gameData = game->getData();
     static H2DE_Engine* engine = game->getEngine();
     static Calculator* calculator = game->getCalculator();
@@ -228,9 +234,23 @@ void Level::render() {
     H2DE_GraphicObject* topLine = H2DE_CreateGraphicObject(*botLine);
     topLine->pos = calculator->convertToPx({ gameData->offsets->topLine.x, topGroundVisualPos.y + gameData->offsets->topLine.y }, gameData->sizes->line, true, false);
     H2DE_AddGraphicObject(engine, topLine);
+}
 
-    for (Item* item : items) item->render();
-    player->render();
+void Level::renderPracticeUI() {
+    static GameData* gameData = game->getData();
+    static H2DE_Engine* engine = game->getEngine();
+    static Calculator* calculator = game->getCalculator();
+
+    H2DE_GraphicObject* practiceButtons = H2DE_CreateGraphicObject();
+    practiceButtons->type = IMAGE;
+    practiceButtons->pos = calculator->convertToPx(gameData->positions->practiceButtons, gameData->sizes->practiceButtons, true, true);
+    practiceButtons->size = calculator->convertToPx(gameData->sizes->practiceButtons);
+    practiceButtons->texture = "practice-buttons.png";
+    practiceButtons->index = Zindex{ UI, 0 }.getIndex();
+    H2DE_AddGraphicObject(engine, practiceButtons);
+
+    // H2DE_GraphicObject* addKey = H2DE_CreateGraphicObject();
+    // addKey->type = TEXT;
 }
 
 // STATIC
@@ -350,8 +370,8 @@ void Level::setMode(LevelMode m) {
     static std::vector<std::string> modes = { "normal", "practice" };
     
     mode = m;
-    if (mode == PRACTICE_MODE) H2DE_PlaySong(engine, "stay-inside-me.mp3", -1);
-    H2DE_PauseSong(engine);
+    if (mode == PRACTICE_MODE) H2DE_PlaySound(engine, 0, "stay-inside-me.mp3", -1);
+    H2DE_PauseSound(engine, 0);
 
     std::cout << "Now in " << modes[mode] << " mode" << std::endl;
 }
@@ -369,7 +389,6 @@ void Level::finish() {
     static H2DE_Engine* engine = game->getEngine();
 
     game->setState({ LEVEL_END, DEFAULT });
-    H2DE_PauseSong(engine);
 
     if (mode == NORMAL_MODE) bestNormalMode = 100.0f;
     else bestPracticeMode = 100.0f;
@@ -393,14 +412,14 @@ void Level::finish() {
 void Level::pause() {
     static H2DE_Engine* engine = game->getEngine();
 
-    H2DE_PauseSong(engine);
+    H2DE_PauseSound(engine, -1);
     game->setState({ LEVEL_PAUSE, DEFAULT });
 }
 
 void Level::resume() {
     static H2DE_Engine* engine = game->getEngine();
     
-    H2DE_ResumeSong(engine);
+    H2DE_ResumeSound(engine, -1);
     game->setState({ LEVEL_PLAYING, DEFAULT });
 }
 
@@ -430,7 +449,7 @@ void Level::respawn() {
 
         player->reset(&(data->startpos));
 
-        if (mode == NORMAL_MODE) H2DE_PlaySong(engine, data->song, 0);
+        if (mode == NORMAL_MODE) H2DE_PlaySound(engine, 0, data->song, 0);
 
     } else if (mode == PRACTICE_MODE) {
         camera->setPos(lastPracticeCheckpoint->camPos, 0);
@@ -445,6 +464,7 @@ void Level::respawn() {
 
     updateBackgroundY();
     game->setState({ LEVEL_PLAYING, DEFAULT });
+    H2DE_ResumeSound(engine, -1);
 
     attempts++;
     std::cout << "Attempt " << attempts << std::endl;

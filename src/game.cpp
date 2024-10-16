@@ -36,7 +36,7 @@ void Game::createWindow(SDL_WindowFlags flag) {
         throw std::runtime_error("HGD-1000: Error creating window => SDL_Init failed: " + std::string(SDL_GetError()));
     }
 
-    window = SDL_CreateWindow("Geometry Dash 1.0 (1.0.18)", x, y, w, h, flag);
+    window = SDL_CreateWindow("Geometry Dash 1.0 (1.0.19)", x, y, w, h, flag);
     if (!window) {
         SDL_Quit();
         throw std::runtime_error("HGD-1001: Error creating window => SDL_CreateWindow failed: " + std::string(SDL_GetError()));
@@ -64,10 +64,7 @@ void Game::createWindow(SDL_WindowFlags flag) {
 void Game::loadVolumes() {
     std::string SAVESpath = "data/saves.json";
     json* saves = H2DE_Json::read(SAVESpath);
-
-    json volume = (*saves)["volume"];
-    H2DE_SetSongVolume(engine, volume["song"]);
-    H2DE_SetSFXVolume(engine, -1, volume["sfx"]);
+    H2DE_SetSoundVolume(engine, -1, (*saves)["volume"]);
 }
 
 // CLEANUP
@@ -172,6 +169,7 @@ void Game::handleEvents(SDL_Event event) {
             level->pause();
         } },
         { SDLK_ESCAPE, { { LEVEL_PAUSE, DEFAULT }, { LEVEL_END, DEFAULT } }, [this]() {
+            H2DE_PlaySound(engine, 1, "exit-level.ogg", 0);
             setState({ LEVEL_MENU, DEFAULT }, getTransitionDuration(500), [this]() {
                 closeLevel();
                 openMenu();
@@ -187,7 +185,8 @@ void Game::handleEvents(SDL_Event event) {
             setState({ LEVEL_MENU, DEFAULT }, getTransitionDuration(500), NULL);
         } },
         { SDLK_SPACE, { { LEVEL_MENU, DEFAULT } }, [this]() {
-            H2DE_PlaySFX(engine, "play-level.ogg", 0);
+            H2DE_PauseSound(engine, 0);
+            H2DE_PlaySound(engine, 1, "play-level.ogg", 0);
             setState({ LEVEL_STARTING_DELAY, DEFAULT }, getTransitionDuration(500), [this]() {
                 openLevel();
                 closeMenu();
@@ -214,7 +213,7 @@ void Game::handleEvents(SDL_Event event) {
 
 
 
-        { SDLK_r, { { LEVEL_PAUSE, DEFAULT } }, [this]() {
+        { SDLK_r, { { LEVEL_PAUSE, DEFAULT }, { LEVEL_PLAYING, DEFAULT } }, [this]() {
             level->respawn();
         } },
         { SDLK_p, { { LEVEL_PAUSE, DEFAULT } }, [this]() {

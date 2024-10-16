@@ -23,6 +23,7 @@
         },
         "sprites": 4
     },
+
     "1_1": {
         "size": {
             "texture": { "w": 1, "h": 1 },
@@ -121,7 +122,7 @@
     "1_6": {
         "size": {
             "texture": { "w": 1, "h": 1 },
-            "hitbox": { "w": 1, "h": 1 }
+            "hitbox": { "w": 0, "h": 0 }
         },
         "offset": {
             "texture": { "x": 0, "y": 0 },
@@ -140,7 +141,7 @@
     "1_7": {
         "size": {
             "texture": { "w": 1, "h": 1 },
-            "hitbox": { "w": 1, "h": 1 }
+            "hitbox": { "w": 0, "h": 0 }
         },
         "offset": {
             "texture": { "x": 0, "y": 0 },
@@ -213,6 +214,7 @@
         },
         "type": 0
     },
+
     "4_1": {
         "size": {
             "texture": { "w": 1, "h": 1 },
@@ -253,22 +255,22 @@
     },
     "4_3": {
         "size": {
-            "texture": { "w": 1, "h": 1 },
-            "hitbox": { "w": 1, "h": 1 }
+            "texture": { "w": 0.66, "h": 0.64 },
+            "hitbox": { "w": 0.135, "h": 0.25 }
         },
         "offset": {
-            "texture": { "x": 0, "y": 0 },
-            "hitbox": { "x": 0, "y": 0 }
+            "texture": { "x": 0.17, "y": -0.02 },
+            "hitbox": { "x": 0.4325, "y": 0.18 }
         },
         "origin": {
-            "x": 0.5,
-            "y": 0.5
+            "x": 0.33,
+            "y": 0.12
         },
         "zIndex": {
-            "layer": "B2",
+            "layer": "T1",
             "order": 2
         },
-        "type": 3
+        "type": 1
     },
     "4_31": {
         "size": {
@@ -289,6 +291,7 @@
         },
         "type": 1
     },
+
     "6_1": {
         "size": {
             "texture": { "w": 0.84, "h": 0.15 },
@@ -473,6 +476,45 @@
             "desc": 1
         }
     },
+    
+    "11_1": {
+        "size": {
+            "texture": { "w": 0.63, "h": 2.305 },
+            "hitbox": { "w": 0, "h": 0 }
+        },
+        "offset": {
+            "texture": { "x": 0.185, "y": -0.01 },
+            "hitbox": { "x": 0, "y": 0 }
+        },
+        "origin": {
+            "x": 0.315,
+            "y": 1.805
+        },
+        "zIndex": {
+            "layer": "B1",
+            "order": 9
+        },
+        "type": 3
+    },
+    "11_2": {
+        "size": {
+            "texture": { "w": 0.63, "h": 1.11 },
+            "hitbox": { "w": 0, "h": 0 }
+        },
+        "offset": {
+            "texture": { "x": 0.185, "y": -0.01 },
+            "hitbox": { "x": 0, "y": 0 }
+        },
+        "origin": {
+            "x": 0.315,
+            "y": 0.61
+        },
+        "zIndex": {
+            "layer": "B1",
+            "order": 9
+        },
+        "type": 3
+    },
     "11_193": {
         "size": {
             "texture": { "w": 4.2, "h": 1.4 },
@@ -550,180 +592,64 @@
         "type": 3
     },
 
-
-    
-
-    "1_815": {
-        "size": {
-            "texture": { "w": 1, "h": 1 },
-            "hitbox": { "w": 1, "h": 1 }
-        },
-        "offset": {
-            "texture": { "x": 0, "y": 0 },
-            "hitbox": { "x": 0, "y": 0 }
-        },
-        "origin": {
-            "x": 0.5,
-            "y": 0.5
-        },
-        "zIndex": {
-            "layer": "B2",
-            "order": 2
-        },
-        "type": 3
-    },
-    "1_816": {
-        "size": {
-            "texture": { "w": 1, "h": 1 },
-            "hitbox": { "w": 1, "h": 1 }
-        },
-        "offset": {
-            "texture": { "x": 0, "y": 0 },
-            "hitbox": { "x": 0, "y": 0 }
-        },
-        "origin": {
-            "x": 0.5,
-            "y": 0.5
-        },
-        "zIndex": {
-            "layer": "B2",
-            "order": 2
-        },
-        "type": 3
-    },
-    "1_817": {
-        "size": {
-            "texture": { "w": 1, "h": 1 },
-            "hitbox": { "w": 1, "h": 1 }
-        },
-        "offset": {
-            "texture": { "x": 0, "y": 0 },
-            "hitbox": { "x": 0, "y": 0 }
-        },
-        "origin": {
-            "x": 0.5,
-            "y": 0.5
-        },
-        "zIndex": {
-            "layer": "B2",
-            "order": 2
-        },
-        "type": 3
-    },
-    "1_818": {
-        "size": {
-            "texture": { "w": 1, "h": 1 },
-            "hitbox": { "w": 1, "h": 1 }
-        },
-        "offset": {
-            "texture": { "x": 0, "y": 0 },
-            "hitbox": { "x": 0, "y": 0 }
-        },
-        "origin": {
-            "x": 0.5,
-            "y": 0.5
-        },
-        "zIndex": {
-            "layer": "B2",
-            "order": 2
-        },
-        "type": 3
-    },
-    "11_1": {
-        "size": {
-            "texture": { "w": 1, "h": 1 },
-            "hitbox": { "w": 1, "h": 1 }
-        },
-        "offset": {
-            "texture": { "x": 0, "y": 0 },
-            "hitbox": { "x": 0, "y": 0 }
-        },
-        "origin": {
-            "x": 0.5,
-            "y": 0.5
-        },
-        "zIndex": {
-            "layer": "B2",
-            "order": 2
-        },
-        "type": 3
-    },
-    "11_2": {
-        "size": {
-            "texture": { "w": 1, "h": 1 },
-            "hitbox": { "w": 1, "h": 1 }
-        },
-        "offset": {
-            "texture": { "x": 0, "y": 0 },
-            "hitbox": { "x": 0, "y": 0 }
-        },
-        "origin": {
-            "x": 0.5,
-            "y": 0.5
-        },
-        "zIndex": {
-            "layer": "B2",
-            "order": 2
-        },
-        "type": 3
-    },
     "12_77": {
         "size": {
-            "texture": { "w": 1, "h": 1 },
-            "hitbox": { "w": 1, "h": 1 }
+            "texture": { "w": 0.215, "h": 1.4 },
+            "hitbox": { "w": 0, "h": 0 }
         },
         "offset": {
-            "texture": { "x": 0, "y": 0 },
+            "texture": { "x": 0.3925, "y": 0 },
             "hitbox": { "x": 0, "y": 0 }
         },
         "origin": {
-            "x": 0.5,
-            "y": 0.5
+            "x": 0.1075,
+            "y": 0.9
         },
         "zIndex": {
             "layer": "B2",
-            "order": 2
+            "order": -6
         },
         "type": 3
     },
     "12_78": {
         "size": {
-            "texture": { "w": 1, "h": 1 },
-            "hitbox": { "w": 1, "h": 1 }
+            "texture": { "w": 0.2, "h": 0.88 },
+            "hitbox": { "w": 0, "h": 0 }
         },
         "offset": {
-            "texture": { "x": 0, "y": 0 },
+            "texture": { "x": 0.4, "y": 0 },
             "hitbox": { "x": 0, "y": 0 }
         },
         "origin": {
-            "x": 0.5,
-            "y": 0.5
+            "x": 0.1,
+            "y": 0.38
         },
         "zIndex": {
             "layer": "B2",
-            "order": 2
+            "order": -6
         },
         "type": 3
     },
     "12_79": {
         "size": {
-            "texture": { "w": 1, "h": 1 },
-            "hitbox": { "w": 1, "h": 1 }
+            "texture": { "w": 0.175, "h": 0.405 },
+            "hitbox": { "w": 0, "h": 0 }
         },
         "offset": {
-            "texture": { "x": 0, "y": 0 },
+            "texture": { "x": 0.4125, "y": 0 },
             "hitbox": { "x": 0, "y": 0 }
         },
         "origin": {
-            "x": 0.5,
-            "y": 0.5
+            "x": 0.0875,
+            "y": -0.095
         },
         "zIndex": {
             "layer": "B2",
-            "order": 2
+            "order": -6
         },
         "type": 3
     },
+
     "13_1": {
         "type": 0
     },
@@ -732,5 +658,87 @@
     },
     "13_2_2": {
         "type": 2
+    },
+
+    
+
+
+
+
+    "1_815": {
+        "size": {
+            "texture": { "w": 1, "h": 0.53 },
+            "hitbox": { "w": 1, "h": 0.53 }
+        },
+        "offset": {
+            "texture": { "x": 0, "y": 0.47 },
+            "hitbox": { "x": 0, "y": 0.47 }
+        },
+        "origin": {
+            "x": 0.5,
+            "y": 0.5
+        },
+        "zIndex": {
+            "layer": "T1",
+            "order": 2
+        },
+        "type": 0
+    },
+    "1_816": {
+        "size": {
+            "texture": { "w": 1, "h": 0.53 },
+            "hitbox": { "w": 1, "h": 0.53 }
+        },
+        "offset": {
+            "texture": { "x": 0, "y": 0.47 },
+            "hitbox": { "x": 0, "y": 0.47 }
+        },
+        "origin": {
+            "x": 0.5,
+            "y": 0.5
+        },
+        "zIndex": {
+            "layer": "T1",
+            "order": 2
+        },
+        "type": 0
+    },
+    "1_817": {
+        "size": {
+            "texture": { "w": 1, "h": 0.53 },
+            "hitbox": { "w": 1, "h": 0.53 }
+        },
+        "offset": {
+            "texture": { "x": 0, "y": 0.47 },
+            "hitbox": { "x": 0, "y": 0.47 }
+        },
+        "origin": {
+            "x": 0.5,
+            "y": 0.5
+        },
+        "zIndex": {
+            "layer": "T1",
+            "order": 2
+        },
+        "type": 0
+    },
+    "1_818": {
+        "size": {
+            "texture": { "w": 1, "h": 0.53 },
+            "hitbox": { "w": 1, "h": 0.53 }
+        },
+        "offset": {
+            "texture": { "x": 0, "y": 0.47 },
+            "hitbox": { "x": 0, "y": 0.47 }
+        },
+        "origin": {
+            "x": 0.5,
+            "y": 0.5
+        },
+        "zIndex": {
+            "layer": "T1",
+            "order": 2
+        },
+        "type": 0
     }
 } 
