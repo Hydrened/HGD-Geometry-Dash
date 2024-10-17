@@ -1,3 +1,8 @@
+## HGD-1.0.20
+#### ADDED
+- new level: back on track
+- block effect triggers (from top, bottom, left and right)
+
 ## HGD-1.0.19
 #### ADDED
 - practice buttons

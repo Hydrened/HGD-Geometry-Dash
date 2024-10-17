@@ -10,6 +10,7 @@
 #include <unordered_map>
 #include <vector>
 #include "utils.h"
+#include "functions.h"
 #include "camera.h" 
 #include "megahack.h"
 #include "menu.h"

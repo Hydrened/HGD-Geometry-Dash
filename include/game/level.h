@@ -44,6 +44,8 @@ private:
     std::vector<Item*> items;
     std::vector<bool> coins;
 
+    BlockEffect currentBlockEffect = FADE;
+
     Player* player = nullptr;
 
     void initFromSave();
@@ -83,6 +85,7 @@ public:
     int getCurrentSpeed() const;
     int getLevelLength() const;
     LevelMode getMode() const;
+    BlockEffect getBlockEffect() const;
 
     void setBackgroundColor(Color color);
     void setGroundColor(Color color);
@@ -92,6 +95,7 @@ public:
     void setMode(LevelMode mode);
     void setBestNormalMode(float percentage);
     void setBestPracticeMode(float percentage);
+    void setBlockEffect(BlockEffect effect);
 };
 
 #endif

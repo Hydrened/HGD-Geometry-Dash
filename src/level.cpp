@@ -312,6 +312,10 @@ LevelMode Level::getMode() const {
     return mode;
 }
 
+BlockEffect Level::getBlockEffect() const {
+    return currentBlockEffect;
+}
+
 // SETTER
 void Level::setBackgroundColor(Color color) {
     backgroundColor.r = color.r;
@@ -384,6 +388,10 @@ void Level::setBestPracticeMode(float percentage) {
     if (bestPracticeMode < percentage) bestPracticeMode = percentage;
 }
 
+void Level::setBlockEffect(BlockEffect effect) {
+    currentBlockEffect = effect;
+}
+
 // OTHER
 void Level::finish() {
     static H2DE_Engine* engine = game->getEngine();
@@ -446,6 +454,8 @@ void Level::respawn() {
         backgroundColor = data->backgroundColor;
         groundColor = data->groundColor;
         lineColor = data->lineColor;
+
+        currentBlockEffect = FADE;
 
         player->reset(&(data->startpos));
 

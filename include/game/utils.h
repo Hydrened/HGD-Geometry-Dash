@@ -65,16 +65,16 @@ enum BlockType {
 };
 
 enum TriggerType {
-    STARTPOS,
-    BACKGROUND,
-    GROUND,
-    LINE,
-};
-
-enum TriggerState {
-    WAITING,
-    ACTIVATING,
-    PASSED,
+    STARTPOS = 0,
+    BACKGROUND = 1,
+    GROUND = 2,
+    LINE = 3,
+    BLOCK_FADE = 4,
+    BLOCK_FROM_TOP = 5,
+    BLOCK_FROM_BOTTOM = 6,
+    BLOCK_FROM_LEFT = 7,
+    BLOCK_FROM_RIGHT = 8,
+    BLOCK_SCALE = 9,
 };
 
 enum Face {
@@ -117,6 +117,15 @@ enum ItemSpecialDataDesc {
     SD_PINK = 5,
     SD_BLUE = 6,
     SD_SECRET = 7,
+};
+
+enum BlockEffect {
+    FADE,
+    FROM_TOP,
+    FROM_BOTTOM,
+    FROM_LEFT,
+    FROM_RIGHT,
+    SCALE,
 };
 
 struct GameState {

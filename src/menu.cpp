@@ -350,6 +350,7 @@ void Menu::spawnIcon() {
     std::mt19937 gen(rd());
 
     std::uniform_int_distribution<> rdmCubes(1, 13);
+    std::uniform_int_distribution<> rdmShips(1, 1);
     std::uniform_int_distribution<> rdmGamemodes(0, 1);
     std::uniform_int_distribution<> rdmSizes(1, 1);
     std::uniform_int_distribution<> rdmSpeeds(1, 1);
@@ -359,12 +360,14 @@ void Menu::spawnIcon() {
     int speed = rdmSpeeds(gen);
     int size = rdmSizes(gen);
     int glow = rdmGlow(gen);
+    Gamemode gamemode = gamemodes[rdmGamemodes(gen)];
+    int textureId = (gamemode == CUBE) ? rdmCubes(gen): rdmShips(gen);
 
     icon = new MenuIcon();
-    icon->id = rdmCubes(gen);
+    icon->id = textureId;
     icon->pos = { -2.0f, 0 };
     icon->velocity = { gameData->physics->speeds[speed], 0.0f };
-    icon->gamemode = gamemodes[rdmGamemodes(gen)];
+    icon->gamemode = gamemode;
     icon->size = (size == 0) ? MINI : BIG;
     icon->speed = speed;
     icon->col1 = rdmCol(gen);

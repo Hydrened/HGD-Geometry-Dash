@@ -214,6 +214,8 @@ struct GameData {
     struct Other {
         std::unordered_map<Gamemode, bool> iconSecondTexture;
         std::vector<std::string> gamemodeStringified = { "cube", "ship" };
+        std::vector<TriggerType> colorTriggers = { BACKGROUND, GROUND, LINE };
+        std::vector<TriggerType> blockEffectTriggers = { BLOCK_FADE, BLOCK_FROM_TOP, BLOCK_FROM_BOTTOM, BLOCK_FROM_LEFT, BLOCK_FROM_RIGHT, BLOCK_SCALE };
 
         Other() {
             iconSecondTexture[CUBE] = false;

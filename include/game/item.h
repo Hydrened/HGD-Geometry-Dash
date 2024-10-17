@@ -25,8 +25,14 @@ class Block : public Item {
 private:
     BufferedBlock* data;
     int currentSprite = -1;
-    H2DE_TimelineManager* sprites = H2DE_CreateTimelineManager();
+    H2DE_TimelineManager* tm = H2DE_CreateTimelineManager();
+    
     bool pickedUp = false;
+    std::optional<BlockEffect> effect = std::nullopt;
+
+    Uint8 textureOpacity = 255;
+    LevelOffset textureOffset = { 0.0f, 0.0f };
+    float textureScale = 1;
 
 public:
     Block(Game* game, BufferedBlock* data);
@@ -50,7 +56,7 @@ public:
 class Trigger : public Item {
 private:
     BufferedTrigger* data;
-    H2DE_TimelineManager* effects = H2DE_CreateTimelineManager();
+    H2DE_TimelineManager* tm = H2DE_CreateTimelineManager();
 
 public:
     Trigger(Game* game, BufferedTrigger* data);

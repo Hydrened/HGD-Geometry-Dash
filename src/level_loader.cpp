@@ -158,8 +158,8 @@ void LevelLoader::getTriggersInfos(LevelData* data, json* level, json* itemsData
         if (itemData["type"] != STARTPOS) {
             bTrigger->type = itemData["type"];
             bTrigger->pos = { trigger["p"]["x"], trigger["p"]["y"] };
-            bTrigger->color = { static_cast<Uint8>(trigger["c"]["r"]), static_cast<Uint8>(trigger["c"]["g"]), static_cast<Uint8>(trigger["c"]["b"]) };
-            bTrigger->ms = trigger["d"];
+            if (trigger.contains("c")) bTrigger->color = { static_cast<Uint8>(trigger["c"]["r"]), static_cast<Uint8>(trigger["c"]["g"]), static_cast<Uint8>(trigger["c"]["b"]) };
+            if (trigger.contains("d")) bTrigger->ms = trigger["d"];
             if (trigger.contains("tt")) bTrigger->touchTrigger = trigger["tt"];
 
             data->triggers.push_back(bTrigger);
@@ -223,7 +223,7 @@ void LevelLoader::initLevelsInfos(std::string content, int id) {
     level["config"]["song"] = songID;
 
     (*levels)[std::to_string(id)] = level;
-    if (!H2DE_Json::write(levelsPATH, levels, 0)) {
+    if (!H2DE_Json::write(levelsPATH, levels, 4)) {
         throw std::runtime_error("HGD-3004: Error loading extern level => Writing data in levels failed");
     }
 }
