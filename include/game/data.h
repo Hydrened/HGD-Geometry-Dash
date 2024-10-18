@@ -31,10 +31,13 @@ struct GameData {
         LevelSize ground = { 4.0f, 4.0f };
         LevelSize line = { 15.0f, 0.05 };
         LevelSize checkpoint = { 0.5f, 1.0f };
+        LevelSize camera = { BLOCKS_ON_WIDTH + 0.3f, 10.5f }; // replace 10.5 => more accurate value
+        float cameraPaddingBot = 3.2f;
+        float cameraXremain = 0.3f;
         float levelHeight = 80.0f;
         float cameraPaddingTop = 3.0f; 
-        float cameraPaddingBot = 3.2f;
-        float levelEndPadding = 8.0f;
+        float levelEndPadding = 5.0f;
+        float blockEffectPadding = 2.5f;
         std::unordered_map<Gamemode, int> gamemodeHeights;
         std::unordered_map<Gamemode, std::unordered_map<Size, LevelSize>> mainIcon;
         std::unordered_map<Gamemode, std::unordered_map<Size, LevelSize>> redHitbox;
@@ -81,6 +84,7 @@ struct GameData {
         LevelOffset botLine = { 2.0f, 3.95f };
         LevelOffset topLine = { 2.0f, 0.0f };
         LevelOffset checkpoint = { 0.25f, 0.0f };
+        float blockEffectMove = 3.0f;
         std::unordered_map<Gamemode, std::unordered_map<Size, LevelOffset>> mainIcon;
         std::unordered_map<Gamemode, std::unordered_map<Size, LevelOffset>> redHitbox;
         std::unordered_map<Gamemode, std::unordered_map<Size, LevelOffset>> blueHitbox;
@@ -188,6 +192,7 @@ struct GameData {
         Color menuBackground = { 0, 102, 255, 255 };
         Color menuGround = { 0, 0, 216, 255 };
         std::unordered_map<BlockType, Color> hitboxes;
+        float glowOpacity = 0.7f;
         std::vector<Color> icons = {
             { 125, 255, 0, 255 },
             { 0, 255, 0, 255 },

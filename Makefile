@@ -11,6 +11,14 @@ all:
 	make game
 	make run
 
+f:
+	make game
+	make run_f
+
+d:
+	make game
+	make run_d
+
 game:
 	$(CC) -std=$(CPP_VERSION) -m64 -o $(BIN_DIR)/$(APP_NAME) $(SRC_DIR)/*.cpp -I$(INCLUDE_DIR) -I$(INCLUDE_DIR)/game -L$(LIB_DIR) -lmingw32 $(SDL_TAGS) -lH2DE
 
@@ -22,3 +30,6 @@ run:
 
 run_f:
 	cd $(BIN_DIR) && $(APP_NAME) -f
+
+run_d:
+	cd $(BIN_DIR) && $(APP_NAME) -d

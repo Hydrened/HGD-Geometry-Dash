@@ -20,12 +20,12 @@ Menu::Menu(Game* g) : game(g) {
     Color defaultGroundColor = groundColor;
     H2DE_Timeline* colorLoop = H2DE_CreateTimeline(engine, 30000, LINEAR, [this, defaultBackgroundColor, defaultGroundColor](float blend) {
 
-        H2DE_RGB rgbBG = H2DE_AddHueToRGB(static_cast<H2DE_RGB>(defaultBackgroundColor), blend * 360);
+        H2DE_RGB rgbBG = H2DE_AddHueToRGB(static_cast<H2DE_RGB>(defaultBackgroundColor), lerp(0, 360, blend));
         backgroundColor.r = rgbBG.r;
         backgroundColor.g = rgbBG.g;
         backgroundColor.b = rgbBG.b;
 
-        H2DE_RGB rgbG = H2DE_AddHueToRGB(static_cast<H2DE_RGB>(defaultGroundColor), blend * 360 - 25);
+        H2DE_RGB rgbG = H2DE_AddHueToRGB(static_cast<H2DE_RGB>(defaultGroundColor), lerp(0, 360, blend) - 25);
         groundColor.r = rgbG.r;
         groundColor.g = rgbG.g;
         groundColor.b = rgbG.b;

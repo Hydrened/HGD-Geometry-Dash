@@ -36,7 +36,7 @@ void Game::createWindow(SDL_WindowFlags flag) {
         throw std::runtime_error("HGD-1000: Error creating window => SDL_Init failed: " + std::string(SDL_GetError()));
     }
 
-    window = SDL_CreateWindow("Geometry Dash 1.0 (1.0.20)", x, y, w, h, flag);
+    window = SDL_CreateWindow("Geometry Dash 1.0 (1.0.21)", x, y, w, h, flag);
     if (!window) {
         SDL_Quit();
         throw std::runtime_error("HGD-1001: Error creating window => SDL_CreateWindow failed: " + std::string(SDL_GetError()));
@@ -152,6 +152,7 @@ void Game::run() {
         
         frameTime = SDL_GetTicks() - now;
         if (timePerFrame >= frameTime) SDL_Delay(timePerFrame - frameTime);
+        else if (debug) std::cout << "GAME => Frame skiped" << std::endl;
     }
 }
 
@@ -494,7 +495,7 @@ void Game::setState(GameState s, unsigned int ms, std::function<void()> then) {
     state.sub = TRANSITION_IN;
 
     H2DE_Timeline* in = H2DE_CreateTimeline(engine, (unsigned int)(ms / 2), EASE_IN, [this](float blend) {
-        this->transitionOpacity = (Uint8)(blend * 255);
+        this->transitionOpacity = (Uint8)(lerp(SDL_MIN_UINT8, SDL_MAX_UINT8, blend));
 
     }, [this, s, ms, then]() {
         state.main = s.main;
@@ -503,7 +504,7 @@ void Game::setState(GameState s, unsigned int ms, std::function<void()> then) {
         if (then) then();
 
         H2DE_Timeline* out = H2DE_CreateTimeline(engine, (unsigned int)(ms / 2), EASE_OUT, [this](float blend) {
-            this->transitionOpacity = (Uint8)(255 + blend * (0 - 255));
+            this->transitionOpacity = (Uint8)(lerp(SDL_MAX_UINT8, SDL_MIN_UINT8, blend));
 
         }, [this, s]() {
             state.sub = s.sub;

@@ -77,7 +77,7 @@ void Camera::setPos(LevelPos pos, unsigned int ms) {
         H2DE_ClearTimelineManager(tm);
 
         H2DE_Timeline* t = H2DE_CreateTimeline(engine, ms, EASE_IN_OUT, [this, defaultPos, pos](float blend) {
-            currentPos.y = defaultPos.y + blend * (pos.y - defaultPos.y);
+            currentPos.y = lerp(defaultPos.y, pos.y, blend);
         }, NULL, 0);
         H2DE_AddTimelineToManager(tm, t);
     } else currentPos.y = pos.y;

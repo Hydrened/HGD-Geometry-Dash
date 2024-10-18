@@ -2,7 +2,7 @@
     "achievments": {},
     "hacks": [
         {
-            "active": false,
+            "active": true,
             "keycode": 48,
             "name": "noclip"
         },
@@ -40,31 +40,45 @@
     },
     "levels": {
         "0": {
-            "attempts": 1989,
-            "clicks": 19649,
+            "attempts": 2317,
+            "clicks": 21663,
             "coins": [
                 true,
                 true,
                 true
             ],
-            "jumps": 12172,
+            "jumps": 13665,
             "progress": {
                 "normal": 100.0,
                 "practice": 100.0
             }
         },
         "1": {
-            "attempts": 4,
-            "clicks": 122,
+            "attempts": 25,
+            "clicks": 483,
+            "coins": [
+                false,
+                true,
+                false
+            ],
+            "jumps": 504,
+            "progress": {
+                "normal": 100.0,
+                "practice": 100.0
+            }
+        },
+        "123": {
+            "attempts": 0,
+            "clicks": 0,
             "coins": [
                 false,
                 false,
                 false
             ],
-            "jumps": 112,
+            "jumps": 0,
             "progress": {
-                "normal": 100.0,
-                "practice": 0.0
+                "normal": 0,
+                "practice": 0
             }
         }
     },

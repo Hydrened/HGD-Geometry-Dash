@@ -6,26 +6,21 @@ LevelData* LevelLoader::getLevelData(int id) {
     std::cout << "Loading level data..." << std::endl;
 
     LevelData* data = new LevelData();
-    json* levels = H2DE_Json::read("data/levels.json");
+    json* level = H2DE_Json::read("data/levels/" + std::to_string(id) + ".gdl");
 
-    std::string stingifiedID = std::to_string(id);
-    if ((*levels).contains(stingifiedID)) {
+    try {
+        data->id = id;
+        getMenuInfos(data, level);
+        getConfigInfos(data, level);
 
-        json* level = &(*levels)[std::to_string(id)];
-        try {
-            data->id = id;
-            getMenuInfos(data, level);
-            getConfigInfos(data, level);
+        json* itemsData = H2DE_Json::read("data/items.json");
+        getBlocksInfos(data, level, itemsData);
+        getTriggersInfos(data, level, itemsData);
+        getStartposInfo(data, level, itemsData);
 
-            json* itemsData = H2DE_Json::read("data/items.json");
-            getBlocksInfos(data, level, itemsData);
-            getTriggersInfos(data, level, itemsData);
-            getStartposInfo(data, level, itemsData);
-
-        } catch (const std::exception& e) {
-            throw std::runtime_error("HGD-1004: Error loading level data => " + std::string(e.what()));
-        }
-    } else throw std::runtime_error("HGD-1005: Error loading level data => Level ID not found");
+    } catch (const std::exception& e) {
+        throw std::runtime_error("HGD-1004: Error loading level data => " + std::string(e.what()));
+    }
 
     std::cout << "Level data loaded in " << SDL_GetTicks() - start << "ms" << std::endl;
     return data;
@@ -62,18 +57,18 @@ void LevelLoader::getMenuInfos(LevelData* data, json* level) {
 
     data->name = menuInfos["name"];
     data->difficulty = menuInfos["difficulty"];
-    data->menuColor = { static_cast<Uint8>(meColor["r"]), static_cast<Uint8>(meColor["g"]), static_cast<Uint8>(meColor["b"]), 255 };
+    data->menuColor = { static_cast<Uint8>(meColor["r"]), static_cast<Uint8>(meColor["g"]), static_cast<Uint8>(meColor["b"]), SDL_MAX_UINT8 };
 }
 
 void LevelLoader::getConfigInfos(LevelData* data, json* level)  {
     json config = (*level)["config"];
 
     json bgCol = config["background"]["color"];
-    data->backgroundColor = { static_cast<Uint8>(bgCol["r"]), static_cast<Uint8>(bgCol["g"]), static_cast<Uint8>(bgCol["b"]), 255 };
+    data->backgroundColor = { static_cast<Uint8>(bgCol["r"]), static_cast<Uint8>(bgCol["g"]), static_cast<Uint8>(bgCol["b"]), SDL_MAX_UINT8 };
     json grCol = config["ground"]["color"];
-    data->groundColor = { static_cast<Uint8>(grCol["r"]), static_cast<Uint8>(grCol["g"]), static_cast<Uint8>(grCol["b"]), 255 };
+    data->groundColor = { static_cast<Uint8>(grCol["r"]), static_cast<Uint8>(grCol["g"]), static_cast<Uint8>(grCol["b"]), SDL_MAX_UINT8 };
     json liCol = config["line"]["color"];
-    data->lineColor = { static_cast<Uint8>(liCol["r"]), static_cast<Uint8>(liCol["g"]), static_cast<Uint8>(liCol["b"]), 255 };
+    data->lineColor = { static_cast<Uint8>(liCol["r"]), static_cast<Uint8>(liCol["g"]), static_cast<Uint8>(liCol["b"]), SDL_MAX_UINT8 };
 
     data->backgroundTexture = config["background"]["texture"];
     data->groundTexture = config["ground"]["texture"];
@@ -82,7 +77,7 @@ void LevelLoader::getConfigInfos(LevelData* data, json* level)  {
     
     for (int i = 0; i < config["colors"].size(); i++) {
         json col = config["colors"][i];
-        data->colors.push_back({ static_cast<Uint8>(col["r"]), static_cast<Uint8>(col["g"]), static_cast<Uint8>(col["b"]), 255 });
+        data->colors.push_back({ static_cast<Uint8>(col["r"]), static_cast<Uint8>(col["g"]), static_cast<Uint8>(col["b"]), SDL_MAX_UINT8 });
     }
 
     data->song = config["song"];
@@ -92,6 +87,7 @@ void LevelLoader::getBlocksInfos(LevelData* data, json* level, json* itemsData) 
     for (json block : (*level)["blocks"]) {
         json itemData = (*itemsData)[block["i"]];
         BufferedBlock* bBlock = new BufferedBlock();
+        bBlock->id = block["i"];
         bBlock->type = itemData["type"];
 
         bBlock->texture = std::string(block["i"]) + ".png";
@@ -102,6 +98,15 @@ void LevelLoader::getBlocksInfos(LevelData* data, json* level, json* itemsData) 
         bBlock->textureSize = { texSize["w"], texSize["h"] };
         json texOffset = itemData["offset"]["texture"];
         bBlock->textureOffset = { texOffset["x"], texOffset["y"] };
+
+        if (itemData["size"].contains("glow")) {
+            json glowSize = itemData["size"]["glow"];
+            bBlock->glowSize = { glowSize["w"], glowSize["h"] };
+        }
+        if (itemData["offset"].contains("glow")) {
+            json glowOffset = itemData["offset"]["glow"];
+            bBlock->glowOffset = { glowOffset["x"], glowOffset["y"] };
+        }
 
         if (block.contains("r")) bBlock->rotation = block["r"];
         json hitSize = itemData["size"]["hitbox"];
@@ -126,9 +131,14 @@ void LevelLoader::getBlocksInfos(LevelData* data, json* level, json* itemsData) 
         }
 
         json origin = itemData["origin"];
-        bBlock->rotationOrigin = { origin["x"], origin["y"] };
+        bBlock->texOrigin = { origin["texture"]["x"], origin["texture"]["y"] };
+        if (origin.contains("glow")) {
+            json origin = itemData["origin"];
+            bBlock->glowOrigin = { origin["glow"]["x"], origin["glow"]["y"] };
+        }
 
         if (block.contains("c")) bBlock->colorID = block["c"];
+        if (itemData.contains("glowID")) bBlock->glowID = itemData["glowID"];
 
         if (block.contains("f")) {
             bool fx = (std::string(block["f"]).find("x") != std::string::npos);
@@ -206,8 +216,7 @@ void LevelLoader::getStartposInfo(LevelData* data, json* level, json* itemsData)
 
 // INIT DATA
 void LevelLoader::initLevelsInfos(std::string content, int id) {
-    std::string levelsPATH = "data/levels.json";
-    json* levels = H2DE_Json::read(levelsPATH);
+    std::string levelsPATH = "data/levels/" + std::to_string(id) + ".gdl";
     json level;
 
     std::string name = getK(content, "k2");
@@ -222,8 +231,7 @@ void LevelLoader::initLevelsInfos(std::string content, int id) {
     level["config"] = {};
     level["config"]["song"] = songID;
 
-    (*levels)[std::to_string(id)] = level;
-    if (!H2DE_Json::write(levelsPATH, levels, 4)) {
+    if (!H2DE_Json::write(levelsPATH, &level, 4)) {
         throw std::runtime_error("HGD-3004: Error loading extern level => Writing data in levels failed");
     }
 }

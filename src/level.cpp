@@ -346,7 +346,7 @@ void Level::setTopGroundPos(LevelPos pos, unsigned int ms) {
         LevelPos defaultPos = topGroundVisualPos;
 
         H2DE_Timeline* t = H2DE_CreateTimeline(engine, ms, EASE_IN_OUT, [this, defaultPos, pos](float blend) {
-            this->topGroundVisualPos.y = defaultPos.y + blend * (pos.y - defaultPos.y);
+            this->topGroundVisualPos.y = lerp(defaultPos.y, pos.y, blend);
         }, NULL, 0);
         H2DE_AddTimelineToManager(topGroundTM, t);
     } else topGroundVisualPos.y = topGroundPos.y;
@@ -363,7 +363,7 @@ void Level::setBotGroundPos(LevelPos pos, unsigned int ms) {
         LevelPos defaultPos = botGroundVisualPos;
 
         H2DE_Timeline* t = H2DE_CreateTimeline(engine, ms, EASE_IN_OUT, [this, defaultPos, pos](float blend) {
-            this->botGroundVisualPos.y = defaultPos.y + blend * (pos.y - defaultPos.y);
+            this->botGroundVisualPos.y = lerp(defaultPos.y, pos.y, blend);
         }, NULL, 0);
         H2DE_AddTimelineToManager(botGroundTM, t);
     } else botGroundVisualPos.y = botGroundPos.y;

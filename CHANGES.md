@@ -1,3 +1,15 @@
+## HGD-1.0.21
+#### ADDED
+- scale block effect trigger
+- block effect triggers to stereo madness
+- block effect triggers to back on track
+- coins to back on track
+- block glow
+#### FIXED
+- move block effect offsets
+- level storing system (one file per level)
+- going through pads
+
 ## HGD-1.0.20
 #### ADDED
 - new level: back on track

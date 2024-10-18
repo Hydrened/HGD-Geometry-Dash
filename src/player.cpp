@@ -120,7 +120,7 @@ void Player::checkBlocksCollisions() {
                         case TOP: if ((gravity == RIGHT_SIDE_UP && canHitTop) || (gravity == UPSIDE_DOWN && canHitBottom)) {
                             botOnSolid = (gravity == UPSIDE_DOWN);
                             topOnSolid = !botOnSolid;
-                            velocity.y = 0;
+                            if (velocity.y > 0) velocity.y = 0;
                             pos.y = blockData->pos.y - gameData->sizes->redHitbox[gamemode][size].h + blockData->hitboxOffset.y;
                             positionChanged = true;
                         } break;
@@ -128,7 +128,7 @@ void Player::checkBlocksCollisions() {
                         case BOTTOM: if ((gravity == RIGHT_SIDE_UP && canHitBottom) || (gravity == UPSIDE_DOWN && canHitTop)) {
                             botOnSolid = (gravity == RIGHT_SIDE_UP);
                             topOnSolid = !botOnSolid;
-                            velocity.y = 0;
+                            if (velocity.y < 0) velocity.y = 0;
                             pos.y = blockData->pos.y + blockData->hitboxSize.h + blockData->hitboxOffset.y;
                             positionChanged = true;
                         } break;

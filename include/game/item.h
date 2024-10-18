@@ -30,9 +30,13 @@ private:
     bool pickedUp = false;
     std::optional<BlockEffect> effect = std::nullopt;
 
-    Uint8 textureOpacity = 255;
+    Uint8 textureOpacity = SDL_MAX_UINT8;
     LevelOffset textureOffset = { 0.0f, 0.0f };
-    float textureScale = 1;
+    float textureScale = 1.0f;
+
+    void renderTexture();
+    void renderGlow();
+    void renderHitbox();
 
 public:
     Block(Game* game, BufferedBlock* data);
@@ -40,8 +44,6 @@ public:
 
     void update() override;
     void render() override;
-    void renderTexture();
-    void renderHitbox();
     void reset() override;
 
     BufferedBlock* getData() const;

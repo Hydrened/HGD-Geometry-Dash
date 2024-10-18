@@ -252,17 +252,22 @@ struct ItemSpecialData {
 };
 
 struct BufferedBlock {
+    std::string id;
     BlockType type;
     std::string texture = "";
-    LevelPos pos = { 0, 0 };
-    LevelSize textureSize = { 0, 0 };
-    LevelSize hitboxSize = { 0, 0 };
-    LevelOffset textureOffset = { 0, 0 };
-    LevelOffset hitboxOffset = { 0, 0 };
-    LevelPos rotationOrigin = { 0, 0 };
+    LevelPos pos = { 0.0f, 0.0f };
+    LevelSize textureSize = { 0.0f, 0.0f };
+    LevelSize hitboxSize = { 0.0f, 0.0f };
+    LevelSize glowSize = { 0.0f, 0.0f };
+    LevelOffset textureOffset = { 0.0f, 0.0f };
+    LevelOffset hitboxOffset = { 0.0f, 0.0f };
+    LevelOffset glowOffset = { 0.0f, 0.0f };
+    LevelPos texOrigin = { 0.0f, 0.0f };
+    LevelPos glowOrigin = { 0.0f, 0.0f };
     int rotation = 0;
     SDL_RendererFlip flip = SDL_FLIP_NONE;
     int colorID = 0;
+    int glowID = 0;
     ItemSpecialData specialData;
     int sprites = 0;
     Zindex* zIndex;
