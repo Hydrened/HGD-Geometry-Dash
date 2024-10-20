@@ -151,6 +151,7 @@ void Level::update() {
             updateBackground();
             camera->update();
             break;
+        default: break;
     }
 }
 

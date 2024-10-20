@@ -40,45 +40,31 @@
     },
     "levels": {
         "0": {
-            "attempts": 2559,
-            "clicks": 22437,
+            "attempts": 2561,
+            "clicks": 22549,
             "coins": [
                 true,
                 true,
                 true
             ],
-            "jumps": 14260,
+            "jumps": 14338,
             "progress": {
                 "normal": 100.0,
                 "practice": 100.0
             }
         },
         "1": {
-            "attempts": 25,
-            "clicks": 483,
+            "attempts": 33,
+            "clicks": 651,
             "coins": [
                 false,
                 true,
                 false
             ],
-            "jumps": 504,
+            "jumps": 679,
             "progress": {
                 "normal": 100.0,
                 "practice": 100.0
-            }
-        },
-        "123": {
-            "attempts": 0,
-            "clicks": 0,
-            "coins": [
-                false,
-                false,
-                false
-            ],
-            "jumps": 0,
-            "progress": {
-                "normal": 0,
-                "practice": 0
             }
         }
     },

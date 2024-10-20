@@ -95,6 +95,7 @@ void Block::update() {
              case FROM_LEFT: textureOffset = { lerp(-minOffset, -maxOffset, blend), 0.0f }; break;
              case FROM_RIGHT: textureOffset = { lerp(minOffset, maxOffset, blend), 0.0f }; break;
              case SCALE: textureScale = lerp(minSize, maxSize, blend); break;
+             default: break;
         }
     } else textureOpacity = 0;
 }
@@ -146,6 +147,7 @@ void Block::renderTexture(BlockTextureData* td) {
         case COL_4: rgb = (H2DE_RGB)level->getData()->colors[3]; break;
         case COL_P_1: rgb = (H2DE_RGB)gameData->colors->icons[level->getPlayer()->getIcons()->colorIDs[0]]; break;
         case COL_P_2: rgb = (H2DE_RGB)gameData->colors->icons[level->getPlayer()->getIcons()->colorIDs[1]]; break;
+        default: break;
     }
     rgb.a = textureOpacity;
     
@@ -262,16 +264,23 @@ void Block::enter() {
             case SD_SHIP: player->setGamemode(SHIP, bb->pos.y, 500); used = true; break;
             case SD_RIGHT_SIDE_UP: player->setGravity(RIGHT_SIDE_UP); used = true; break;
             case SD_UPSIDE_DOWN: player->setGravity(UPSIDE_DOWN); used = true; break;
+            default: break;
         } break;
+
         case SD_ORB: player->setHoveredOrb(this); break;
+
         case SD_PAD: switch (sd->desc) {
             case SD_YELLOW: player->setYvelocity(gameData->physics->pads[YELLOW_PAD][gm][si] * gr); used = true; break;
             case SD_PINK: player->setYvelocity(gameData->physics->pads[PINK_PAD][gm][si] * gr); used = true; break;
             case SD_BLUE: player->setYvelocity(gameData->physics->pads[BLUE_PAD][gm][si] * gr); player->setGravity(((gr == UPSIDE_DOWN) ? RIGHT_SIDE_UP : UPSIDE_DOWN)); used = true; break;
+            default: break;
         } break;
+
         case SD_COIN: switch (sd->desc) {
             case SD_SECRET: pickedUp = true; used = true; break;
+            default: break;
         } break;
+        default: break;
     }
 }
 
@@ -361,6 +370,7 @@ void Trigger::trigger() {
             case T_BE_FROM_LEFT: level->setBlockEffect(FROM_LEFT); break;
             case T_BE_FROM_RIGHT: level->setBlockEffect(FROM_RIGHT); break;
             case T_BE_SCALE: level->setBlockEffect(SCALE); break;
+            default: break;
         }
     }
 }

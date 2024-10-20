@@ -151,6 +151,7 @@ void Player::checkBlocksCollisions() {
                             pos.y = blockPos.y + blockSize.h + blockOffset.y;
                             positionChanged = true;
                         } break;
+                        default: break;
                     } break;
 
                     case SPECIAL: if (!block->entered()) {
@@ -218,10 +219,8 @@ void Player::updateRotation() {
 
         switch (gamemode) {
             case CUBE: rotation += gmRotation * gravity; break;
-            case SHIP:
-                float a = velocity.y / maxGravity;
-                rotation = pow(abs(a), 1.15f) * (a < 0 ? -1 : 1) * gmRotation;
-                break;
+            case SHIP: rotation = pow(abs(velocity.y / maxGravity), 1.15f) * (velocity.y / maxGravity < 0 ? -1 : 1) * gmRotation; break;
+            default: break;
         }
     }
 
@@ -397,6 +396,7 @@ void Player::click() {
             }
         } break;
         case SHIP: velocity.y += (gameData->physics->clicks[SHIP][size] * gravity); break;
+        default: break;
     }
 }
 

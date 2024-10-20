@@ -1,3 +1,7 @@
+## HGD-1.0.23
+#### FIXED
+- random crash in menu
+
 ## HGD-1.0.22
 #### ADDED
 - colors to blocks (base and detail)

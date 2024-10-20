@@ -112,10 +112,8 @@ void Menu::updateIcon() {
             
             switch (gamemode) {
                 case CUBE: icon->rotation += gmRotation; break;
-                case SHIP:
-                    float a = icon->velocity.y / maxGravity;
-                    icon->rotation = pow(abs(a), 1.15f) * (a < 0 ? -1 : 1) * gmRotation;
-                    break;
+                case SHIP: icon->rotation = pow(abs(icon->velocity.y / maxGravity), 1.15f) * (icon->velocity.y / maxGravity < 0 ? -1 : 1) * gmRotation; break;
+                default: break;
             }
         }
 
@@ -127,25 +125,25 @@ void Menu::updateIcon() {
         std::uniform_int_distribution<> rdmHoldDuration(50, 300);
 
         if (!icon->holding) {
-            if (rdmJump(gen) == 0) {
-                switch (gamemode) {
-                    case CUBE: if (icon->onSolid) {
-                        icon->onSolid = false;
-                        icon->velocity.y = gameData->physics->clicks[CUBE][size];
-                    } break;
-                    case SHIP: if (!icon->holding) {
-                        icon->onSolid = false;
-                        icon->holding = true;
-                        Game::delay(rdmHoldDuration(gen), [this]() {
-                            icon->holding = false;
-                        });
-                        icon->velocity.y += (gameData->physics->clicks[SHIP][size]);
-                    } break;
-                }
+            if (rdmJump(gen) == 0) switch (gamemode) {
+                case CUBE: if (icon->onSolid) {
+                    icon->onSolid = false;
+                    icon->velocity.y = gameData->physics->clicks[CUBE][size];
+                } break;
+                case SHIP: if (!icon->holding) {
+                    icon->onSolid = false;
+                    icon->holding = true;
+                    Game::delay(rdmHoldDuration(gen), [this]() {
+                        if (icon) icon->holding = false;
+                    });
+                    icon->velocity.y += (gameData->physics->clicks[SHIP][size]);
+                } break;
+                default: break;
             }
         } else {
             switch (gamemode) {
                 case SHIP: icon->velocity.y += (gameData->physics->clicks[SHIP][size]); break;
+                default: break;
             }
         }
     }
@@ -158,6 +156,7 @@ void Menu::render() {
     switch (state.main) {
         case MAIN_MENU: renderMainMenu(); renderIcon(); break;
         case LEVEL_MENU: renderLevelMenu(); break;
+        default: break;
     }
 }
 

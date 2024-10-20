@@ -38,7 +38,7 @@ void Game::createWindow(SDL_WindowFlags flag) {
         throw std::runtime_error("HGD-1000: Error creating window => SDL_Init failed: " + std::string(SDL_GetError()));
     }
 
-    window = SDL_CreateWindow("Geometry Dash 1.0 (1.0.22)", x, y, w, h, flag);
+    window = SDL_CreateWindow("Geometry Dash 1.0 (1.0.23)", x, y, w, h, flag);
     if (!window) {
         SDL_Quit();
         throw std::runtime_error("HGD-1001: Error creating window => SDL_CreateWindow failed: " + std::string(SDL_GetError()));
@@ -260,6 +260,7 @@ void Game::handleEvents(SDL_Event event) {
 
         case SDL_WINDOWEVENT: switch (event.window.event) {
             case SDL_WINDOWEVENT_RESIZED: resizeWindow(event.window.data1, event.window.data2); break;
+            default: break;
         } break;
 
         case SDL_MOUSEBUTTONDOWN: if (event.button.button == SDL_BUTTON_LEFT) {
@@ -268,6 +269,7 @@ void Game::handleEvents(SDL_Event event) {
                 case LEVEL_PLAYING: level->getPlayer()->setClicking(true); break;
                 case LEVEL_PAUSE: level->getPlayer()->setClicking(true); break;
                 case LEVEL_DEAD: level->getPlayer()->setClicking(true); break;
+                default: break;
             }
             H2DE_Click(engine, event.button.x, event.button.y);
         } break;
@@ -277,6 +279,7 @@ void Game::handleEvents(SDL_Event event) {
             case LEVEL_PLAYING: level->getPlayer()->setClicking(false); break;
             case LEVEL_PAUSE: level->getPlayer()->setClicking(false); break;
             case LEVEL_DEAD: level->getPlayer()->setClicking(false); break;
+            default: break;
         } break;
 
         case SDL_KEYDOWN:
@@ -303,6 +306,7 @@ void Game::handleEvents(SDL_Event event) {
                 break;
             }
         } break;
+        default: break;
     }
 }
 
