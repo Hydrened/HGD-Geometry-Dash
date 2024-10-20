@@ -4,12 +4,12 @@
 Player::Player(Game* g, Level* l, Checkpoint* s) : game(g), level(l), startpos(s), pos(s->playerPos), velocity(s->velocity), gamemode(s->gamemode), gravity(s->gravity), size(s->size), rotation(s->rotation) {
     json* saves = H2DE_Json::read("data/saves.json");
 
-    icons = Icons();
-    icons.ids[CUBE] = (*saves)["icons"]["textures"]["cube"];
-    icons.ids[SHIP] = (*saves)["icons"]["textures"]["ship"];
-    icons.colorIDs.push_back((*saves)["icons"]["colors"][0]);
-    icons.colorIDs.push_back((*saves)["icons"]["colors"][1]);
-    icons.glow = (*saves)["icons"]["glow"];
+    icons = new Icons();
+    icons->ids[CUBE] = (*saves)["icons"]["textures"]["cube"];
+    icons->ids[SHIP] = (*saves)["icons"]["textures"]["ship"];
+    icons->colorIDs.push_back((*saves)["icons"]["colors"][0]);
+    icons->colorIDs.push_back((*saves)["icons"]["colors"][1]);
+    icons->glow = (*saves)["icons"]["glow"];
     
     setGamemode(s->gamemode, pos.y, 0);
 }
@@ -86,28 +86,47 @@ void Player::checkBlocksCollisions() {
     for (int i = startingItem; i < items->size(); i++) {
         Item* item = items->at(i);
         Block* block = ItemManager::castToBlock(item);
-        
+
         if (!block) continue;
 
-        BufferedBlock* blockData = block->getData();
-        if (blockData->type == DECORATION) continue;
+        BufferedBlock* bb = block->getBufferedData();
+        if (bb->data->type == DECORATION) continue;
+        if (!bb->data->hitboxData.has_value()) continue;
 
-        if (blockData->pos.x + blockData->textureOffset.x + blockData->textureSize.w < camPos.x) {
+        BlockHitboxData* hd = bb->data->hitboxData.value();
+
+        if (bb->pos.x + hd->offset.x + hd->size.w < pos.x) {
             startingItem = i + 1;
             continue;
         }
-        if (blockData->pos.x + blockData->textureOffset.x + blockData->textureSize.w > camPos.x + BLOCKS_ON_WIDTH + 1) break;
+        if (bb->pos.x + hd->offset.x > pos.x + redPlayerRect.w) break;
 
-        LevelPos blockPos = blockData->pos;
-        LevelSize blockSize = blockData->hitboxSize;
-        LevelOffset blockOffset = blockData->hitboxOffset;
-        Rect blockRect = (blockData->type == SPECIAL) ?
+        LevelPos blockPos = bb->pos;
+        LevelSize blockSize = hd->size;
+        LevelOffset blockOffset = hd->offset;
+
+        switch (bb->rotation) {
+            case 90:
+                blockSize = { blockSize.h, blockSize.w };
+                blockOffset = { blockOffset.y, blockOffset.x };
+                break;
+            case 180:
+                blockOffset = { 1.0f - blockSize.w - blockOffset.x, 1.0f - blockSize.h - blockOffset.y };
+                break;
+            case 270:
+                blockSize = { blockSize.h, blockSize.w };
+                blockOffset = { 1.0f - blockSize.h - blockOffset.y, 1.0f - blockSize.w - blockOffset.x };
+                break;
+            default: break;
+        }
+
+        Rect blockRect = (bb->data->type == SPECIAL) ?
             Rect{ blockPos.x + blockOffset.x - 0.01f, blockPos.y + blockOffset.y - 0.01f, blockSize.w + 0.01f, blockSize.h + 0.01f } :
             Rect{ blockPos.x + blockOffset.x, blockPos.y + blockOffset.y, blockSize.w, blockSize.h };
 
         bool positionChanged = false;
 
-        if (blockData->type != OBSTACLE) {
+        if (bb->data->type != OBSTACLE) {
             if (Rect::intersect(&redPlayerRect, &blockRect)) {
                 bool canHitTop = gameData->physics->canHitTop[gamemode];
                 bool canHitBottom = gameData->physics->canHitBottom[gamemode];
@@ -115,13 +134,13 @@ void Player::checkBlocksCollisions() {
                 Face collidedFace = Rect::getCollidedFace(&redPlayerRect, &blockRect);
                 if (collidedBlockFace.find(i) == collidedBlockFace.end()) collidedBlockFace[i] = collidedFace;
 
-                switch (blockData->type) {
+                switch (bb->data->type) {
                     case SOLID: switch (collidedBlockFace[i]) {
                         case TOP: if ((gravity == RIGHT_SIDE_UP && canHitTop) || (gravity == UPSIDE_DOWN && canHitBottom)) {
                             botOnSolid = (gravity == UPSIDE_DOWN);
                             topOnSolid = !botOnSolid;
                             if (velocity.y > 0) velocity.y = 0;
-                            pos.y = blockData->pos.y - gameData->sizes->redHitbox[gamemode][size].h + blockData->hitboxOffset.y;
+                            pos.y = blockPos.y - gameData->sizes->redHitbox[gamemode][size].h + blockOffset.y;
                             positionChanged = true;
                         } break;
 
@@ -129,7 +148,7 @@ void Player::checkBlocksCollisions() {
                             botOnSolid = (gravity == RIGHT_SIDE_UP);
                             topOnSolid = !botOnSolid;
                             if (velocity.y < 0) velocity.y = 0;
-                            pos.y = blockData->pos.y + blockData->hitboxSize.h + blockData->hitboxOffset.y;
+                            pos.y = blockPos.y + blockSize.h + blockOffset.y;
                             positionChanged = true;
                         } break;
                     } break;
@@ -137,6 +156,7 @@ void Player::checkBlocksCollisions() {
                     case SPECIAL: if (!block->entered()) {
                         block->enter();
                     } break;
+                    default: break;
                 }
 
                 if (positionChanged) {
@@ -147,8 +167,8 @@ void Player::checkBlocksCollisions() {
         }
 
         if (!hacks["noclip"]->active && !positionChanged) {
-            if (blockData->type != SPECIAL) {
-                Rect playerRect = (blockData->type == SOLID) ? bluePlayerRect : redPlayerRect;
+            if (bb->data->type != SPECIAL) {
+                Rect playerRect = (bb->data->type == SOLID) ? bluePlayerRect : redPlayerRect;
 
                 if (Rect::intersect(&playerRect, &blockRect)) {
                     kill();
@@ -170,6 +190,7 @@ void Player::checkBlocksCollisions() {
                             overflow = blockRect.getMaxY() - playerRect.getMinY();
                             pos.y += overflow;
                             break;
+                        default: break;
                     }
                     break;
                 }
@@ -250,18 +271,18 @@ void Player::renderMainTexture() {
 
     H2DE_GraphicObject* col1 = H2DE_CreateGraphicObject();
     col1->type = IMAGE;
-    col1->texture = gamemodeStrigified + "-" + std::to_string(icons.ids[gamemode]) + "-1.png";
+    col1->texture = gamemodeStrigified + "-" + std::to_string(icons->ids[gamemode]) + "-1.png";
     col1->pos = calculator->convertToPx(iconPos, iconSize, false, false);
     col1->size = calculator->convertToPx(iconSize);
     col1->rotation = rotation;
     col1->rotationOrigin = center;
-    col1->rgb = (H2DE_RGB)(gameData->colors->icons[icons.colorIDs[0]]);
+    col1->rgb = (H2DE_RGB)(gameData->colors->icons[icons->colorIDs[0]]);
     col1->index = Zindex{ T1, 0 }.getIndex();
     H2DE_AddGraphicObject(engine, col1);
 
     H2DE_GraphicObject* col2 = H2DE_CreateGraphicObject(*col1);
-    col2->texture = gamemodeStrigified + "-" + std::to_string(icons.ids[gamemode]) + "-2.png";
-    col2->rgb = (H2DE_RGB)(gameData->colors->icons[icons.colorIDs[1]]);
+    col2->texture = gamemodeStrigified + "-" + std::to_string(icons->ids[gamemode]) + "-2.png";
+    col2->rgb = (H2DE_RGB)(gameData->colors->icons[icons->colorIDs[1]]);
     col2->index = Zindex{ T1, 1 }.getIndex();
     H2DE_AddGraphicObject(engine, col2);
 }
@@ -283,13 +304,13 @@ void Player::renderSecondTexture() {
     col1->size = calculator->convertToPx(iconSize);
     col1->rotation = rotation;
     col1->rotationOrigin = center;
-    col1->rgb = (H2DE_RGB)(gameData->colors->icons[icons.colorIDs[0]]);
+    col1->rgb = (H2DE_RGB)(gameData->colors->icons[icons->colorIDs[0]]);
     col1->index = Zindex{ T1, -2 }.getIndex();
     H2DE_AddGraphicObject(engine, col1);
 
     H2DE_GraphicObject* col2 = H2DE_CreateGraphicObject(*col1);
     col2->texture = "cube-0-2.png";
-    col2->rgb = (H2DE_RGB)(gameData->colors->icons[icons.colorIDs[1]]);
+    col2->rgb = (H2DE_RGB)(gameData->colors->icons[icons->colorIDs[1]]);
     col2->index = Zindex{ T1, -1 }.getIndex();
     H2DE_AddGraphicObject(engine, col2);
 }
@@ -311,7 +332,7 @@ void Player::renderHitboxes() {
         { absRedHitboxSize.w, absRedHitboxSize.h },
         { 0, absRedHitboxSize.h },
     };
-    redHitbox->rgb = static_cast<H2DE_RGB>(gameData->colors->hitboxes[OBSTACLE]);
+    redHitbox->rgb = (H2DE_RGB)(gameData->colors->hitboxes[OBSTACLE]);
     redHitbox->index = Zindex{ H, 0 }.getIndex();
     H2DE_AddGraphicObject(engine, redHitbox);
 
@@ -326,7 +347,7 @@ void Player::renderHitboxes() {
         { blueHitboxSize.w, blueHitboxSize.h },
         { 0, blueHitboxSize.h },
     };
-    blueHitbox->rgb = static_cast<H2DE_RGB>(gameData->colors->hitboxes[SOLID]);
+    blueHitbox->rgb = (H2DE_RGB)(gameData->colors->hitboxes[SOLID]);
     blueHitbox->index = Zindex{ H, 1 }.getIndex();
     H2DE_AddGraphicObject(engine, blueHitbox);
 }
@@ -353,7 +374,7 @@ void Player::click() {
 
     if (hoveredOrb.has_value() && orbBuffer) {
         Orb orb;
-        switch (hoveredOrb.value()->getData()->specialData.desc) {
+        switch (hoveredOrb.value()->getBufferedData()->data->specialData.value()->desc) {
             case SD_YELLOW: orb = YELLOW_ORB; break;
             case SD_PINK: orb = PINK_ORB; break;
             case SD_BLUE: orb = BLUE_ORB; break;
@@ -476,6 +497,10 @@ Gravity Player::getGravity() const {
 Checkpoint* Player::getLastPracticeCheckpoint() const {
     if (!practiceCheckpoints.empty()) return practiceCheckpoints[practiceCheckpoints.size() - 1];
     else return nullptr;
+}
+
+Icons* Player::getIcons() const {
+    return icons;
 }
 
 // SETTER

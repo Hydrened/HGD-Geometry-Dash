@@ -23,30 +23,32 @@ public:
 
 class Block : public Item {
 private:
-    BufferedBlock* data;
+    BufferedBlock* bb;
     int currentSprite = -1;
     H2DE_TimelineManager* tm = H2DE_CreateTimelineManager();
     
     bool pickedUp = false;
     std::optional<BlockEffect> effect = std::nullopt;
 
+    std::vector<BlockTextureData*> texturesData;
+
     Uint8 textureOpacity = SDL_MAX_UINT8;
     LevelOffset textureOffset = { 0.0f, 0.0f };
     float textureScale = 1.0f;
 
-    void renderTexture();
+    void renderTexture(BlockTextureData* textureData);
     void renderGlow();
     void renderHitbox();
 
 public:
-    Block(Game* game, BufferedBlock* data);
+    Block(Game* game, BufferedBlock* bufferedBlock);
     ~Block() override;
 
     void update() override;
     void render() override;
     void reset() override;
 
-    BufferedBlock* getData() const;
+    BufferedBlock* getBufferedData() const;
     bool entered() const;
     bool isPickedUp() const;
 
@@ -57,18 +59,18 @@ public:
 
 class Trigger : public Item {
 private:
-    BufferedTrigger* data;
+    BufferedTrigger* bt;
     H2DE_TimelineManager* tm = H2DE_CreateTimelineManager();
 
 public:
-    Trigger(Game* game, BufferedTrigger* data);
+    Trigger(Game* game, BufferedTrigger* bufferedTrigger);
     ~Trigger() override;
 
     void update() override;
     void render() override;
     void reset() override;
 
-    BufferedTrigger* getData() const;
+    BufferedTrigger* getBufferedData() const;
 
     void trigger();
 };

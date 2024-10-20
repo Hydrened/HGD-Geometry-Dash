@@ -29,8 +29,8 @@ H2DE_Size Calculator::convertToPx(LevelSize s) {
     getUtils(&engineSize, &blockSize);
 
     return {
-        static_cast<int>(s.w * blockSize),
-        static_cast<int>(s.h * blockSize)
+        (int)(s.w * blockSize),
+        (int)(s.h * blockSize)
     };
 }
 
@@ -40,8 +40,8 @@ H2DE_Pos Calculator::convertToPx(LevelOffset o) {
     getUtils(&engineSize, &blockSize);
 
     return {
-        static_cast<int>(o.x * blockSize),
-        static_cast<int>(o.y * blockSize)
+        (int)(o.x * blockSize),
+        (int)(o.y * blockSize)
     };
 }
 

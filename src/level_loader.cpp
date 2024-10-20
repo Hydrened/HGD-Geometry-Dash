@@ -1,7 +1,7 @@
 #include "level_loader.h"
 
 // MAIN
-LevelData* LevelLoader::getLevelData(int id) {
+LevelData* LevelLoader::getLevelData(Game* game, int id) {
     Uint32 start = SDL_GetTicks();
     std::cout << "Loading level data..." << std::endl;
 
@@ -10,13 +10,11 @@ LevelData* LevelLoader::getLevelData(int id) {
 
     try {
         data->id = id;
-        getMenuInfos(data, level);
-        getConfigInfos(data, level);
-
-        json* itemsData = H2DE_Json::read("data/items.json");
-        getBlocksInfos(data, level, itemsData);
-        getTriggersInfos(data, level, itemsData);
-        getStartposInfo(data, level, itemsData);
+        getMenuInfos(game, data, level);
+        getConfigInfos(game, data, level);
+        getBlocksInfos(game, data, level);
+        getTriggersInfos(game, data, level);
+        getStartposInfo(game, data, level);
 
     } catch (const std::exception& e) {
         throw std::runtime_error("HGD-1004: Error loading level data => " + std::string(e.what()));
@@ -40,7 +38,7 @@ void LevelLoader::loadLevelData(const fs::path& gmdFile) {
 
         int id;
         if (!containsK(content, "k1")) {
-            id = -1; // not uploaded level (give special id)
+            id = -1; // replace => not uploaded level (give special id)
         } else id = std::stoi(getK(content, "k1"));
 
         initLevelsInfos(content, id);
@@ -51,138 +49,99 @@ void LevelLoader::loadLevelData(const fs::path& gmdFile) {
 }
 
 // GET DATA
-void LevelLoader::getMenuInfos(LevelData* data, json* level) {
+void LevelLoader::getMenuInfos(Game* game, LevelData* data, json* level) {
     json menuInfos = (*level)["menuInfos"];
     json meColor = menuInfos["backgroundColor"];
 
     data->name = menuInfos["name"];
     data->difficulty = menuInfos["difficulty"];
-    data->menuColor = { static_cast<Uint8>(meColor["r"]), static_cast<Uint8>(meColor["g"]), static_cast<Uint8>(meColor["b"]), SDL_MAX_UINT8 };
+    data->menuColor = { (Uint8)(meColor["r"]), (Uint8)(meColor["g"]), (Uint8)(meColor["b"]), SDL_MAX_UINT8 };
 }
 
-void LevelLoader::getConfigInfos(LevelData* data, json* level)  {
+void LevelLoader::getConfigInfos(Game* game, LevelData* data, json* level)  {
     json config = (*level)["config"];
 
     json bgCol = config["background"]["color"];
-    data->backgroundColor = { static_cast<Uint8>(bgCol["r"]), static_cast<Uint8>(bgCol["g"]), static_cast<Uint8>(bgCol["b"]), SDL_MAX_UINT8 };
+    data->backgroundColor = { (Uint8)(bgCol["r"]), (Uint8)(bgCol["g"]), (Uint8)(bgCol["b"]), SDL_MAX_UINT8 };
     json grCol = config["ground"]["color"];
-    data->groundColor = { static_cast<Uint8>(grCol["r"]), static_cast<Uint8>(grCol["g"]), static_cast<Uint8>(grCol["b"]), SDL_MAX_UINT8 };
+    data->groundColor = { (Uint8)(grCol["r"]), (Uint8)(grCol["g"]), (Uint8)(grCol["b"]), SDL_MAX_UINT8 };
     json liCol = config["line"]["color"];
-    data->lineColor = { static_cast<Uint8>(liCol["r"]), static_cast<Uint8>(liCol["g"]), static_cast<Uint8>(liCol["b"]), SDL_MAX_UINT8 };
+    data->lineColor = { (Uint8)(liCol["r"]), (Uint8)(liCol["g"]), (Uint8)(liCol["b"]), SDL_MAX_UINT8 };
 
     data->backgroundTexture = config["background"]["texture"];
     data->groundTexture = config["ground"]["texture"];
     data->lineTexture = config["line"]["texture"];
-
     
-    for (int i = 0; i < config["colors"].size(); i++) {
-        json col = config["colors"][i];
-        data->colors.push_back({ static_cast<Uint8>(col["r"]), static_cast<Uint8>(col["g"]), static_cast<Uint8>(col["b"]), SDL_MAX_UINT8 });
+    for (int i = 0; i < 4; i++) {
+        if (i < config["colors"].size()) {
+            json col = config["colors"][i];
+            data->colors.push_back({ (Uint8)(col["r"]), (Uint8)(col["g"]), (Uint8)(col["b"]), SDL_MAX_UINT8 });
+        } else data->colors.push_back({ SDL_MAX_UINT8, SDL_MAX_UINT8, SDL_MAX_UINT8, SDL_MAX_UINT8 });
     }
 
     data->song = config["song"];
 }
 
-void LevelLoader::getBlocksInfos(LevelData* data, json* level, json* itemsData)  {
-    for (json block : (*level)["blocks"]) {
-        json itemData = (*itemsData)[block["i"]];
-        BufferedBlock* bBlock = new BufferedBlock();
-        bBlock->id = block["i"];
-        bBlock->type = itemData["type"];
+void LevelLoader::getBlocksInfos(Game* game, LevelData* data, json* level)  {
+    static std::unordered_map<std::string, BlockData>* blocksData = &(game->getData()->other->blocks);
 
-        bBlock->texture = std::string(block["i"]) + ".png";
+    for (json block : (*level)["blocks"]) {
+        BlockData* blockData = &blocksData->at(block["i"]);
+        BufferedBlock* bb = new BufferedBlock();
+
+        bb->id = block["i"];
+        bb->data = new BlockData(*blockData);
 
         json pos = block["p"];
-        bBlock->pos = { pos["x"], pos["y"] };
-        json texSize = itemData["size"]["texture"];
-        bBlock->textureSize = { texSize["w"], texSize["h"] };
-        json texOffset = itemData["offset"]["texture"];
-        bBlock->textureOffset = { texOffset["x"], texOffset["y"] };
+        bb->pos = { pos["x"], pos["y"] };
 
-        if (itemData["size"].contains("glow")) {
-            json glowSize = itemData["size"]["glow"];
-            bBlock->glowSize = { glowSize["w"], glowSize["h"] };
-        }
-        if (itemData["offset"].contains("glow")) {
-            json glowOffset = itemData["offset"]["glow"];
-            bBlock->glowOffset = { glowOffset["x"], glowOffset["y"] };
-        }
-
-        if (block.contains("r")) bBlock->rotation = block["r"];
-        json hitSize = itemData["size"]["hitbox"];
-        json hitOffset = itemData["offset"]["hitbox"];
-        switch (static_cast<int>(bBlock->rotation)) {
-            case 90:
-                bBlock->hitboxSize = { hitSize["h"], hitSize["w"] };
-                bBlock->hitboxOffset = { hitOffset["y"], hitOffset["x"] };
-                break;
-            case 180:
-                bBlock->hitboxSize = { hitSize["w"], hitSize["h"] };
-                bBlock->hitboxOffset = { 1.0f - (float)(hitSize["w"]) - (float)(hitOffset["x"]), 1.0f - (float)(hitSize["h"]) - (float)(hitOffset["y"]) };
-                break;
-            case 270:
-                bBlock->hitboxSize = { hitSize["h"], hitSize["w"] };
-                bBlock->hitboxOffset = { 1.0f - (float)(hitSize["h"]) - (float)(hitOffset["y"]), 1.0f - (float)(hitSize["w"]) - (float)(hitOffset["x"]) };
-                break;
-            default:
-                bBlock->hitboxSize = { hitSize["w"], hitSize["h"] };
-                bBlock->hitboxOffset = { hitOffset["x"], hitOffset["y"] };
-                break;
-        }
-
-        json origin = itemData["origin"];
-        bBlock->texOrigin = { origin["texture"]["x"], origin["texture"]["y"] };
-        if (origin.contains("glow")) {
-            json origin = itemData["origin"];
-            bBlock->glowOrigin = { origin["glow"]["x"], origin["glow"]["y"] };
-        }
-
-        if (block.contains("c")) bBlock->colorID = block["c"];
-        if (itemData.contains("glowID")) bBlock->glowID = itemData["glowID"];
+        if (block.contains("r")) bb->rotation = block["r"];
+        while (bb->rotation >= 360) bb->rotation -= 360;
+        while (bb->rotation < 0) bb->rotation += 360;
 
         if (block.contains("f")) {
             bool fx = (std::string(block["f"]).find("x") != std::string::npos);
             bool fy = (std::string(block["f"]).find("y") != std::string::npos);
-
-            bBlock->flip = (fx && fy) ? SDL_FLIP_NONE : (fx) ? SDL_FLIP_HORIZONTAL : (fy) ? SDL_FLIP_VERTICAL : SDL_FLIP_NONE;
-        } else bBlock->flip = SDL_FLIP_NONE;
-
-        bBlock->zIndex = new Zindex(Zindex::getLayer(itemData["zIndex"]["layer"]), itemData["zIndex"]["order"]);
-        if (itemData.contains("special")) {
-            bBlock->specialData = ItemSpecialData();
-            bBlock->specialData.type = itemData["special"]["type"];
-            bBlock->specialData.desc = itemData["special"]["desc"];
+            bb->flip = (fx && fy) ? SDL_FLIP_NONE : (fx) ? SDL_FLIP_HORIZONTAL : (fy) ? SDL_FLIP_VERTICAL : SDL_FLIP_NONE;
         }
 
-        if (itemData.contains("sprites")) bBlock->sprites = itemData["sprites"];
+        if (block.contains("c")) {
+            if (block["c"].contains("b")) bb->baseColor = block["c"]["b"];
+            if (block["c"].contains("d")) bb->detailColor = block["c"]["d"];
+        }
 
-        data->blocks.push_back(bBlock);
+        data->blocks.push_back(bb);
     }
 }
 
-void LevelLoader::getTriggersInfos(LevelData* data, json* level, json* itemsData) {
+void LevelLoader::getTriggersInfos(Game* game, LevelData* data, json* level) {
+    static std::unordered_map<std::string, TriggerData>* triggersData = &(game->getData()->other->triggers);
+
     for (json trigger : (*level)["triggers"]) {
-        BufferedTrigger* bTrigger = new BufferedTrigger();
-        json itemData = (*itemsData)[trigger["i"]];
+        TriggerData* triggerData = &triggersData->at(trigger["i"]);
+        BufferedTrigger* bt = new BufferedTrigger();
 
-        if (itemData["type"] != STARTPOS) {
-            bTrigger->type = itemData["type"];
-            bTrigger->pos = { trigger["p"]["x"], trigger["p"]["y"] };
-            if (trigger.contains("c")) bTrigger->color = { static_cast<Uint8>(trigger["c"]["r"]), static_cast<Uint8>(trigger["c"]["g"]), static_cast<Uint8>(trigger["c"]["b"]) };
-            if (trigger.contains("d")) bTrigger->ms = trigger["d"];
-            if (trigger.contains("tt")) bTrigger->touchTrigger = trigger["tt"];
+        bt->id = trigger["i"];
+        bt->data = triggerData;
 
-            data->triggers.push_back(bTrigger);
+        if (triggerData->type != T_STARTPOS) {
+            bt->pos = { trigger["p"]["x"], trigger["p"]["y"] };
+            if (trigger.contains("c")) bt->color = { (Uint8)(trigger["c"]["r"]), (Uint8)(trigger["c"]["g"]), (Uint8)(trigger["c"]["b"]) };
+            if (trigger.contains("d")) bt->ms = trigger["d"];
+            if (trigger.contains("tt")) bt->touchTrigger = trigger["tt"];
+
+            data->triggers.push_back(bt);
         }
     }
 }
 
-void LevelLoader::getStartposInfo(LevelData* data, json* level, json* itemsData) {
+void LevelLoader::getStartposInfo(Game* game, LevelData* data, json* level) {
     static GameData* gameData = new GameData();
+    static std::unordered_map<std::string, TriggerData>* triggersData = &(gameData->other->triggers);
     json config = (*level)["config"];
     Checkpoint* startpos = nullptr;
 
-    for (json trigger : (*level)["triggers"]) if ((*itemsData)[trigger["i"]]["type"] == STARTPOS && trigger["p"]["x"] >= 0) {
+    for (json trigger : (*level)["triggers"]) if (triggersData->at(trigger["i"]).type == T_STARTPOS && trigger["p"]["x"] >= 0) {
         if (!startpos) startpos = new Checkpoint();
         
         if (startpos->playerPos.x <= trigger["p"]["x"]) {

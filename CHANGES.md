@@ -1,3 +1,12 @@
+## HGD-1.0.22
+#### ADDED
+- colors to blocks (base and detail)
+- default block colors
+- player color on blocks
+- color 1, 2, 3, and 4 on blocks
+#### FIXED
+- item data storage
+
 ## HGD-1.0.21
 #### ADDED
 - scale block effect trigger

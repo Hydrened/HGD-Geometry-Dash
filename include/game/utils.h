@@ -1,158 +1,6 @@
 #ifndef UTILS_H
 #define UTILS_H
 
-enum MainGameState {
-    LOADING_SCREEN,
-    MAIN_MENU,
-    LEVEL_MENU,
-    ICONS_MENU,
-    LEVEL_STARTING_DELAY,
-    LEVEL_PLAYING,
-    LEVEL_DEAD,
-    LEVEL_PAUSE,
-    LEVEL_END,
-};
-
-enum SubGameState {
-    DEFAULT,
-    TRANSITION_IN,
-    TRANSITION_OUT,
-    MODAL_EXIT,
-};
-
-enum Gravity {
-    RIGHT_SIDE_UP = 1,
-    UPSIDE_DOWN = -1,
-};
-
-enum Size {
-    MINI,
-    BIG,
-};
-
-enum Gamemode {
-    CUBE,
-    SHIP,
-};
-
-enum LevelDifficulty {
-    NA_0,
-    AUTO_1,
-    EASY_2,
-    NORMAL_3,
-    HEAD_4,
-    HEAD_5,
-    HEADER_6,
-    HEADER_7,
-    INSANE_8,
-    INSANE_9,
-    EASY_DEMON_10,
-    MEDIUM_DEMON_10,
-    HARD_DEMON_10,
-    INSANE_DEMON_10,
-    EXTREME_DEMON_10,
-};
-
-enum Layer {
-    BG, B5, B4, B3, B2, B1, P, T1, T2, T3, T4, G, H, UI
-};
-
-enum BlockType {
-    SOLID,
-    OBSTACLE,
-    SPECIAL,
-    DECORATION,
-};
-
-enum TriggerType {
-    STARTPOS = 0,
-    BACKGROUND = 1,
-    GROUND = 2,
-    LINE = 3,
-    BLOCK_FADE = 4,
-    BLOCK_FROM_TOP = 5,
-    BLOCK_FROM_BOTTOM = 6,
-    BLOCK_FROM_LEFT = 7,
-    BLOCK_FROM_RIGHT = 8,
-    BLOCK_SCALE = 9,
-};
-
-enum Face {
-    TOP,
-    RIGHT,
-    BOTTOM,
-    LEFT,
-};
-
-enum LevelMode {
-    NORMAL_MODE,
-    PRACTICE_MODE,
-};
-
-enum Pad {
-    YELLOW_PAD,
-    PINK_PAD,
-    BLUE_PAD,
-};
-
-enum Orb {
-    YELLOW_ORB,
-    PINK_ORB,
-    BLUE_ORB,
-};
-
-enum ItemSpecialDataType {
-    SD_PORTAL = 0,
-    SD_ORB = 1,
-    SD_PAD = 2,
-    SD_COIN = 3,
-};
-
-enum ItemSpecialDataDesc {
-    SD_CUBE = 0,
-    SD_SHIP = 1,
-    SD_RIGHT_SIDE_UP = 2,
-    SD_UPSIDE_DOWN = 3,
-    SD_YELLOW = 4,
-    SD_PINK = 5,
-    SD_BLUE = 6,
-    SD_SECRET = 7,
-};
-
-enum BlockEffect {
-    FADE,
-    FROM_TOP,
-    FROM_BOTTOM,
-    FROM_LEFT,
-    FROM_RIGHT,
-    SCALE,
-};
-
-struct GameState {
-    MainGameState main;
-    SubGameState sub;
-
-    bool operator==(const GameState& other) const {
-        return (main == other.main && sub == other.sub);
-    }
-};
-
-struct KeyEvent {
-    SDL_Keycode keycode;
-    std::vector<GameState> states;
-    std::function<void()> call;
-};
-
-struct UpdateInstruction {
-    std::vector<GameState> states;
-    std::function<void()> call;
-};
-
-struct RenderInstruction {
-    std::vector<GameState> states;
-    std::function<void()> call;
-};
-
 struct LevelPos {
     float x;
     float y;
@@ -179,6 +27,18 @@ struct Color {
     explicit operator H2DE_RGB() const {
         return { r, g, b, a };
     }
+};
+
+struct Hack {
+    bool active;
+    SDL_KeyCode keycode;
+};
+
+enum Face {
+    TOP,
+    RIGHT,
+    BOTTOM,
+    LEFT,
 };
 
 struct Rect {
@@ -217,16 +77,52 @@ struct Rect {
     }
 };
 
-struct Checkpoint {
-    LevelPos camPos = { 0, 0 };
-    LevelPos playerPos = { 0, 0 };
-    Velocity velocity = { 0, 0 };
-    int speed = 1;
-    Gravity gravity = RIGHT_SIDE_UP;
-    Size size = BIG;
-    Gamemode gamemode = CUBE;
-    int rotation = 0;
-    float botGroundPosY = -1.0;
+enum MainGameState {
+    LOADING_SCREEN,
+    MAIN_MENU,
+    LEVEL_MENU,
+    ICONS_MENU,
+    LEVEL_STARTING_DELAY,
+    LEVEL_PLAYING,
+    LEVEL_DEAD,
+    LEVEL_PAUSE,
+    LEVEL_END,
+};
+
+enum SubGameState {
+    DEFAULT,
+    TRANSITION_IN,
+    TRANSITION_OUT,
+    MODAL_EXIT,
+};
+
+struct GameState {
+    MainGameState main;
+    SubGameState sub;
+
+    bool operator==(const GameState& other) const {
+        return (main == other.main && sub == other.sub);
+    }
+};
+
+struct KeyEvent {
+    SDL_Keycode keycode;
+    std::vector<GameState> states;
+    std::function<void()> call;
+};
+
+struct UpdateInstruction {
+    std::vector<GameState> states;
+    std::function<void()> call;
+};
+
+struct RenderInstruction {
+    std::vector<GameState> states;
+    std::function<void()> call;
+};
+
+enum Layer {
+    BG, B5, B4, B3, B2, B1, P, T1, T2, T3, T4, G, H, UI
 };
 
 class Zindex {
@@ -246,39 +142,159 @@ public:
     int getIndex() { return layer * range * 2 + layer + order; };
 };
 
-struct ItemSpecialData {
-    ItemSpecialDataType type;
-    ItemSpecialDataDesc desc;
+enum BlockSpecialDataType {
+    SD_PORTAL = 0,
+    SD_ORB = 1,
+    SD_PAD = 2,
+    SD_COIN = 3,
+};
+
+enum BlockSpecialDataDesc {
+    SD_CUBE = 0,
+    SD_SHIP = 1,
+    SD_RIGHT_SIDE_UP = 2,
+    SD_UPSIDE_DOWN = 3,
+    SD_YELLOW = 4,
+    SD_PINK = 5,
+    SD_BLUE = 6,
+    SD_SECRET = 7,
+};
+
+struct BlockSpecialData {
+    BlockSpecialDataType type;
+    BlockSpecialDataDesc desc;
+};
+
+enum LevelColor {
+    COL_BLACK = -2,
+    COL_WHITE = -1,
+    COL_OBJ = 0,
+    COL_1 = 1,
+    COL_2 = 2,
+    COL_3 = 3,
+    COL_4 = 4,
+    COL_P_1 = 5,
+    COL_P_2 = 6,
+};
+
+struct BlockTextureData {
+    std::string texture;
+    int sprites;
+    LevelSize size;
+    LevelOffset offset;
+    LevelPos origin;
+    LevelColor color;
+};
+
+struct BlockGlowData {
+    int id;
+    LevelSize size;
+    LevelOffset offset;
+    LevelPos origin;
+};
+
+struct BlockHitboxData {
+    LevelSize size;
+    LevelOffset offset;
+    LevelPos origin;
+};
+
+enum BlockType {
+    SOLID,
+    OBSTACLE,
+    SPECIAL,
+    DECORATION,
+};
+
+struct BlockData {
+    BlockType type;
+    std::optional<BlockTextureData*> baseTexture;
+    std::optional<BlockTextureData*> detailTexture;
+    std::optional<BlockGlowData*> glow;
+    std::optional<BlockHitboxData*> hitboxData;
+    std::optional<BlockSpecialData*> specialData;
+    Zindex* zIndex;
 };
 
 struct BufferedBlock {
     std::string id;
-    BlockType type;
-    std::string texture = "";
+    BlockData* data;
     LevelPos pos = { 0.0f, 0.0f };
-    LevelSize textureSize = { 0.0f, 0.0f };
-    LevelSize hitboxSize = { 0.0f, 0.0f };
-    LevelSize glowSize = { 0.0f, 0.0f };
-    LevelOffset textureOffset = { 0.0f, 0.0f };
-    LevelOffset hitboxOffset = { 0.0f, 0.0f };
-    LevelOffset glowOffset = { 0.0f, 0.0f };
-    LevelPos texOrigin = { 0.0f, 0.0f };
-    LevelPos glowOrigin = { 0.0f, 0.0f };
     int rotation = 0;
     SDL_RendererFlip flip = SDL_FLIP_NONE;
-    int colorID = 0;
-    int glowID = 0;
-    ItemSpecialData specialData;
-    int sprites = 0;
-    Zindex* zIndex;
+    std::optional<LevelColor> baseColor = std::nullopt;
+    std::optional<LevelColor> detailColor = std::nullopt;
+};
+
+enum TriggerType {
+    T_STARTPOS,
+    T_BACKGROUND,
+    T_GROUND,
+    T_LINE,
+    T_BE_FADE,
+    T_BE_FROM_TOP,
+    T_BE_FROM_BOTTOM,
+    T_BE_FROM_LEFT,
+    T_BE_FROM_RIGHT,
+    T_BE_SCALE,
+};
+
+struct TriggerData {
+    TriggerType type;
 };
 
 struct BufferedTrigger {
-    TriggerType type;
+    std::string id;
+    TriggerData* data;
     LevelPos pos = { 0, 0 };
-    Color color = { 0, 0, 0, 0 };
-    int ms = 0;
+    std::optional<Color> color = std::nullopt;
+    std::optional<unsigned int> ms = std::nullopt;
     bool touchTrigger = false;
+};
+
+enum Gravity {
+    RIGHT_SIDE_UP = 1,
+    UPSIDE_DOWN = -1,
+};
+
+enum Size {
+    MINI,
+    BIG,
+};
+
+enum Gamemode {
+    CUBE,
+    SHIP,
+};
+
+struct Checkpoint {
+    LevelPos camPos = { 0, 0 };
+    LevelPos playerPos = { 0, 0 };
+    Velocity velocity = { 0, 0 };
+    int speed = 1;
+    Gravity gravity = RIGHT_SIDE_UP;
+    Size size = BIG;
+    Gamemode gamemode = CUBE;
+    int rotation = 0;
+    float botGroundPosY = -1.0;
+};
+
+enum LevelDifficulty {
+    NA_0,
+    AUTO_1,
+    EASY_2,
+    NORMAL_3,
+    HEAD_4,
+    HEAD_5,
+    HEADER_6,
+    HEADER_7,
+    INSANE_8,
+    INSANE_9,
+    EASY_DEMON_10,
+    MEDIUM_DEMON_10,
+    HARD_DEMON_10,
+    INSANE_DEMON_10,
+    EXTREME_DEMON_10,
 };
 
 struct LevelData {
@@ -296,12 +312,7 @@ struct LevelData {
     std::string song;
     std::vector<BufferedBlock*> blocks = {};
     std::vector<BufferedTrigger*> triggers = {};
-    std::vector<Color> colors = {{ 255, 255, 255, 255 }};
-};
-
-struct Hack {
-    bool active;
-    SDL_KeyCode keycode;
+    std::vector<Color> colors = {};
 };
 
 struct Icons {
@@ -333,6 +344,32 @@ struct MenuIcon {
 
     bool onSolid;
     bool holding;
+};
+
+enum LevelMode {
+    NORMAL_MODE,
+    PRACTICE_MODE,
+};
+
+enum BlockEffect {
+    FADE,
+    FROM_TOP,
+    FROM_BOTTOM,
+    FROM_LEFT,
+    FROM_RIGHT,
+    SCALE,
+};
+
+enum Pad {
+    YELLOW_PAD,
+    PINK_PAD,
+    BLUE_PAD,
+};
+
+enum Orb {
+    YELLOW_ORB,
+    PINK_ORB,
+    BLUE_ORB,
 };
 
 #endif

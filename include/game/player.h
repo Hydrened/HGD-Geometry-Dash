@@ -11,7 +11,7 @@ private:
     Game* game;
     Level* level;
 
-    Icons icons;
+    Icons* icons;
 
     Checkpoint* startpos;
     int jumps = 0;
@@ -70,6 +70,7 @@ public:
     Size getSize() const;
     Gravity getGravity() const;
     Checkpoint* getLastPracticeCheckpoint() const;
+    Icons* getIcons() const;
     
     void setClicking(bool value);
     void setGamemode(Gamemode gamemode, float y, unsigned int ms);

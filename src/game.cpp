@@ -17,6 +17,8 @@ Game::Game(int f, int argc, char** argv) : FPS(f) {
     calculator = new Calculator(this);
     megahack = new Megahack(this);
 
+    H2DE_DebugEngineRendering(engine, false);
+
     camera = new Camera(this);
     setState({ MAIN_MENU, DEFAULT }, getTransitionDuration(500), [this]() {
         openMenu();
@@ -27,16 +29,16 @@ void Game::createWindow(SDL_WindowFlags flag) {
     bool fullscreen = (flag == SDL_WINDOW_FULLSCREEN);
     json* settings = H2DE_Json::read("data/settings.json");
 
-    int x = (fullscreen) ? 0 : static_cast<int>((*settings)["window"]["x"]);
-    int y = (fullscreen) ? 0 : static_cast<int>((*settings)["window"]["y"]);
-    int w = (fullscreen) ? 1920 : static_cast<int>((*settings)["window"]["w"]);
-    int h = (fullscreen) ? 1080 : static_cast<int>((*settings)["window"]["h"]);
+    int x = (fullscreen) ? 0 : (int)((*settings)["window"]["x"]);
+    int y = (fullscreen) ? 0 : (int)((*settings)["window"]["y"]);
+    int w = (fullscreen) ? 1920 : (int)((*settings)["window"]["w"]);
+    int h = (fullscreen) ? 1080 : (int)((*settings)["window"]["h"]);
 
     if (SDL_Init(SDL_INIT_VIDEO) != 0) {
         throw std::runtime_error("HGD-1000: Error creating window => SDL_Init failed: " + std::string(SDL_GetError()));
     }
 
-    window = SDL_CreateWindow("Geometry Dash 1.0 (1.0.21)", x, y, w, h, flag);
+    window = SDL_CreateWindow("Geometry Dash 1.0 (1.0.22)", x, y, w, h, flag);
     if (!window) {
         SDL_Quit();
         throw std::runtime_error("HGD-1001: Error creating window => SDL_CreateWindow failed: " + std::string(SDL_GetError()));

@@ -11,12 +11,12 @@
 #include <vector>
 #include "utils.h"
 #include "functions.h"
+#include "data.h"
+#include "calculator.h" 
 #include "camera.h" 
 #include "megahack.h"
 #include "menu.h"
 #include "level.h"
-#include "data.h"
-#include "calculator.h" 
 #include "modal.h"
 class Camera;
 class Megahack;

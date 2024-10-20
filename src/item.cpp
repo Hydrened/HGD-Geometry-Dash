@@ -21,15 +21,19 @@ void Item::setUsed() {
 // BLOCK
 
 // INIT
-Block::Block(Game* game, BufferedBlock* d) : Item(game), data(d) {
+Block::Block(Game* game, BufferedBlock* b) : Item(game), bb(b) {
     static H2DE_Engine* engine = game->getEngine();
 
-    if (data->sprites != 0) {
-        H2DE_Timeline* t = H2DE_CreateTimeline(engine, 500, LINEAR, [this](float blend) {
-            this->currentSprite = std::min((int)floor(lerp(0, this->data->sprites, blend)), this->data->sprites - 1) + 1;
-        }, NULL, -1);
+    if (bb->data->baseTexture.has_value()) texturesData.push_back(bb->data->baseTexture.value());
+    if (bb->data->detailTexture.has_value()) texturesData.push_back(bb->data->detailTexture.value());
 
-        H2DE_AddTimelineToManager(tm, t);
+    for (BlockTextureData* textureData : texturesData) {
+        if (textureData->sprites != 0) {
+            H2DE_Timeline* t = H2DE_CreateTimeline(engine, 500, LINEAR, [this, textureData](float blend) {
+                this->currentSprite = std::min((int)floor(lerp(0, textureData->sprites, blend)), textureData->sprites - 1) + 1;
+            }, NULL, -1);
+            H2DE_AddTimelineToManager(tm, t);
+        }
     }
 }
 
@@ -52,19 +56,19 @@ void Block::update() {
     static float moveOffset = gameData->offsets->blockEffectMove;
 
     float maxCamX = camPosX + camWidth;
-    bool onScreen = (maxCamX > data->pos.x);
+    bool onScreen = (maxCamX > bb->pos.x);
 
     BlockEffect levelBlockEffect = level->getBlockEffect();
 
     if (onScreen) {
-        bool onMaxXedge = (data->pos.x >= maxCamX - blockEffectPadding);
-        bool onMinXedge = (data->pos.x - blockEffectPadding <= camPosX);
+        bool onMaxXedge = (bb->pos.x >= maxCamX - blockEffectPadding);
+        bool onMinXedge = (bb->pos.x - blockEffectPadding <= camPosX);
 
         float blend, minOffset = 0.0f, maxOffset = 0.0f, minSize = 0.0f, maxSize = 0.0f;
         if (onMaxXedge) {
             if (!effect.has_value()) effect = levelBlockEffect;
 
-            float dist = maxCamX - data->pos.x - camXremain;
+            float dist = maxCamX - bb->pos.x - camXremain;
             blend = std::clamp(dist / (blockEffectPadding - 0.5f), 0.0f, 1.0f);
             textureOpacity = lerp(SDL_MIN_UINT8, SDL_MAX_UINT8, blend);
             minOffset = moveOffset;
@@ -75,7 +79,7 @@ void Block::update() {
         } else if (onMinXedge) {
             if (!effect.has_value()) effect = levelBlockEffect;
 
-            float dist = camPosX + blockEffectPadding - 1.0f - data->pos.x;
+            float dist = camPosX + blockEffectPadding - 1.0f - bb->pos.x;
             blend = std::clamp(dist / (blockEffectPadding - 0.5f), 0.0f, 1.0f);
             textureOpacity = lerp(SDL_MAX_UINT8, SDL_MIN_UINT8, blend);
             minOffset = 0.0f;
@@ -100,37 +104,66 @@ void Block::render() {
     LevelPos camPos = game->getCamera()->getPos();
     GameState gameState = game->getState();
 
-    if (!pickedUp) if (data->pos.x + data->textureSize.w >= camPos.x && data->pos.x - data->textureSize.w <= camPos.x + BLOCKS_ON_WIDTH + 1) { // refaire
-        if (gameState.main != LEVEL_PAUSE) H2DE_TickTimelineManager(tm);
-        renderTexture();
-        if (data->glowID != 0) renderGlow();
-        if (game->getMegahack()->getHack("show-hitboxes")->active) renderHitbox();
+    // replace
+    if (!pickedUp) {
+        for (BlockTextureData* textureData : texturesData) {
+            if (bb->pos.x + textureData->size.w >= camPos.x && bb->pos.x - textureData->size.w <= camPos.x + BLOCKS_ON_WIDTH + 1) {
+                if (gameState.main != LEVEL_PAUSE) H2DE_TickTimelineManager(tm);
+                renderTexture(textureData);
+                if (bb->data->glow.has_value()) renderGlow();
+                if (game->getMegahack()->getHack("show-hitboxes")->active && bb->data->type != DECORATION) renderHitbox();
+            }
+        }
     }
 }
 
-void Block::renderTexture() {
+void Block::renderTexture(BlockTextureData* td) {
     static H2DE_Engine* engine = game->getEngine();
+    static GameData* gameData = game->getData();
     static Calculator* calculator = game->getCalculator();
     Level* level = game->getLevel();
     LevelPos camPos = game->getCamera()->getPos();
 
-    std::string tex = data->texture.substr(0, data->texture.size() - 4).append(((data->sprites != 0) ? std::string("-").append(std::to_string(currentSprite)) : "")).append(".png");
-    H2DE_Size absTexOrigin = calculator->convertToPx(LevelSize{ data->texOrigin.x, data->texOrigin.y });
-    H2DE_RGB rgb = static_cast<H2DE_RGB>(level->getData()->colors[data->colorID]);
+    BlockTextureData* bt = (bb->data->baseTexture.has_value()) ? bb->data->baseTexture.value() : nullptr;
+    BlockTextureData* dt = (bb->data->detailTexture.has_value()) ? bb->data->detailTexture.value() : nullptr;
+    LevelColor color;
+    if (bt == td) {
+        if (bb->baseColor.has_value()) color = bb->baseColor.value();
+        else color = td->color;
+    } else if (dt == td) {
+        if (bb->detailColor.has_value()) color = bb->detailColor.value();
+        else color = td->color;
+    } else color = td->color;
+
+    H2DE_RGB rgb;
+    switch (color) {
+        case COL_WHITE: rgb = { 255, 255, 255, 255 }; break;
+        case COL_BLACK: rgb = { 0, 0, 0, 255 }; break;
+        case COL_OBJ: rgb = { 255, 255, 255, 255 }; break;
+        case COL_1: rgb = (H2DE_RGB)level->getData()->colors[0]; break;
+        case COL_2: rgb = (H2DE_RGB)level->getData()->colors[1]; break;
+        case COL_3: rgb = (H2DE_RGB)level->getData()->colors[2]; break;
+        case COL_4: rgb = (H2DE_RGB)level->getData()->colors[3]; break;
+        case COL_P_1: rgb = (H2DE_RGB)gameData->colors->icons[level->getPlayer()->getIcons()->colorIDs[0]]; break;
+        case COL_P_2: rgb = (H2DE_RGB)gameData->colors->icons[level->getPlayer()->getIcons()->colorIDs[1]]; break;
+    }
     rgb.a = textureOpacity;
+    
+    std::string tex = td->texture.substr(0, td->texture.size() - 4).append(((td->sprites != 0) ? std::string("-").append(std::to_string(currentSprite)) : "")).append(".png");
+    H2DE_Size absOrigin = calculator->convertToPx(LevelSize{ td->origin.x, td->origin.y });
 
     H2DE_GraphicObject* texture = H2DE_CreateGraphicObject();
     texture->type = IMAGE;
     texture->texture = tex;
-    texture->pos = calculator->convertToPx({ data->pos.x + data->textureOffset.x + textureOffset.x, data->pos.y + data->textureOffset.y + textureOffset.y }, data->textureSize, false, false);
-    texture->size = calculator->convertToPx(data->textureSize);
-    texture->rotation = data->rotation;
-    texture->rotationOrigin = { absTexOrigin.w, absTexOrigin.h };
+    texture->pos = calculator->convertToPx({ bb->pos.x + td->offset.x + textureOffset.x, bb->pos.y + td->offset.y + textureOffset.y }, td->size, false, false);
+    texture->size = calculator->convertToPx(td->size);
+    texture->rotation = bb->rotation;
+    texture->rotationOrigin = { absOrigin.w, absOrigin.h };
     texture->scale = { textureScale, textureScale };
-    texture->scaleOrigin = { absTexOrigin.w, absTexOrigin.h };
-    texture->flip = data->flip;
+    texture->scaleOrigin = { absOrigin.w, absOrigin.h };
+    texture->flip = bb->flip;
     texture->rgb = rgb;
-    texture->index = data->zIndex->getIndex();
+    texture->index = bb->data->zIndex->getIndex();
     H2DE_AddGraphicObject(engine, texture);
 }
 
@@ -138,24 +171,26 @@ void Block::renderGlow() {
     static H2DE_Engine* engine = game->getEngine();
     static GameData* gameData = game->getData();
     static Calculator* calculator = game->getCalculator();
-
     static float glowOpacity = gameData->colors->glowOpacity;
-    H2DE_Size absGlowOrigin = calculator->convertToPx(LevelSize{ data->glowOrigin.x, data->glowOrigin.y });
-    H2DE_RGB rgb = { 255, 255, 255, 255 }; // replace => pcol 1 or 2 (idk)
+
+    BlockGlowData* g = bb->data->glow.value();
+
+    H2DE_Size absOrigin = calculator->convertToPx(LevelSize{ g->origin.x, g->origin.y });
+    H2DE_RGB rgb = { 255, 255, 255, 255 };
     rgb.a = textureOpacity * glowOpacity;
 
     H2DE_GraphicObject* glow = H2DE_CreateGraphicObject();
     glow->type = IMAGE;
-    glow->texture = "glow-" + std::to_string(data->glowID) + ".png";
-    glow->pos = calculator->convertToPx({ data->pos.x + textureOffset.x + data->glowOffset.x, data->pos.y + textureOffset.y + data->glowOffset.y }, data->glowSize, false, false);
-    glow->size = calculator->convertToPx(data->glowSize);
-    glow->rotation = data->rotation;
-    glow->rotationOrigin = { absGlowOrigin.w, absGlowOrigin.h };
+    glow->texture = "glow-" + std::to_string(g->id) + ".png";
+    glow->pos = calculator->convertToPx({ bb->pos.x + textureOffset.x + g->offset.x, bb->pos.y + textureOffset.y + g->offset.y }, g->size, false, false);
+    glow->size = calculator->convertToPx(g->size);
+    glow->rotation = bb->rotation;
+    glow->rotationOrigin = { absOrigin.w, absOrigin.h };
     glow->scale = { textureScale, textureScale };
-    glow->scaleOrigin = { absGlowOrigin.w, absGlowOrigin.h };
-    glow->flip = data->flip;
+    glow->scaleOrigin = { absOrigin.w, absOrigin.h };
+    glow->flip = bb->flip;
     glow->rgb = rgb;
-    glow->index = data->zIndex->getIndex() - 1;
+    glow->index = Zindex{ B4, -99 }.getIndex();
     H2DE_AddGraphicObject(engine, glow);
 }
 
@@ -165,22 +200,23 @@ void Block::renderHitbox() {
     static Calculator* calculator = game->getCalculator();
     LevelPos camPos = game->getCamera()->getPos();
 
-    if (data->type != DECORATION) {
-        H2DE_Size absHitboxSize = calculator->convertToPx(data->hitboxSize);
-        H2DE_Pos absHitboxOffset = calculator->convertToPx(data->hitboxOffset);
-        H2DE_GraphicObject* hitbox = H2DE_CreateGraphicObject();
-        hitbox->type = POLYGON;
-        hitbox->pos = calculator->convertToPx({ data->pos.x + data->hitboxOffset.x, data->pos.y + data->hitboxOffset.y }, data->hitboxSize, false, false);
-        hitbox->points = {
-            { 0, 0, },
-            { absHitboxSize.w, 0, },
-            { absHitboxSize.w, absHitboxSize.h },
-            { 0, absHitboxSize.h },
-        };
-        hitbox->rgb = static_cast<H2DE_RGB>(gameData->colors->hitboxes[data->type]);
-        hitbox->index = Zindex{ H, -1 }.getIndex();
-        H2DE_AddGraphicObject(engine, hitbox);
-    }
+    BlockHitboxData* h = bb->data->hitboxData.value();
+    H2DE_Size absSize = calculator->convertToPx(h->size);
+
+    H2DE_GraphicObject* hitbox = H2DE_CreateGraphicObject();
+    hitbox->type = POLYGON;
+    hitbox->pos = calculator->convertToPx({ bb->pos.x + h->offset.x, bb->pos.y + h->offset.y }, h->size, false, false);
+    hitbox->points = {
+        { 0, 0, },
+        { absSize.w, 0, },
+        { absSize.w, absSize.h },
+        { 0, absSize.h },
+    };
+    hitbox->rotation = bb->rotation;
+    hitbox->rotationOrigin = calculator->convertToPx(LevelOffset{ h->origin.x, h->origin.y });
+    hitbox->rgb = (H2DE_RGB)(gameData->colors->hitboxes[bb->data->type]);
+    hitbox->index = Zindex{ H, -1 }.getIndex();
+    H2DE_AddGraphicObject(engine, hitbox);
 }
 
 // RESET
@@ -197,8 +233,8 @@ void Block::reset() {
 }
 
 // GETTER
-BufferedBlock* Block::getData() const {
-    return data;
+BufferedBlock* Block::getBufferedData() const {
+    return bb;
 }
  
 bool Block::entered() const {
@@ -218,20 +254,22 @@ void Block::enter() {
     Size si = player->getSize();
     Gravity gr = player->getGravity();
 
-    switch (data->specialData.type) {
-        case SD_PORTAL: switch (data->specialData.desc) {
-            case SD_CUBE: player->setGamemode(CUBE, data->pos.y, 500); used = true; break;
-            case SD_SHIP: player->setGamemode(SHIP, data->pos.y, 500); used = true; break;
+    BlockSpecialData* sd = bb->data->specialData.value();
+
+    switch (sd->type) {
+        case SD_PORTAL: switch (sd->desc) {
+            case SD_CUBE: player->setGamemode(CUBE, bb->pos.y, 500); used = true; break;
+            case SD_SHIP: player->setGamemode(SHIP, bb->pos.y, 500); used = true; break;
             case SD_RIGHT_SIDE_UP: player->setGravity(RIGHT_SIDE_UP); used = true; break;
             case SD_UPSIDE_DOWN: player->setGravity(UPSIDE_DOWN); used = true; break;
         } break;
         case SD_ORB: player->setHoveredOrb(this); break;
-        case SD_PAD: switch (data->specialData.desc) {
+        case SD_PAD: switch (sd->desc) {
             case SD_YELLOW: player->setYvelocity(gameData->physics->pads[YELLOW_PAD][gm][si] * gr); used = true; break;
             case SD_PINK: player->setYvelocity(gameData->physics->pads[PINK_PAD][gm][si] * gr); used = true; break;
             case SD_BLUE: player->setYvelocity(gameData->physics->pads[BLUE_PAD][gm][si] * gr); player->setGravity(((gr == UPSIDE_DOWN) ? RIGHT_SIDE_UP : UPSIDE_DOWN)); used = true; break;
         } break;
-        case SD_COIN: switch (data->specialData.desc) {
+        case SD_COIN: switch (sd->desc) {
             case SD_SECRET: pickedUp = true; used = true; break;
         } break;
     }
@@ -242,8 +280,8 @@ void Block::enter() {
 // TRIGGER
 
 // INIT
-Trigger::Trigger(Game* game, BufferedTrigger* d) : Item(game), data(d) {
-    if (data->type == STARTPOS) used = true;
+Trigger::Trigger(Game* game, BufferedTrigger* b) : Item(game), bt(b) {
+    if (bt->data->type == T_STARTPOS) used = true;
 }
 
 // CLEANUP
@@ -262,11 +300,11 @@ void Trigger::update() {
     H2DE_TickTimelineManager(tm);
 
     if (used) return;
-    if (playerPos.x + playerSize.w >= data->pos.x) {
-        if (data->touchTrigger) {
+    if (playerPos.x + playerSize.w >= bt->pos.x) {
+        if (bt->touchTrigger) {
 
             Rect playerRect = { playerPos.x, playerPos.y, playerSize.w, playerSize.h };
-            Rect triggerRect = { data->pos.x, data->pos.y, 1.0f, 1.0f };
+            Rect triggerRect = { bt->pos.x, bt->pos.y, 1.0f, 1.0f };
 
             if (Rect::intersect(&playerRect, &triggerRect)) trigger();
         } else trigger();
@@ -282,47 +320,47 @@ void Trigger::trigger() {
     for (Item* item : *(level->getItems())) {
         Trigger* trigger = ItemManager::castToTrigger(item);
         if (!trigger) continue;
-        if (trigger->data->pos.x > data->pos.x) break;
-        if (trigger->data->type == data->type) H2DE_ClearTimelineManager(trigger->tm);
+        if (trigger->bt->pos.x > bt->pos.x) break;
+        if (trigger->bt->data->type == bt->data->type) H2DE_ClearTimelineManager(trigger->tm);
     }
 
     used = true;
 
-    if (std::find(colorTriggers.begin(), colorTriggers.end(), data->type) != colorTriggers.end()) {
+    if (std::find(colorTriggers.begin(), colorTriggers.end(), bt->data->type) != colorTriggers.end()) {
         Color sCol;
-        switch (data->type) {
-            case BACKGROUND: sCol = level->getBackgroundColor(); break;
-            case GROUND: sCol = level->getGroundColor(); break;
-            case LINE: sCol = level->getLineColor(); break;
+        switch (bt->data->type) {
+            case T_BACKGROUND: sCol = level->getBackgroundColor(); break;
+            case T_GROUND: sCol = level->getGroundColor(); break;
+            case T_LINE: sCol = level->getLineColor(); break;
             default: sCol = { 0, 0, 0, 0 }; break;
         }
 
-        H2DE_Timeline* t = H2DE_CreateTimeline(engine, data->ms, LINEAR, [this, level, sCol](float blend) {
-            Color eCol = data->color;
+        H2DE_Timeline* t = H2DE_CreateTimeline(engine, bt->ms.value(), LINEAR, [this, level, sCol](float blend) {
+            Color eCol = bt->color.value();
             Color bCol = {
-                static_cast<Uint8>(lerp(sCol.r, eCol.r, blend)),
-                static_cast<Uint8>(lerp(sCol.g, eCol.g, blend)),
-                static_cast<Uint8>(lerp(sCol.b, eCol.b, blend)),
-                static_cast<Uint8>(lerp(sCol.a, eCol.a, blend)),
+                (Uint8)(lerp(sCol.r, eCol.r, blend)),
+                (Uint8)(lerp(sCol.g, eCol.g, blend)),
+                (Uint8)(lerp(sCol.b, eCol.b, blend)),
+                (Uint8)(lerp(sCol.a, eCol.a, blend)),
             };
 
-            switch (data->type) {
-                case BACKGROUND: level->setBackgroundColor(bCol); break;
-                case GROUND: level->setGroundColor(bCol); break;
-                case LINE: level->setLineColor(bCol); break;
+            switch (bt->data->type) {
+                case T_BACKGROUND: level->setBackgroundColor(bCol); break;
+                case T_GROUND: level->setGroundColor(bCol); break;
+                case T_LINE: level->setLineColor(bCol); break;
                 default: break;
             }
         }, NULL, 0);
         H2DE_AddTimelineToManager(tm, t);
 
-    } else if (std::find(blockEffectTriggers.begin(), blockEffectTriggers.end(), data->type) != blockEffectTriggers.end()) {
-        switch (data->type) {
-            case BLOCK_FADE: level->setBlockEffect(FADE); break;
-            case BLOCK_FROM_TOP: level->setBlockEffect(FROM_TOP); break;
-            case BLOCK_FROM_BOTTOM: level->setBlockEffect(FROM_BOTTOM); break;
-            case BLOCK_FROM_LEFT: level->setBlockEffect(FROM_LEFT); break;
-            case BLOCK_FROM_RIGHT: level->setBlockEffect(FROM_RIGHT); break;
-            case BLOCK_SCALE: level->setBlockEffect(SCALE); break;
+    } else if (std::find(blockEffectTriggers.begin(), blockEffectTriggers.end(), bt->data->type) != blockEffectTriggers.end()) {
+        switch (bt->data->type) {
+            case T_BE_FADE: level->setBlockEffect(FADE); break;
+            case T_BE_FROM_TOP: level->setBlockEffect(FROM_TOP); break;
+            case T_BE_FROM_BOTTOM: level->setBlockEffect(FROM_BOTTOM); break;
+            case T_BE_FROM_LEFT: level->setBlockEffect(FROM_LEFT); break;
+            case T_BE_FROM_RIGHT: level->setBlockEffect(FROM_RIGHT); break;
+            case T_BE_SCALE: level->setBlockEffect(SCALE); break;
         }
     }
 }
@@ -334,13 +372,13 @@ void Trigger::render() {
 
 // RESET
 void Trigger::reset() {
-    if (data->type != STARTPOS) used = false;
+    if (bt->data->type != T_STARTPOS) used = false;
     H2DE_ClearTimelineManager(tm);
 }
 
 // GETTER
-BufferedTrigger* Trigger::getData() const {
-    return data;
+BufferedTrigger* Trigger::getBufferedData() const {
+    return bt;
 }
 
 

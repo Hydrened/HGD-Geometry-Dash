@@ -1,14 +1,11 @@
 #ifndef LEVEL_H
 #define LEVEL_H
 
-#define BLOCKS_ON_WIDTH 19
 
 #include "game.h"
 #include "level_loader.h"
 #include "item.h"
 #include "player.h"
-#include "data.h"
-#include "calculator.h"
 
 class Game;
 class Item;

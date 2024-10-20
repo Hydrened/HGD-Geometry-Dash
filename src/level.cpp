@@ -6,7 +6,7 @@ Level::Level(Game* g, int i) : game(g), id(i) {
 
     std::cout << "Initializing level..." << std::endl;
     Uint32 start = SDL_GetTicks();
-    data = LevelLoader::getLevelData(id);
+    data = LevelLoader::getLevelData(game, id);
 
     initFromSave();
     initCamera();
@@ -23,7 +23,7 @@ Level::Level(Game* g, int i) : game(g), id(i) {
     Game::delay(1000, [this]() {
         game->setState({ LEVEL_PLAYING, DEFAULT });
         H2DE_PlaySound(engine, 0, data->song, 0);
-    }); // error => rare crash
+    });
 }
 
 void Level::initFromSave() {
@@ -31,7 +31,7 @@ void Level::initFromSave() {
     std::string stingifiedID = std::to_string(id);
 
     if ((*saves)["levels"].contains(stingifiedID)) {
-        attempts = static_cast<int>((*saves)["levels"][stingifiedID]["attempts"]) + 1;
+        attempts = (int)((*saves)["levels"][stingifiedID]["attempts"]) + 1;
         for (bool c : (*saves)["levels"][stingifiedID]["coins"]) coins.push_back(c);
         bestNormalMode = (*saves)["levels"][stingifiedID]["progress"]["normal"];
         bestPracticeMode = (*saves)["levels"][stingifiedID]["progress"]["practice"];
@@ -76,8 +76,8 @@ void Level::initConfig() {
         Block* block = ItemManager::castToBlock(lastItem);
         Trigger* trigger = ItemManager::castToTrigger(lastItem);
 
-        if (block) levelLength = block->getData()->pos.x + gameData->sizes->levelEndPadding;
-        else if (trigger) levelLength = trigger->getData()->pos.x + gameData->sizes->levelEndPadding;
+        if (block) levelLength = block->getBufferedData()->pos.x + gameData->sizes->levelEndPadding;
+        else if (trigger) levelLength = trigger->getBufferedData()->pos.x + gameData->sizes->levelEndPadding;
 
     } else levelLength = gameData->sizes->levelEndPadding;
 }
@@ -201,7 +201,7 @@ void Level::renderElements() {
     background->size = calculator->convertToPx(gameData->sizes->background);
     background->texture = data->backgroundTexture;
     background->repeatX = true;
-    background->rgb = static_cast<H2DE_RGB>(backgroundColor);
+    background->rgb = (H2DE_RGB)(backgroundColor);
     background->index = Zindex{ BG, 0 }.getIndex();
     H2DE_AddGraphicObject(engine, background);
 
@@ -210,7 +210,7 @@ void Level::renderElements() {
     botGround->pos = calculator->convertToPx(botGroundVisualPos, gameData->sizes->ground, false, false);
     botGround->size = absGroundSize;
     botGround->texture = data->groundTexture;
-    botGround->rgb = static_cast<H2DE_RGB>(groundColor);
+    botGround->rgb = (H2DE_RGB)(groundColor);
     botGround->index = groundIndex;
     H2DE_AddGraphicObject(engine, botGround);
 
@@ -220,7 +220,7 @@ void Level::renderElements() {
     botLine->size = absLineSize;
     botLine->texture = data->lineTexture;
     botLine->repeatX = false;
-    botLine->rgb = static_cast<H2DE_RGB>(lineColor);
+    botLine->rgb = (H2DE_RGB)(lineColor);
     botLine->index = lineIndex;
     H2DE_AddGraphicObject(engine, botLine);
 
@@ -248,9 +248,6 @@ void Level::renderPracticeUI() {
     practiceButtons->texture = "practice-buttons.png";
     practiceButtons->index = Zindex{ UI, 0 }.getIndex();
     H2DE_AddGraphicObject(engine, practiceButtons);
-
-    // H2DE_GraphicObject* addKey = H2DE_CreateGraphicObject();
-    // addKey->type = TEXT;
 }
 
 // STATIC
@@ -261,8 +258,8 @@ bool Level::sortItems(Item* item1, Item* item2) {
     Block* block2 = ItemManager::castToBlock(item2);
     Trigger* trigger2 = ItemManager::castToTrigger(item2);
 
-    float posX1 = (block1) ? block1->getData()->pos.x : trigger1->getData()->pos.x;
-    float posX2 = (block2) ? block2->getData()->pos.x : trigger2->getData()->pos.x;
+    float posX1 = (block1) ? block1->getBufferedData()->pos.x : trigger1->getBufferedData()->pos.x;
+    float posX2 = (block2) ? block2->getBufferedData()->pos.x : trigger2->getBufferedData()->pos.x;
 
     return (posX1 < posX2);
 }
@@ -408,8 +405,10 @@ void Level::finish() {
             Block* block = ItemManager::castToBlock(item);
             if (!block) continue;
 
-            BufferedBlock* bData = block->getData();
-            if (bData->specialData.desc != SD_SECRET) continue;
+            BufferedBlock* bb = block->getBufferedData();
+            if (bb->data->specialData.has_value()) {
+                if (bb->data->specialData.value()->desc != SD_SECRET) continue;
+            } else continue;
 
             if (!coins[coinNb]) coins[coinNb] = block->isPickedUp();
             coinNb++;
