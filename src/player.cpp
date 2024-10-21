@@ -76,7 +76,8 @@ void Player::checkGroundCollisions() {
 void Player::checkBlocksCollisions() {
     static GameData* gameData = game->getData();
     static Camera* camera = game->getCamera();
-    static std::unordered_map<std::string, Hack*> hacks = game->getMegahack()->getHacks();
+    static Megahack* megahack = game->getMegahack();
+    static std::unordered_map<std::string, Hack*> hacks = megahack->getHacks();
     std::vector<Item*>* items = level->getItems();
     LevelPos camPos = camera->getPos();
 
@@ -174,26 +175,28 @@ void Player::checkBlocksCollisions() {
                 if (Rect::intersect(&playerRect, &blockRect)) {
                     kill();
 
-                    float overflow;
-                    switch (Rect::getCollidedFace(&playerRect, &blockRect)) {
-                        case TOP:
-                            overflow = playerRect.getMaxY() - blockRect.getMinY();
-                            pos.y -= overflow;
-                            break;
+                    if (!megahack->getOldNoclipState()) {
+                        float overflow;
+                        switch (Rect::getCollidedFace(&playerRect, &blockRect)) {
+                            case TOP:
+                                overflow = playerRect.getMaxY() - blockRect.getMinY();
+                                pos.y -= overflow;
+                                break;
 
-                        case RIGHT:
-                            overflow = playerRect.getMaxX() - blockRect.getMinX();
-                            camera->setPos({ camPos.x - overflow + velocity.x - gameData->physics->speeds[level->getCurrentSpeed()], camPos.y }, 0);
-                            pos.x -= overflow;
-                            break;
+                            case RIGHT:
+                                overflow = playerRect.getMaxX() - blockRect.getMinX();
+                                camera->setPos({ camPos.x - overflow + velocity.x - gameData->physics->speeds[level->getCurrentSpeed()], camPos.y }, 0);
+                                pos.x -= overflow;
+                                break;
 
-                        case BOTTOM:
-                            overflow = blockRect.getMaxY() - playerRect.getMinY();
-                            pos.y += overflow;
-                            break;
-                        default: break;
+                            case BOTTOM:
+                                overflow = blockRect.getMaxY() - playerRect.getMinY();
+                                pos.y += overflow;
+                                break;
+                            default: break;
+                        }
+                        break;
                     }
-                    break;
                 }
             }
         }
@@ -425,7 +428,7 @@ void Player::reset(Checkpoint* c) {
     gravity = c->gravity;
     size = c->size;
 
-    float yGamemode = (c->botGroundPosY == -1.0f) ? ceil((c->botGroundPosY + gameData->sizes->gamemodeHeights[c->gamemode]) / 2) : pos.y;
+    float yGamemode = ceil(c->botGroundPosY + gameData->sizes->ground.h + gameData->sizes->gamemodeHeights[c->gamemode] / 2);
     setGamemode(c->gamemode, yGamemode, 0);
 
     rotation = 0;
@@ -453,6 +456,7 @@ void Player::addCheckpoint() {
     c->rotation = rotation;
     c->speed = level->getCurrentSpeed();
     c->camPos = camera->getPos();
+    c->botGroundPosY = level->getBotGroundPos().y;
 
     practiceCheckpoints.push_back(c);
 }

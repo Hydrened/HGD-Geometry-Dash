@@ -1,3 +1,10 @@
+## HGD-1.0.25
+#### ADDED
+- zIndex in level block storage
+#### FIXED
+- cursed death when dying through a block (noclip enabled to disabled)
+- practice ship startpos
+
 ## HGD-1.0.24
 #### ADDED
 - 3 coins limit in levels

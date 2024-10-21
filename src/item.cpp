@@ -155,6 +155,9 @@ void Block::renderTexture(BlockTextureData* td) {
         default: break;
     }
     rgb.a = textureOpacity;
+
+    int index = (bb->zIndex.has_value()) ? bb->zIndex.value().getIndex() : bb->data->zIndex->getIndex();
+    if (dt == td) index--;
     
     std::string tex = td->texture.substr(0, td->texture.size() - 4).append(((td->sprites != 0) ? std::string("-").append(std::to_string(currentSprite)) : "")).append(".png");
     H2DE_Size absOrigin = calculator->convertToPx(LevelSize{ td->origin.x, td->origin.y });
@@ -170,7 +173,7 @@ void Block::renderTexture(BlockTextureData* td) {
     texture->scaleOrigin = { absOrigin.w, absOrigin.h };
     texture->flip = bb->flip;
     texture->rgb = rgb;
-    texture->index = bb->data->zIndex->getIndex();
+    texture->index = index;
     H2DE_AddGraphicObject(engine, texture);
 }
 

@@ -117,6 +117,8 @@ void LevelLoader::getBlocksInfos(Game* game, LevelData* data, json* level)  {
             if (block["c"].contains("d")) bb->detailColor = block["c"]["d"];
         }
 
+        if (block.contains("z")) bb->zIndex = Zindex{ block["z"]["l"], block["z"]["o"] };
+
         data->blocks.push_back(bb);
     }
 }

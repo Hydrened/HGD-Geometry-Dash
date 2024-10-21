@@ -3,6 +3,7 @@
 // INIT
 Megahack::Megahack(Game* g) : game(g) {
     loadHacks();
+    oldNoclipState = hacks["noclip"]->active;
 }
 
 void Megahack::loadHacks() {
@@ -81,6 +82,8 @@ void Megahack::update() {
             }
         } else if (!hitboxTrail.empty()) resetHitboxTrail();
     }
+
+    oldNoclipState = hacks["noclip"]->active;
 }
 
 // RENDER
@@ -137,4 +140,8 @@ std::unordered_map<std::string, Hack*> Megahack::getHacks() const {
 
 Hack* Megahack::getHack(std::string hack) {
     return hacks[hack];
+}
+
+bool Megahack::getOldNoclipState() const {
+    return oldNoclipState;    
 }

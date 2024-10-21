@@ -10,6 +10,7 @@ private:
     std::unordered_map<std::string, Hack*> hacks;
 
     std::vector<Hitbox*> hitboxTrail;
+    bool oldNoclipState;
 
     void loadHacks();
     void saveHacks();
@@ -25,6 +26,7 @@ public:
 
     std::unordered_map<std::string, Hack*> getHacks() const;
     Hack* getHack(std::string hack);
+    bool getOldNoclipState() const;
 };
 
 #endif

@@ -130,6 +130,8 @@ private:
     Layer layer;
     int order;
     int range = 100;
+    int offset = 2;
+    
 public:
     Zindex(Layer l, int o) : layer(l), order(o) {};
     static Layer getLayer(std::string layer) {
@@ -139,7 +141,7 @@ public:
         };
         return layers[layer];
     }
-    int getIndex() { return layer * range * 2 + layer + order; };
+    int getIndex() { return (layer * range * 2 + layer + order + range) * offset; };
 };
 
 enum BlockSpecialDataType {
@@ -224,6 +226,7 @@ struct BufferedBlock {
     SDL_RendererFlip flip = SDL_FLIP_NONE;
     std::optional<LevelColor> baseColor = std::nullopt;
     std::optional<LevelColor> detailColor = std::nullopt;
+    std::optional<Zindex> zIndex = std::nullopt;
 };
 
 enum TriggerType {
