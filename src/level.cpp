@@ -32,12 +32,16 @@ void Level::initFromSave() {
 
     if ((*saves)["levels"].contains(stingifiedID)) {
         attempts = (int)((*saves)["levels"][stingifiedID]["attempts"]) + 1;
-        for (bool c : (*saves)["levels"][stingifiedID]["coins"]) coins.push_back(c);
+        for (bool c : (*saves)["levels"][stingifiedID]["coins"]) {
+            savedCoins.push_back(c);
+            coins.push_back(c);
+        }
         bestNormalMode = (*saves)["levels"][stingifiedID]["progress"]["normal"];
         bestPracticeMode = (*saves)["levels"][stingifiedID]["progress"]["practice"];
 
     } else {
         attempts = 1;
+        savedCoins = { false, false, false };
         coins = { false, false, false };
         bestNormalMode = 0.0f;
         bestPracticeMode = 0.0f;
@@ -45,7 +49,7 @@ void Level::initFromSave() {
 }
 
 void Level::initCamera() {
-    game->getCamera()->globalSet(data->startpos.camPos);
+    game->getCamera()->setPos(data->startpos.camPos, 0);
 }
 
 void Level::initLevelElements() {
@@ -62,7 +66,7 @@ void Level::initLevelElements() {
 }
 
 void Level::initItems() {
-    for (BufferedBlock* bBlock : data->blocks) items.push_back(new Block(game, bBlock));
+    for (BufferedBlock* bb : data->blocks) items.push_back(new Block(game, bb));
     for (BufferedTrigger* bTrigger : data->triggers) items.push_back(new Trigger(game, bTrigger));
     
     std::sort(items.begin(), items.end(), &sortItems);
@@ -125,9 +129,11 @@ void Level::saveData() {
     (*saves)["levels"][stingifiedID]["progress"]["normal"] = 0;
     (*saves)["levels"][stingifiedID]["progress"]["practice"] = 0;
 
-    (*saves)["levels"][stingifiedID]["coins"][0] = coins[0];
-    (*saves)["levels"][stingifiedID]["coins"][1] = coins[1];
-    (*saves)["levels"][stingifiedID]["coins"][2] = coins[2];
+    if (finished) {
+        (*saves)["levels"][stingifiedID]["coins"][0] = coins[0];
+        (*saves)["levels"][stingifiedID]["coins"][1] = coins[1];
+        (*saves)["levels"][stingifiedID]["coins"][2] = coins[2];
+    }
 
     (*saves)["levels"][stingifiedID]["progress"]["normal"] = bestNormalMode;
     (*saves)["levels"][stingifiedID]["progress"]["practice"] = bestPracticeMode;
@@ -314,6 +320,10 @@ BlockEffect Level::getBlockEffect() const {
     return currentBlockEffect;
 }
 
+std::vector<bool> Level::getSavedCoins() const {
+    return savedCoins;
+}
+
 // SETTER
 void Level::setBackgroundColor(Color color) {
     backgroundColor.r = color.r;
@@ -390,6 +400,10 @@ void Level::setBlockEffect(BlockEffect effect) {
     currentBlockEffect = effect;
 }
 
+void Level::gotCoinNb(unsigned int nb) {
+    if (nb < 3) coins[nb] = true;
+}
+
 // OTHER
 void Level::finish() {
     static H2DE_Engine* engine = game->getEngine();
@@ -399,22 +413,7 @@ void Level::finish() {
     if (mode == NORMAL_MODE) bestNormalMode = 100.0f;
     else bestPracticeMode = 100.0f;
 
-    if (mode == NORMAL_MODE && data->startpos.playerPos.x == 0) {
-        int coinNb = 0;
-
-        for (Item* item : items) {
-            Block* block = ItemManager::castToBlock(item);
-            if (!block) continue;
-
-            BufferedBlock* bb = block->getBufferedData();
-            if (bb->data->specialData.has_value()) {
-                if (bb->data->specialData.value()->desc != SD_SECRET) continue;
-            } else continue;
-
-            if (!coins[coinNb]) coins[coinNb] = block->isPickedUp();
-            coinNb++;
-        }
-    }
+    if (mode == NORMAL_MODE && data->startpos.playerPos.x == 0) finished = true;
 }
 
 void Level::pause() {
@@ -442,7 +441,7 @@ void Level::respawn() {
     Checkpoint* lastPracticeCheckpoint = player->getLastPracticeCheckpoint();
 
     if (mode == NORMAL_MODE || (mode == PRACTICE_MODE && lastPracticeCheckpoint == nullptr)) {
-        camera->reset();
+        camera->reset(data->startpos.camPos);
         speed = data->startpos.speed;
 
         backgroundPos = gameData->positions->background;
@@ -469,6 +468,8 @@ void Level::respawn() {
     }
 
     for (Item* item : items) item->reset();
+    if (mode == NORMAL_MODE && !finished) for (int i = 0; i < 3; i++) coins[i] = savedCoins[i];
+    refreshCoins();
 
     game->getMegahack()->resetHitboxTrail();
 
@@ -478,4 +479,18 @@ void Level::respawn() {
 
     attempts++;
     std::cout << "Attempt " << attempts << std::endl;
+}
+
+void Level::refreshCoins() {
+    int coinIndex = 0;
+    for (Item* item : items) {
+        Block* block = ItemManager::castToBlock(item);
+        if (!block) continue;
+
+        if (block->getBufferedData()->id == "0_1") {
+            block->setCoinIndex(coinIndex);
+            if (coins[coinIndex]) block->enter();
+            coinIndex++;
+        }
+    }
 }

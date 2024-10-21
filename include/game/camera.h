@@ -10,8 +10,7 @@ private:
 
     H2DE_TimelineManager* tm = H2DE_CreateTimelineManager();
 
-    LevelPos initalPos;
-    LevelPos currentPos;
+    LevelPos pos;
     Velocity velocity = { 0.0f, 0.0f };
 
 public:
@@ -19,12 +18,12 @@ public:
     ~Camera();
 
     void update();
-    void reset();
+    void reset(LevelPos pos);
     void clearTM();
 
     LevelPos getPos();
+    bool isOnScreen(LevelPos pos, LevelSize size, LevelOffset offset);
 
-    void globalSet(LevelPos pos);
     void setPos(LevelPos pos, unsigned int ms);
 };
 

@@ -29,6 +29,7 @@ private:
     
     bool pickedUp = false;
     std::optional<BlockEffect> effect = std::nullopt;
+    std::optional<int> coinIndex = std::nullopt;
 
     std::vector<BlockTextureData*> texturesData;
 
@@ -53,6 +54,7 @@ public:
     bool isPickedUp() const;
 
     void enter();
+    void setCoinIndex(int index);
 };
 
 

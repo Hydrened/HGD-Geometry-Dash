@@ -4,7 +4,7 @@
 Camera::Camera(Game* g) : game(g) {
     static GameData* gameData = game->getData();
     
-    globalSet(gameData->positions->camera);
+    setPos(gameData->positions->camera, 0);
 }
 
 // CLEANUP
@@ -29,27 +29,27 @@ void Camera::update() {
     static float maxGravityCube = gameData->physics->maxGravities[CUBE][BIG];
 
     LevelPos playerPos = player->getPos();
-    float newYpos = currentPos.y;
+    float newYpos = pos.y;
 
     if (gameData->physics->canMoveCamera[player->getGamemode()]) {
-        if (playerPos.y < currentPos.y + cameraPaddingBot) {
-            newYpos -= ((( currentPos.y + cameraPaddingBot ) - playerPos.y ) / cameraPaddingBot) * maxGravityCube;
+        if (playerPos.y < pos.y + cameraPaddingBot) {
+            newYpos -= ((( pos.y + cameraPaddingBot ) - playerPos.y ) / cameraPaddingBot) * maxGravityCube;
 
-        } else if (playerPos.y > currentPos.y + winHeight - cameraPaddingTop) {
-            newYpos += (( playerPos.y - ( currentPos.y + winHeight - cameraPaddingTop )) / cameraPaddingTop) * maxGravityCube;
+        } else if (playerPos.y > pos.y + winHeight - cameraPaddingTop) {
+            newYpos += (( playerPos.y - ( pos.y + winHeight - cameraPaddingTop )) / cameraPaddingTop) * maxGravityCube;
         }
 
         if (newYpos < cameraMinY) newYpos = cameraMinY;
         else if (newYpos > cameraMaxY) newYpos = cameraMaxY;
     }
 
-    setPos({ currentPos.x + gameData->physics->speeds[level->getCurrentSpeed()],newYpos }, 0);
+    setPos({ pos.x + gameData->physics->speeds[level->getCurrentSpeed()],newYpos }, 0);
 }
 
 // RESET
-void Camera::reset() {
-    currentPos.x = initalPos.x;
-    currentPos.y = initalPos.y;
+void Camera::reset(LevelPos p) {
+    pos.x = p.x;
+    pos.y = p.y;
 }
 
 void Camera::clearTM() {
@@ -58,29 +58,28 @@ void Camera::clearTM() {
 
 // GETTER
 LevelPos Camera::getPos() {
-    return currentPos;
+    return pos;
+}
+
+bool Camera::isOnScreen(LevelPos p, LevelSize s, LevelOffset o) {
+    static float camWidth = game->getData()->sizes->camera.w; 
+    return (p.x + o.x + s.w >= pos.x) && (p.x + o.x <= pos.x + camWidth);
 }
 
 //SETTER
-void Camera::globalSet(LevelPos pos) {
-    initalPos.x = pos.x;
-    initalPos.y = pos.y;
-    reset();
-}
-
-void Camera::setPos(LevelPos pos, unsigned int ms) {
+void Camera::setPos(LevelPos p, unsigned int ms) {
     static H2DE_Engine* engine = game->getEngine();
-    currentPos.x = pos.x;
+    pos.x = p.x;
 
     if (ms != 0) {
-        LevelPos defaultPos = currentPos;
+        LevelPos defaultPos = pos;
         H2DE_ClearTimelineManager(tm);
 
-        H2DE_Timeline* t = H2DE_CreateTimeline(engine, ms, EASE_IN_OUT, [this, defaultPos, pos](float blend) {
-            currentPos.y = lerp(defaultPos.y, pos.y, blend);
+        H2DE_Timeline* t = H2DE_CreateTimeline(engine, ms, EASE_IN_OUT, [this, defaultPos, p](float blend) {
+            pos.y = lerp(defaultPos.y, p.y, blend);
         }, NULL, 0);
         H2DE_AddTimelineToManager(tm, t);
-    } else currentPos.y = pos.y;
+    } else pos.y = p.y;
 
     H2DE_TickTimelineManager(tm);
 }

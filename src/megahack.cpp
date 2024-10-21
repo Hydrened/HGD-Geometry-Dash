@@ -58,8 +58,8 @@ void Megahack::resetHitboxTrail() {
 // UPDATE
 void Megahack::update() {
     static GameData* gameData = game->getData();
+    static Camera* camera = game->getCamera();
     Level* level = game->getLevel();
-    LevelPos camPos = game->getCamera()->getPos();
     
     if (level) {
         if (hacks["hitbox-trail"]->active && hacks["show-hitboxes"]->active) {
@@ -74,7 +74,7 @@ void Megahack::update() {
             for (int i = 0; i < hitboxTrail.size(); i++) {
                 Hitbox* hitbox = hitboxTrail[i];
 
-                if (hitbox->pos.x + gameData->sizes->redHitbox[hitbox->gamemode][hitbox->size].w < camPos.x) {
+                if (!camera->isOnScreen(hitbox->pos, gameData->sizes->redHitbox[hitbox->gamemode][hitbox->size], gameData->offsets->redHitbox[hitbox->gamemode][hitbox->size])) {
                     delete hitboxTrail[i];
                     hitboxTrail.erase(hitboxTrail.begin() + i);
                 } else break;

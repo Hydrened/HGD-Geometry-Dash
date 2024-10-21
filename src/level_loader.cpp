@@ -85,9 +85,16 @@ void LevelLoader::getConfigInfos(Game* game, LevelData* data, json* level)  {
 void LevelLoader::getBlocksInfos(Game* game, LevelData* data, json* level)  {
     static std::unordered_map<std::string, BlockData>* blocksData = &(game->getData()->other->blocks);
 
+    int coins = 0;
+
     for (json block : (*level)["blocks"]) {
         BlockData* blockData = &blocksData->at(block["i"]);
         BufferedBlock* bb = new BufferedBlock();
+
+        if (block["i"] == "0_1") {
+            coins++;
+            if (coins > 3) continue;
+        }
 
         bb->id = block["i"];
         bb->data = new BlockData(*blockData);

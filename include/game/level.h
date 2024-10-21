@@ -39,7 +39,9 @@ private:
     Color lineColor;
 
     std::vector<Item*> items;
+    std::vector<bool> savedCoins;
     std::vector<bool> coins;
+    bool finished = false;
 
     BlockEffect currentBlockEffect = FADE;
 
@@ -70,6 +72,7 @@ public:
     void pause();
     void resume();
     void respawn();
+    void refreshCoins();
 
     LevelData* getData() const;
     LevelPos getBotGroundPos() const;
@@ -83,6 +86,7 @@ public:
     int getLevelLength() const;
     LevelMode getMode() const;
     BlockEffect getBlockEffect() const;
+    std::vector<bool> getSavedCoins() const;
 
     void setBackgroundColor(Color color);
     void setGroundColor(Color color);
@@ -93,6 +97,7 @@ public:
     void setBestNormalMode(float percentage);
     void setBestPracticeMode(float percentage);
     void setBlockEffect(BlockEffect effect);
+    void gotCoinNb(unsigned int nb);
 };
 
 #endif

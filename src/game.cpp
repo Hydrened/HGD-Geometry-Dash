@@ -38,7 +38,7 @@ void Game::createWindow(SDL_WindowFlags flag) {
         throw std::runtime_error("HGD-1000: Error creating window => SDL_Init failed: " + std::string(SDL_GetError()));
     }
 
-    window = SDL_CreateWindow("Geometry Dash 1.0 (1.0.23)", x, y, w, h, flag);
+    window = SDL_CreateWindow("Geometry Dash 1.0 (1.0.24)", x, y, w, h, flag);
     if (!window) {
         SDL_Quit();
         throw std::runtime_error("HGD-1001: Error creating window => SDL_CreateWindow failed: " + std::string(SDL_GetError()));
@@ -66,7 +66,7 @@ void Game::createWindow(SDL_WindowFlags flag) {
 void Game::loadVolumes() {
     std::string SAVESpath = "data/saves.json";
     json* saves = H2DE_Json::read(SAVESpath);
-    H2DE_SetSoundVolume(engine, -1, (*saves)["volume"]);
+    H2DE_SetSoundVolume(engine, -1, (*saves)["settings"]["volume"]);
 }
 
 // CLEANUP
@@ -333,6 +333,7 @@ void Game::closeMenu() {
 void Game::openLevel() {
     int levelID = (menu) ? menu->getLevelIndex() : 0;
     level = new Level(this, levelID);
+    level->refreshCoins();
 }
 
 void Game::closeLevel() {

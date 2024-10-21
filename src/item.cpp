@@ -21,7 +21,7 @@ void Item::setUsed() {
 // BLOCK
 
 // INIT
-Block::Block(Game* game, BufferedBlock* b) : Item(game), bb(b) {
+Block::Block(Game* g, BufferedBlock* b) : Item(g), bb(b) {
     static H2DE_Engine* engine = game->getEngine();
 
     if (bb->data->baseTexture.has_value()) texturesData.push_back(bb->data->baseTexture.value());
@@ -102,17 +102,22 @@ void Block::update() {
 
 // RENDER
 void Block::render() {
-    LevelPos camPos = game->getCamera()->getPos();
+    static Camera* camera = game->getCamera(); 
     GameState gameState = game->getState();
 
-    // replace
-    if (!pickedUp) {
-        for (BlockTextureData* textureData : texturesData) {
-            if (bb->pos.x + textureData->size.w >= camPos.x && bb->pos.x - textureData->size.w <= camPos.x + BLOCKS_ON_WIDTH + 1) {
-                if (gameState.main != LEVEL_PAUSE) H2DE_TickTimelineManager(tm);
+    if (bb->data->type != DECORATION) {
+        BlockHitboxData* hd = (bb->data->hitboxData.has_value()) ? bb->data->hitboxData.value() : nullptr;
+        if (hd) if (game->getMegahack()->getHack("show-hitboxes")->active) {
+            if (camera->isOnScreen(bb->pos, hd->size, hd->offset)) renderHitbox();
+        }
+    }
+
+    for (BlockTextureData* textureData : texturesData) {
+        if (camera->isOnScreen(bb->pos, textureData->size, textureData->offset)) {
+            if (gameState.main != LEVEL_PAUSE) H2DE_TickTimelineManager(tm);
+            if (!pickedUp) {
                 renderTexture(textureData);
                 if (bb->data->glow.has_value()) renderGlow();
-                if (game->getMegahack()->getHack("show-hitboxes")->active && bb->data->type != DECORATION) renderHitbox();
             }
         }
     }
@@ -230,8 +235,6 @@ void Block::reset() {
     textureOffset = { 0.0f, 0.0f };
     textureScale = 1;
     effect = std::nullopt;
-
-    H2DE_ClearTimelineManager(tm);
 }
 
 // GETTER
@@ -277,11 +280,15 @@ void Block::enter() {
         } break;
 
         case SD_COIN: switch (sd->desc) {
-            case SD_SECRET: pickedUp = true; used = true; break;
+            case SD_SECRET: pickedUp = true; used = true; game->getLevel()->gotCoinNb(coinIndex.value()); break;
             default: break;
         } break;
         default: break;
     }
+}
+
+void Block::setCoinIndex(int index) {
+    if (coinIndex == std::nullopt) coinIndex = index;
 }
 
 

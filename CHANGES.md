@@ -1,3 +1,10 @@
+## HGD-1.0.24
+#### ADDED
+- 3 coins limit in levels
+#### FIXED
+- sprite animations canceled after 1st attempt
+- coins pick up when respawning
+
 ## HGD-1.0.23
 #### FIXED
 - random crash in menu
