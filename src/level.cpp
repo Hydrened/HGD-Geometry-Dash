@@ -80,10 +80,10 @@ void Level::initConfig() {
         Block* block = ItemManager::castToBlock(lastItem);
         Trigger* trigger = ItemManager::castToTrigger(lastItem);
 
-        if (block) levelLength = block->getBufferedData()->pos.x + gameData->sizes->levelEndPadding;
-        else if (trigger) levelLength = trigger->getBufferedData()->pos.x + gameData->sizes->levelEndPadding;
+        if (block) levelLength = block->getBufferedData()->pos.x;
+        else if (trigger) levelLength = trigger->getBufferedData()->pos.x;
 
-    } else levelLength = gameData->sizes->levelEndPadding;
+    } else levelLength = gameData->sizes->levelMinLength;
 }
 
 // CLEANUP
@@ -195,6 +195,7 @@ void Level::renderElements() {
     static GameData* gameData = game->getData();
     static H2DE_Engine* engine = game->getEngine();
     static Calculator* calculator = game->getCalculator();
+    static Camera* camera = game->getCamera();
 
     H2DE_Size absGroundSize = calculator->convertToPx(gameData->sizes->ground);
     H2DE_Size absLineSize = calculator->convertToPx(gameData->sizes->line);
@@ -208,7 +209,7 @@ void Level::renderElements() {
     background->size = calculator->convertToPx(gameData->sizes->background);
     background->texture = data->backgroundTexture;
     background->repeatX = true;
-    background->rgb = (H2DE_RGB)(backgroundColor);
+    background->rgb = backgroundColor;
     background->index = Zindex{ BG, 0 }.getIndex();
     H2DE_AddGraphicObject(engine, background);
 
@@ -217,7 +218,7 @@ void Level::renderElements() {
     botGround->pos = calculator->convertToPx(botGroundVisualPos, gameData->sizes->ground, false, false);
     botGround->size = absGroundSize;
     botGround->texture = data->groundTexture;
-    botGround->rgb = (H2DE_RGB)(groundColor);
+    botGround->rgb = groundColor;
     botGround->index = groundIndex;
     H2DE_AddGraphicObject(engine, botGround);
 
@@ -227,7 +228,7 @@ void Level::renderElements() {
     botLine->size = absLineSize;
     botLine->texture = data->lineTexture;
     botLine->repeatX = false;
-    botLine->rgb = (H2DE_RGB)(lineColor);
+    botLine->rgb = lineColor;
     botLine->index = lineIndex;
     H2DE_AddGraphicObject(engine, botLine);
 
@@ -241,6 +242,24 @@ void Level::renderElements() {
     H2DE_GraphicObject* topLine = H2DE_CreateGraphicObject(*botLine);
     topLine->pos = calculator->convertToPx({ gameData->offsets->topLine.x, topGroundVisualPos.y + gameData->offsets->topLine.y }, gameData->sizes->line, true, false);
     H2DE_AddGraphicObject(engine, topLine);
+
+    float wallXpos = (float)levelLength + gameData->offsets->levelEndWallX + gameData->sizes->camera.w + gameData->positions->camera.x;
+    if (camera->isOnScreen({ wallXpos - 1.0f, 0.0f }, { 1.0f, 1.0f }, { 0.0f, 0.0f })) {
+        H2DE_Size wallSize = calculator->convertToPx(LevelSize{ 1.0f, 1.0f });
+        H2DE_Pos center = calculator->convertToPx(LevelOffset{ 0.5f, 0.5f });
+
+        for (int i = 0; i < gameData->sizes->levelHeight; i++) {
+            H2DE_GraphicObject* wall = H2DE_CreateGraphicObject();
+            wall->type = IMAGE;
+            wall->texture = "1_3.png";
+            wall->pos = calculator->convertToPx({ wallXpos, 1.0f * i }, { 1.0f, 1.0f }, false, false);
+            wall->size = wallSize;
+            wall->rotationOrigin = center;
+            wall->rotation = 270.0f;
+            wall->index = Zindex{ T1, 20 }.getIndex();
+            H2DE_AddGraphicObject(engine, wall);
+        }
+    }
 }
 
 void Level::renderPracticeUI() {
@@ -450,12 +469,6 @@ void Level::respawn() {
         topGroundPos = gameData->positions->topGround;
         topGroundVisualPos = gameData->positions->topGround;
 
-        backgroundColor = data->backgroundColor;
-        groundColor = data->groundColor;
-        lineColor = data->lineColor;
-
-        currentBlockEffect = FADE;
-
         player->reset(&(data->startpos));
 
         if (mode == NORMAL_MODE) H2DE_PlaySound(engine, 0, data->song, 0);
@@ -466,6 +479,12 @@ void Level::respawn() {
 
         player->reset(lastPracticeCheckpoint);
     }
+
+    currentBlockEffect = FADE;
+    
+    backgroundColor = data->backgroundColor;
+    groundColor = data->groundColor;
+    lineColor = data->lineColor;
 
     for (Item* item : items) item->reset();
     if (mode == NORMAL_MODE && !finished) for (int i = 0; i < 3; i++) coins[i] = savedCoins[i];
@@ -489,7 +508,7 @@ void Level::refreshCoins() {
 
         if (block->getBufferedData()->id == "0_1") {
             block->setCoinIndex(coinIndex);
-            if (coins[coinIndex]) block->enter();
+            if (coins[coinIndex]) block->setPickedUp(true);
             coinIndex++;
         }
     }

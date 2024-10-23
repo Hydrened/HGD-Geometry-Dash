@@ -38,7 +38,7 @@ void Game::createWindow(SDL_WindowFlags flag) {
         throw std::runtime_error("HGD-1000: Error creating window => SDL_Init failed: " + std::string(SDL_GetError()));
     }
 
-    window = SDL_CreateWindow("Geometry Dash 1.0 (1.0.25)", x, y, w, h, flag);
+    window = SDL_CreateWindow("Geometry Dash 1.0 (1.0.26)", x, y, w, h, flag);
     if (!window) {
         SDL_Quit();
         throw std::runtime_error("HGD-1001: Error creating window => SDL_CreateWindow failed: " + std::string(SDL_GetError()));

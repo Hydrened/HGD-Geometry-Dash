@@ -20,12 +20,12 @@ Menu::Menu(Game* g) : game(g) {
     Color defaultGroundColor = groundColor;
     H2DE_Timeline* colorLoop = H2DE_CreateTimeline(engine, 30000, LINEAR, [this, defaultBackgroundColor, defaultGroundColor](float blend) {
 
-        H2DE_RGB rgbBG = H2DE_AddHueToRGB((H2DE_RGB)(defaultBackgroundColor), lerp(0, 360, blend));
+        H2DE_RGB rgbBG = H2DE_AddHueToRGB(defaultBackgroundColor, lerp(0, 360, blend));
         backgroundColor.r = rgbBG.r;
         backgroundColor.g = rgbBG.g;
         backgroundColor.b = rgbBG.b;
 
-        H2DE_RGB rgbG = H2DE_AddHueToRGB((H2DE_RGB)(defaultGroundColor), lerp(0, 360, blend) - 25);
+        H2DE_RGB rgbG = H2DE_AddHueToRGB(defaultGroundColor, lerp(0, 360, blend) - 25);
         groundColor.r = rgbG.r;
         groundColor.g = rgbG.g;
         groundColor.b = rgbG.b;
@@ -171,7 +171,7 @@ void Menu::renderMainMenu() {
     ground->texture = "ground_1.png"; // replace => ground_1.png(last ground used)
     ground->pos = calculator->convertToPx(gameData->positions->botGround, gameData->sizes->ground, false, false);
     ground->size = calculator->convertToPx(gameData->sizes->ground);
-    ground->rgb = (H2DE_RGB)(groundColor);
+    ground->rgb = groundColor;
     ground->repeatX = true;
     ground->index = Zindex{G, 0}.getIndex();
     H2DE_AddGraphicObject(engine, ground);
@@ -189,7 +189,7 @@ void Menu::renderMainMenu() {
     background->texture = "background_1.png"; // replace => background_1.png(last background used)
     background->pos = calculator->convertToPx(backgroundPos, gameData->sizes->background, false, false);
     background->size = calculator->convertToPx(gameData->sizes->background);
-    background->rgb = (H2DE_RGB)(backgroundColor);
+    background->rgb = backgroundColor;
     background->index = Zindex{BG, 0}.getIndex();
     H2DE_AddGraphicObject(engine, background);
 
@@ -282,7 +282,7 @@ void Menu::renderMainTexture() {
     col1->texture = gamemodeStrigified + "-" + std::to_string(icon->id) + "-1.png";
     col1->pos = calculator->convertToPx(iconPos, iconSize, true, false);
     col1->size = calculator->convertToPx(iconSize);
-    col1->rgb = (H2DE_RGB)(gameData->colors->icons[icon->col1]);
+    col1->rgb = gameData->colors->icons[icon->col1];
     col1->rotationOrigin = center;
     col1->rotation = icon->rotation;
     col1->index = Zindex{ T1, 2 }.getIndex();
@@ -290,7 +290,7 @@ void Menu::renderMainTexture() {
 
     H2DE_GraphicObject* col2 = H2DE_CreateGraphicObject(*col1);
     col2->texture = gamemodeStrigified + "-" + std::to_string(icon->id) + "-2.png";
-    col2->rgb = (H2DE_RGB)(gameData->colors->icons[icon->col2]);
+    col2->rgb = gameData->colors->icons[icon->col2];
     col2->index = Zindex{ T1, 1 }.getIndex();
     H2DE_AddGraphicObject(engine, col2);
 }
@@ -315,13 +315,13 @@ void Menu::renderSecondTexture() {
     col1->size = calculator->convertToPx(iconSize);
     col1->rotation = icon->rotation;
     col1->rotationOrigin = center;
-    col1->rgb = (H2DE_RGB)(gameData->colors->icons[icon->col1]);
+    col1->rgb = gameData->colors->icons[icon->col1];
     col1->index = Zindex{ T1, -2 }.getIndex();
     H2DE_AddGraphicObject(engine, col1);
 
     H2DE_GraphicObject* col2 = H2DE_CreateGraphicObject(*col1);
     col2->texture = "cube-0-2.png";
-    col2->rgb = (H2DE_RGB)(gameData->colors->icons[icon->col2]);
+    col2->rgb = gameData->colors->icons[icon->col2];
     col2->index = Zindex{ T1, -1 }.getIndex();
     H2DE_AddGraphicObject(engine, col2);
 }

@@ -111,7 +111,7 @@ void Megahack::render() {
                 { absRedHitboxSize.w, absRedHitboxSize.h },
                 { 0, absRedHitboxSize.h },
             };
-            redHitbox->rgb = (H2DE_RGB)(gameData->colors->hitboxes[OBSTACLE]);
+            redHitbox->rgb = gameData->colors->hitboxes[OBSTACLE];
             redHitbox->index = Zindex{ H, 0 }.getIndex();
             H2DE_AddGraphicObject(engine, redHitbox);
 
@@ -126,7 +126,7 @@ void Megahack::render() {
                 { blueHitboxSize.w, blueHitboxSize.h },
                 { 0, blueHitboxSize.h },
             };
-            blueHitbox->rgb = (H2DE_RGB)(gameData->colors->hitboxes[SOLID]);
+            blueHitbox->rgb = gameData->colors->hitboxes[SOLID];
             blueHitbox->index = Zindex{ H, 1 }.getIndex();
             H2DE_AddGraphicObject(engine, blueHitbox);
         }

@@ -278,13 +278,13 @@ void Player::renderMainTexture() {
     col1->size = calculator->convertToPx(iconSize);
     col1->rotation = rotation;
     col1->rotationOrigin = center;
-    col1->rgb = (H2DE_RGB)(gameData->colors->icons[icons->colorIDs[0]]);
+    col1->rgb = gameData->colors->icons[icons->colorIDs[0]];
     col1->index = Zindex{ T1, 0 }.getIndex();
     H2DE_AddGraphicObject(engine, col1);
 
     H2DE_GraphicObject* col2 = H2DE_CreateGraphicObject(*col1);
     col2->texture = gamemodeStrigified + "-" + std::to_string(icons->ids[gamemode]) + "-2.png";
-    col2->rgb = (H2DE_RGB)(gameData->colors->icons[icons->colorIDs[1]]);
+    col2->rgb = gameData->colors->icons[icons->colorIDs[1]];
     col2->index = Zindex{ T1, 1 }.getIndex();
     H2DE_AddGraphicObject(engine, col2);
 }
@@ -306,13 +306,13 @@ void Player::renderSecondTexture() {
     col1->size = calculator->convertToPx(iconSize);
     col1->rotation = rotation;
     col1->rotationOrigin = center;
-    col1->rgb = (H2DE_RGB)(gameData->colors->icons[icons->colorIDs[0]]);
+    col1->rgb = gameData->colors->icons[icons->colorIDs[0]];
     col1->index = Zindex{ T1, -2 }.getIndex();
     H2DE_AddGraphicObject(engine, col1);
 
     H2DE_GraphicObject* col2 = H2DE_CreateGraphicObject(*col1);
     col2->texture = "cube-0-2.png";
-    col2->rgb = (H2DE_RGB)(gameData->colors->icons[icons->colorIDs[1]]);
+    col2->rgb = gameData->colors->icons[icons->colorIDs[1]];
     col2->index = Zindex{ T1, -1 }.getIndex();
     H2DE_AddGraphicObject(engine, col2);
 }
@@ -334,7 +334,7 @@ void Player::renderHitboxes() {
         { absRedHitboxSize.w, absRedHitboxSize.h },
         { 0, absRedHitboxSize.h },
     };
-    redHitbox->rgb = (H2DE_RGB)(gameData->colors->hitboxes[OBSTACLE]);
+    redHitbox->rgb = gameData->colors->hitboxes[OBSTACLE];
     redHitbox->index = Zindex{ H, 0 }.getIndex();
     H2DE_AddGraphicObject(engine, redHitbox);
 
@@ -349,7 +349,7 @@ void Player::renderHitboxes() {
         { blueHitboxSize.w, blueHitboxSize.h },
         { 0, blueHitboxSize.h },
     };
-    blueHitbox->rgb = (H2DE_RGB)(gameData->colors->hitboxes[SOLID]);
+    blueHitbox->rgb = gameData->colors->hitboxes[SOLID];
     blueHitbox->index = Zindex{ H, 1 }.getIndex();
     H2DE_AddGraphicObject(engine, blueHitbox);
 }

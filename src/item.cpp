@@ -18,6 +18,7 @@ void Item::setUsed() {
 }
 
 
+
 // BLOCK
 
 // INIT
@@ -115,7 +116,7 @@ void Block::render() {
     for (BlockTextureData* textureData : texturesData) {
         if (camera->isOnScreen(bb->pos, textureData->size, textureData->offset)) {
             if (gameState.main != LEVEL_PAUSE) H2DE_TickTimelineManager(tm);
-            if (!pickedUp) {
+            if (!pickedUp || !used) {
                 renderTexture(textureData);
                 if (bb->data->glow.has_value()) renderGlow();
             }
@@ -132,34 +133,24 @@ void Block::renderTexture(BlockTextureData* td) {
 
     BlockTextureData* bt = (bb->data->baseTexture.has_value()) ? bb->data->baseTexture.value() : nullptr;
     BlockTextureData* dt = (bb->data->detailTexture.has_value()) ? bb->data->detailTexture.value() : nullptr;
-    LevelColor color;
-    if (bt == td) {
-        if (bb->baseColor.has_value()) color = bb->baseColor.value();
-        else color = td->color;
-    } else if (dt == td) {
-        if (bb->detailColor.has_value()) color = bb->detailColor.value();
-        else color = td->color;
-    } else color = td->color;
 
     H2DE_RGB rgb;
-    switch (color) {
+    switch (getLevelColor(bt, dt, td)) {
         case COL_WHITE: rgb = { 255, 255, 255, 255 }; break;
         case COL_BLACK: rgb = { 0, 0, 0, 255 }; break;
         case COL_OBJ: rgb = { 255, 255, 255, 255 }; break;
-        case COL_1: rgb = (H2DE_RGB)level->getData()->colors[0]; break;
-        case COL_2: rgb = (H2DE_RGB)level->getData()->colors[1]; break;
-        case COL_3: rgb = (H2DE_RGB)level->getData()->colors[2]; break;
-        case COL_4: rgb = (H2DE_RGB)level->getData()->colors[3]; break;
-        case COL_P_1: rgb = (H2DE_RGB)gameData->colors->icons[level->getPlayer()->getIcons()->colorIDs[0]]; break;
-        case COL_P_2: rgb = (H2DE_RGB)gameData->colors->icons[level->getPlayer()->getIcons()->colorIDs[1]]; break;
+        case COL_1: rgb = level->getData()->colors[0]; break;
+        case COL_2: rgb = level->getData()->colors[1]; break;
+        case COL_3: rgb = level->getData()->colors[2]; break;
+        case COL_4: rgb = level->getData()->colors[3]; break;
+        case COL_P_1: rgb = gameData->colors->icons[level->getPlayer()->getIcons()->colorIDs[0]]; break;
+        case COL_P_2: rgb = gameData->colors->icons[level->getPlayer()->getIcons()->colorIDs[1]]; break;
         default: break;
     }
     rgb.a = textureOpacity;
 
-    int index = (bb->zIndex.has_value()) ? bb->zIndex.value().getIndex() : bb->data->zIndex->getIndex();
-    if (dt == td) index--;
-    
-    std::string tex = td->texture.substr(0, td->texture.size() - 4).append(((td->sprites != 0) ? std::string("-").append(std::to_string(currentSprite)) : "")).append(".png");
+    std::string tempTex = (td->texture == "0_1.png" && pickedUp && !used) ? "0_2.png" : td->texture;
+    std::string tex = tempTex.substr(0, tempTex.size() - 4).append(((td->sprites != 0) ? std::string("-").append(std::to_string(currentSprite)) : "")).append(".png");
     H2DE_Size absOrigin = calculator->convertToPx(LevelSize{ td->origin.x, td->origin.y });
 
     H2DE_GraphicObject* texture = H2DE_CreateGraphicObject();
@@ -173,7 +164,7 @@ void Block::renderTexture(BlockTextureData* td) {
     texture->scaleOrigin = { absOrigin.w, absOrigin.h };
     texture->flip = bb->flip;
     texture->rgb = rgb;
-    texture->index = index;
+    texture->index = getIndex(bt, dt, td);
     H2DE_AddGraphicObject(engine, texture);
 }
 
@@ -200,7 +191,7 @@ void Block::renderGlow() {
     glow->scaleOrigin = { absOrigin.w, absOrigin.h };
     glow->flip = bb->flip;
     glow->rgb = rgb;
-    glow->index = Zindex{ B4, -99 }.getIndex();
+    glow->index = Zindex{ B5, -100 }.getIndex();
     H2DE_AddGraphicObject(engine, glow);
 }
 
@@ -224,7 +215,7 @@ void Block::renderHitbox() {
     };
     hitbox->rotation = bb->rotation;
     hitbox->rotationOrigin = calculator->convertToPx(LevelOffset{ h->origin.x, h->origin.y });
-    hitbox->rgb = (H2DE_RGB)(gameData->colors->hitboxes[bb->data->type]);
+    hitbox->rgb = gameData->colors->hitboxes[bb->data->type];
     hitbox->index = Zindex{ H, -1 }.getIndex();
     H2DE_AddGraphicObject(engine, hitbox);
 }
@@ -241,6 +232,31 @@ void Block::reset() {
 }
 
 // GETTER
+LevelColor Block::getLevelColor(BlockTextureData* bt, BlockTextureData* dt, BlockTextureData* td) const {
+    if (bt == td) {
+        if (bb->baseColor.has_value()) return bb->baseColor.value();
+        else return td->color;
+    } else if (dt == td) {
+        if (bb->detailColor.has_value()) return bb->detailColor.value();
+        else return td->color;
+    } else return td->color;
+}
+
+int Block::getIndex(BlockTextureData* bt, BlockTextureData* dt, BlockTextureData* td) const {
+    int index;
+    if (bb->zIndex.has_value()) {
+        if (bt && dt) {
+            if (bt->zIndex > dt->zIndex) {
+                if (td == bt) return bb->zIndex.value().getIndex();
+                else return bb->zIndex.value().getIndex() - (bt->zIndex - dt->zIndex);
+            } else {
+                if (td == bt) return bb->zIndex.value().getIndex() - (dt->zIndex - bt->zIndex);
+                else return bb->zIndex.value().getIndex();
+            }
+        } else return bb->zIndex.value().getIndex();
+    } else return td->zIndex.getIndex();
+}
+
 BufferedBlock* Block::getBufferedData() const {
     return bb;
 }
@@ -292,6 +308,10 @@ void Block::enter() {
 
 void Block::setCoinIndex(int index) {
     if (coinIndex == std::nullopt) coinIndex = index;
+}
+
+void Block::setPickedUp(bool value) {
+    pickedUp = true;
 }
 
 
@@ -392,7 +412,7 @@ void Trigger::render() {
 
 // RESET
 void Trigger::reset() {
-    if (bt->data->type != T_STARTPOS) used = false;
+    if (bt->data->type != T_STARTPOS && game->getLevel()->getMode() == NORMAL_MODE) used = false;
     H2DE_ClearTimelineManager(tm);
 }
 

@@ -1,3 +1,9 @@
+## HGD-1.0.26
+#### ADDED
+- coin texture when already picked up
+- level end wall
+- one zIndex per texture
+
 ## HGD-1.0.25
 #### ADDED
 - zIndex in level block storage

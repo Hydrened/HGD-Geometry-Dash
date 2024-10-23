@@ -41,6 +41,9 @@ private:
     void renderGlow();
     void renderHitbox();
 
+    LevelColor getLevelColor(BlockTextureData* bt, BlockTextureData* dt, BlockTextureData* td) const;
+    int getIndex(BlockTextureData* bt, BlockTextureData* dt, BlockTextureData* td) const;
+
 public:
     Block(Game* game, BufferedBlock* bufferedBlock);
     ~Block() override;
@@ -55,6 +58,7 @@ public:
 
     void enter();
     void setCoinIndex(int index);
+    void setPickedUp(bool value);
 };
 
 

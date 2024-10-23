@@ -38,8 +38,8 @@ struct GameData {
         float cameraXremain = 0.3f;
         float levelHeight = 80.0f;
         float cameraPaddingTop = 3.0f; 
-        float levelEndPadding = 5.0f;
         float blockEffectPadding = 2.5f;
+        float levelMinLength = 8.0f; // replace
         std::unordered_map<Gamemode, int> gamemodeHeights;
         std::unordered_map<Gamemode, std::unordered_map<Size, LevelSize>> mainIcon;
         std::unordered_map<Gamemode, std::unordered_map<Size, LevelSize>> redHitbox;
@@ -87,6 +87,7 @@ struct GameData {
         LevelOffset topLine = { 2.0f, 0.0f };
         LevelOffset checkpoint = { 0.25f, 0.0f };
         float blockEffectMove = 3.0f;
+        float levelEndWallX = -0.6f;
         std::unordered_map<Gamemode, std::unordered_map<Size, LevelOffset>> mainIcon;
         std::unordered_map<Gamemode, std::unordered_map<Size, LevelOffset>> redHitbox;
         std::unordered_map<Gamemode, std::unordered_map<Size, LevelOffset>> blueHitbox;
@@ -232,332 +233,296 @@ struct GameData {
 
             blocks["0_1"] = {
                 SPECIAL,
-                new BlockTextureData{ "0_1.png", 4, { 1.34f, 1.34f }, { -0.17f, -0.17f }, { 0.67f, 0.67f }, COL_WHITE },
+                new BlockTextureData{ "0_1.png", 4, { 1.34f, 1.34f }, { -0.17f, -0.17f }, { 0.67f, 0.67f }, COL_WHITE, { T1, 9 } },
                 std::nullopt,
                 std::nullopt,
                 new BlockHitboxData{ { 1.5f, 1.5f }, { -0.25f, -0.25f }, { 0.75f, 0.75f } },
                 new BlockSpecialData{ SD_COIN, SD_SECRET },
-                new Zindex{ T1, 9 }
             };
 
             blocks["1_1"] = {
                 SOLID,
-                new BlockTextureData{ "1_1.png", 0, { 1.0f, 1.0f }, { 0.0f, 0.0f }, { 0.5f, 0.5f }, COL_OBJ },
+                new BlockTextureData{ "1_1.png", 0, { 1.0f, 1.0f }, { 0.0f, 0.0f }, { 0.5f, 0.5f }, COL_OBJ, { T1, 2 } },
                 std::nullopt,
                 new BlockGlowData{ 1, { 1.3f, 1.3f }, { -0.15f, -0.15f }, { 0.66f, 0.66f } },
                 new BlockHitboxData{ { 1.0f, 1.0f }, { 0.0f, 0.0f }, { 0.5f, 0.5f } },
                 std::nullopt,
-                new Zindex{ T1, 2 }
             };
             blocks["1_2"] = {
                 SOLID,
-                new BlockTextureData{ "1_2.png", 0, { 1.0f, 1.0f }, { 0.0f, 0.0f }, { 0.5f, 0.5f }, COL_OBJ },
+                new BlockTextureData{ "1_2.png", 0, { 1.0f, 1.0f }, { 0.0f, 0.0f }, { 0.5f, 0.5f }, COL_OBJ, { T1, 2 } },
                 std::nullopt,
                 new BlockGlowData{ 1, { 1.3f, 1.3f }, { -0.15f, -0.15f }, { 0.66f, 0.66f } },
                 new BlockHitboxData{ { 1.0f, 1.0f }, { 0.0f, 0.0f }, { 0.5f, 0.5f } },
                 std::nullopt,
-                new Zindex{ T1, 2 }
             };
             blocks["1_3"] = {
                 SOLID,
-                new BlockTextureData{ "1_3.png", 0, { 1.0f, 1.0f }, { 0.0f, 0.0f }, { 0.5f, 0.5f }, COL_OBJ },
+                new BlockTextureData{ "1_3.png", 0, { 1.0f, 1.0f }, { 0.0f, 0.0f }, { 0.5f, 0.5f }, COL_OBJ, { T1, 2 } },
                 std::nullopt,
                 new BlockGlowData{ 5, { 1.0f, 0.4f }, { 0.0f, 0.75f }, { 0.5f, 0.66f } },
                 new BlockHitboxData{ { 1.0f, 1.0f }, { 0.0f, 0.0f }, { 0.5f, 0.5f } },
                 std::nullopt,
-                new Zindex{ T1, 2 }
             };
             blocks["1_4"] = {
                 SOLID,
-                new BlockTextureData{ "1_4.png", 0, { 1.0f, 1.0f }, { 0.0f, 0.0f }, { 0.5f, 0.5f }, COL_OBJ },
+                new BlockTextureData{ "1_4.png", 0, { 1.0f, 1.0f }, { 0.0f, 0.0f }, { 0.5f, 0.5f }, COL_OBJ, { T1, 2 } },
                 std::nullopt,
                 new BlockGlowData{ 3, { 1.15f, 1.15f }, { -0.15f, 0.0f }, { 0.66f, 0.66f } },
                 new BlockHitboxData{ { 1.0f, 1.0f }, { 0.0f, 0.0f }, { 0.5f, 0.5f } },
                 std::nullopt,
-                new Zindex{ T1, 2 }
             };
             blocks["1_5"] = {
                 SOLID,
-                new BlockTextureData{ "1_5.png", 0, { 1.0f, 1.0f }, { 0.0f, 0.0f }, { 0.5f, 0.5f }, COL_OBJ },
+                new BlockTextureData{ "1_5.png", 0, { 1.0f, 1.0f }, { 0.0f, 0.0f }, { 0.5f, 0.5f }, COL_OBJ, { T1, 2 } },
                 std::nullopt,
                 new BlockGlowData{ 10, { 0.35f, 0.35f }, { -0.14f, 0.79f }, { 0.65f, 0.65f } },
                 new BlockHitboxData{ { 1.0f, 1.0f }, { 0.0f, 0.0f }, { 0.5f, 0.5f } },
                 std::nullopt,
-                new Zindex{ T1, 2 }
             };
             blocks["1_6"] = {
                 DECORATION,
-                new BlockTextureData{ "1_6.png", 0, { 1.0f, 1.0f }, { 0.0f, 0.0f }, { 0.5f, 0.5f }, COL_OBJ },
+                new BlockTextureData{ "1_6.png", 0, { 1.0f, 1.0f }, { 0.0f, 0.0f }, { 0.5f, 0.5f }, COL_OBJ, { B2, -7 } },
                 std::nullopt,
                 std::nullopt,
                 std::nullopt,
                 std::nullopt,
-                new Zindex{ B2, -7 }
             };
             blocks["1_7"] = {
                 DECORATION,
-                new BlockTextureData{ "1_7.png", 0, { 1.0f, 1.0f }, { 0.0f, 0.0f }, { 0.5f, 0.5f }, COL_OBJ },
+                new BlockTextureData{ "1_7.png", 0, { 1.0f, 1.0f }, { 0.0f, 0.0f }, { 0.5f, 0.5f }, COL_OBJ, { B2, -7 } },
                 std::nullopt,
                 std::nullopt,
                 std::nullopt,
                 std::nullopt,
-                new Zindex{ B2, -7 }
             };
             blocks["1_8"] = {
                 SOLID,
-                new BlockTextureData{ "1_8.png", 0, { 1.0f, 1.0f }, { 0.0f, 0.0f }, { 0.5f, 0.5f }, COL_OBJ },
+                new BlockTextureData{ "1_8.png", 0, { 1.0f, 1.0f }, { 0.0f, 0.0f }, { 0.5f, 0.5f }, COL_OBJ, { T1, 2 } },
                 std::nullopt,
                 new BlockGlowData{ 2, { 1.3f, 1.15f }, { -0.15f, -0.01f }, { 0.66f, 0.65f } },
                 new BlockHitboxData{ { 1.0f, 1.0f }, { 0.0f, 0.0f }, { 0.5f, 0.5f } },
                 std::nullopt,
-                new Zindex{ T1, 2 }
             };
             blocks["1_9"] = {
                 SOLID,
-                new BlockTextureData{ "1_9.png", 0, { 1.0f, 1.0f }, { 0.0f, 0.0f }, { 0.5f, 0.5f }, COL_OBJ },
+                new BlockTextureData{ "1_9.png", 0, { 1.0f, 1.0f }, { 0.0f, 0.0f }, { 0.5f, 0.5f }, COL_OBJ, { T1, 2 } },
                 std::nullopt,
                 new BlockGlowData{ 4, { 1.3f, 1.0f }, { -0.155f, 0.0f }, { 0.66f, 0.5f } },
                 new BlockHitboxData{ { 1.0f, 1.0f }, { 0.0f, 0.0f }, { 0.5f, 0.5f } },
                 std::nullopt,
-                new Zindex{ T1, 2 }
             };
             blocks["1_807"] = {
                 SOLID,
-                new BlockTextureData{ "1_807.png", 0, { 1.0f, 0.47f }, { 0.0f, 0.53f }, { 0.5f, 0.5f }, COL_OBJ },
+                new BlockTextureData{ "1_807.png", 0, { 1.0f, 0.47f }, { 0.0f, 0.53f }, { 0.5f, 0.5f }, COL_OBJ, { T1, 2 } },
                 std::nullopt,
                 new BlockGlowData{ 6, { 1.3f, 0.77f }, { -0.15f, 0.38f }, { 0.66f, 0.66f } },
                 new BlockHitboxData{ { 1.0f, 0.47f }, { 0.0f, 0.53f }, { 0.5f, 0.5f } },
                 std::nullopt,
-                new Zindex{ T1, 2 }
             };
             blocks["1_815"] = {
                 SOLID,
-                new BlockTextureData{ "1_815.png", 0, { 1.0f, 0.53f }, { 0.0f, 0.47f }, { 0.5f, 0.5f }, COL_OBJ },
+                new BlockTextureData{ "1_815.png", 0, { 1.0f, 0.53f }, { 0.0f, 0.47f }, { 0.5f, 0.5f }, COL_OBJ, { T1, 2 } },
                 std::nullopt,
                 new BlockGlowData{ 5, { 1.0f, 0.4f }, { 0.0f, 0.75f }, { 0.5f, 0.66f } },
                 new BlockHitboxData{ { 1.0f, 0.53f }, { 0.0f, 0.47f }, { 0.5f, 0.5f } },
                 std::nullopt,
-                new Zindex{ T1, 2 }
             };
             blocks["1_816"] = {
                 SOLID,
-                new BlockTextureData{ "1_816.png", 0, { 1.0f, 0.53f }, { 0.0f, 0.47f }, { 0.5f, 0.5f }, COL_OBJ },
+                new BlockTextureData{ "1_816.png", 0, { 1.0f, 0.53f }, { 0.0f, 0.47f }, { 0.5f, 0.5f }, COL_OBJ, { T1, 2 } },
                 std::nullopt,
                 new BlockGlowData{ 5, { 1.0f, 0.4f }, { 0.0f, 0.75f }, { 0.5f, 0.66f } },
                 new BlockHitboxData{ { 1.0f, 0.53f }, { 0.0f, 0.47f }, { 0.5f, 0.5f } },
                 std::nullopt,
-                new Zindex{ T1, 2 }
             };
             blocks["1_817"] = {
                 SOLID,
-                new BlockTextureData{ "1_817.png", 0, { 1.0f, 0.53f }, { 0.0f, 0.47f }, { 0.5f, 0.5f }, COL_OBJ },
+                new BlockTextureData{ "1_817.png", 0, { 1.0f, 0.53f }, { 0.0f, 0.47f }, { 0.5f, 0.5f }, COL_OBJ, { T1, 2 } },
                 std::nullopt,
                 new BlockGlowData{ 5, { 1.0f, 0.4f }, { 0.0f, 0.75f }, { 0.5f, 0.66f } },
                 new BlockHitboxData{ { 1.0f, 0.53f }, { 0.0f, 0.47f }, { 0.5f, 0.5f } },
                 std::nullopt,
-                new Zindex{ T1, 2 }
             };
             blocks["1_818"] = {
                 SOLID,
-                new BlockTextureData{ "1_818.png", 0, { 1.0f, 0.53f }, { 0.0f, 0.47f }, { 0.5f, 0.5f }, COL_OBJ },
+                new BlockTextureData{ "1_818.png", 0, { 1.0f, 0.53f }, { 0.0f, 0.47f }, { 0.5f, 0.5f }, COL_OBJ, { T1, 2 } },
                 std::nullopt,
                 new BlockGlowData{ 11, { 1.2f, 0.4f }, { -0.1f, 0.75f }, { 0.61f, 0.66f } },
                 new BlockHitboxData{ { 1.0f, 0.53f }, { 0.0f, 0.47f }, { 0.5f, 0.5f } },
                 std::nullopt,
-                new Zindex{ T1, 2 }
             };
 
             blocks["4_1"] = {
                 OBSTACLE,
-                new BlockTextureData{ "4_1.png", 0, { 1.0f, 1.0f }, { 0.0f, 0.0f }, { 0.5f, 0.5f }, COL_OBJ },
+                new BlockTextureData{ "4_1.png", 0, { 1.0f, 1.0f }, { 0.0f, 0.0f }, { 0.5f, 0.5f }, COL_OBJ, { T1, 2 } },
                 std::nullopt,
                 new BlockGlowData{ 7, { 1.2f, 1.2f }, { -0.09f, -0.15f }, { 0.6f, 0.56f } },
                 new BlockHitboxData{ { 0.24f, 0.42f }, { 0.38f, 0.29f }, { 0.12f, 0.22f } },
                 std::nullopt,
-                new Zindex{ T1, 2 }
             };
             blocks["4_2"] = {
                 OBSTACLE,
-                new BlockTextureData{ "4_2.png", 0, { 1.0f, 0.45f }, { 0.0f, -0.02f }, { 0.5f, -0.08f }, COL_OBJ },
+                new BlockTextureData{ "4_2.png", 0, { 1.0f, 0.45f }, { 0.0f, -0.02f }, { 0.5f, -0.08f }, COL_OBJ, { T1, 2 } },
                 std::nullopt,
                 new BlockGlowData{ 8, { 1.15f, 0.7f }, { -0.075f, -0.15f }, { 0.58f, 0.04f } },
                 new BlockHitboxData{ { 0.24f, 0.2f }, { 0.38f, 0.1f }, { 0.13, -0.21 } },
                 std::nullopt,
-                new Zindex{ T1, 2 }
             };
             blocks["4_3"] = {
                 OBSTACLE,
-                new BlockTextureData{ "4_3.png", 0, { 0.66f, 0.64f }, { 0.17f, -0.02f }, { 0.33f, 0.12f }, COL_OBJ },
+                new BlockTextureData{ "4_3.png", 0, { 0.66f, 0.64f }, { 0.17f, -0.02f }, { 0.33f, 0.12f }, COL_OBJ, { T1, 2 } },
                 std::nullopt,
                 new BlockGlowData{ 9, { 0.86f, 0.86f }, { 0.06f, -0.15f }, { 0.43f, 0.21f } },
                 new BlockHitboxData{ { 0.135f, 0.25f }, { 0.4325f, 0.18f }, { 0.07f, -0.07f } },
                 std::nullopt,
-                new Zindex{ T1, 2 }
             };
             blocks["4_31"] = {
                 OBSTACLE,
-                new BlockTextureData{ "4_31.png", 0, { 1.0f, 0.48f }, { 0.0f, -0.05f }, { 0.5f, -0.08f }, COL_WHITE },
+                new BlockTextureData{ "4_31.png", 0, { 1.0f, 0.48f }, { 0.0f, -0.05f }, { 0.5f, -0.08f }, COL_WHITE, { T1, 2 } },
                 std::nullopt,
                 std::nullopt,
                 new BlockHitboxData{ { 0.34f, 0.25f }, { 0.33f, 0.0f }, { 0.17f, -0.26f } },
                 std::nullopt,
-                new Zindex{ T1, 2 }
             };
         
             blocks["6_1"] = {
                 SPECIAL,
-                new BlockTextureData{ "6_1.png", 0, { 0.84f, 0.15f }, { 0.08f, 0.0f }, { 0.42f, -0.35f }, COL_WHITE },
+                new BlockTextureData{ "6_1.png", 0, { 0.84f, 0.15f }, { 0.08f, 0.0f }, { 0.42f, -0.35f }, COL_WHITE, { B1, 12 } },
                 std::nullopt,
                 std::nullopt, // glow
                 new BlockHitboxData{ { 0.84f, 0.15f }, { 0.08f, 0.0f }, { 0.42f, -0.35f } },
                 new BlockSpecialData{ SD_PAD, SD_YELLOW },
-                new Zindex{ B1, 12 }
             };
             blocks["6_2"] = {
                 SPECIAL,
-                new BlockTextureData{ "6_2.png", 0, { 0.84f, 0.17f }, { 0.08f, -0.02f }, { 0.42f, -0.35f }, COL_WHITE },
+                new BlockTextureData{ "6_2.png", 0, { 0.84f, 0.17f }, { 0.08f, -0.02f }, { 0.42f, -0.35f }, COL_WHITE, { B1, 12 } },
                 std::nullopt,
                 std::nullopt, // glow
                 new BlockHitboxData{ { 0.84f, 0.17f }, { 0.08f, -0.02f }, { 0.42f, -0.35f } },
                 new BlockSpecialData{ SD_PAD, SD_PINK },
-                new Zindex{ B1, 12 }
             };
             blocks["6_4"] = {
                 SPECIAL,
-                new BlockTextureData{ "6_4.png", 0, { 0.84f, 0.2f }, { 0.08f, 0.0f }, { 0.42f, -0.3f }, COL_WHITE },
+                new BlockTextureData{ "6_4.png", 0, { 0.84f, 0.2f }, { 0.08f, 0.0f }, { 0.42f, -0.3f }, COL_WHITE, { B1, 12 } },
                 std::nullopt,
                 std::nullopt, // glow
                 new BlockHitboxData{ { 0.84f, 0.2f }, { 0.08f, 0.0f }, { 0.42f, -0.31f } },
                 new BlockSpecialData{ SD_PAD, SD_BLUE },
-                new Zindex{ B1, 12 }
             };
             blocks["6_6"] = {
                 SPECIAL,
-                new BlockTextureData{ "6_6.png", 0, { 1.0f, 1.0f }, { 0.0f, 0.0f }, { 0.5f, 0.5f }, COL_WHITE },
+                new BlockTextureData{ "6_6.png", 0, { 1.0f, 1.0f }, { 0.0f, 0.0f }, { 0.5f, 0.5f }, COL_WHITE, { B1, 12 } },
                 std::nullopt,
                 std::nullopt, // glow
                 new BlockHitboxData{ { 1.2f, 1.2f }, { -0.1f, -0.1f }, { 0.6f, 0.6f } },
                 new BlockSpecialData{ SD_ORB, SD_YELLOW },
-                new Zindex{ B1, 12 }
             };
             blocks["6_17"] = {
                 SPECIAL,
-                new BlockTextureData{ "6_17.png", 0, { 1.2f, 2.52f }, { -0.1f, -0.76f }, { 0.6f, 1.25f }, COL_WHITE },
+                new BlockTextureData{ "6_17.png", 0, { 1.2f, 2.52f }, { -0.1f, -0.76f }, { 0.6f, 1.25f }, COL_WHITE, { T1, 10 } },
                 std::nullopt,
                 std::nullopt,
                 new BlockHitboxData{ { 0.84f, 2.52f }, { 0.08f, -0.76f }, { 0.42f, 1.25f } },
                 new BlockSpecialData{ SD_PORTAL, SD_RIGHT_SIDE_UP },
-                new Zindex{ T1, 10 }
             };
             blocks["6_18"] = {
                 SPECIAL,
-                new BlockTextureData{ "6_18.png", 0, { 1.2f, 2.52f }, { -0.1f, -0.76f }, { 0.6f, 1.25f }, COL_WHITE },
+                new BlockTextureData{ "6_18.png", 0, { 1.2f, 2.52f }, { -0.1f, -0.76f }, { 0.6f, 1.25f }, COL_WHITE, { T1, 10 } },
                 std::nullopt,
                 std::nullopt,
                 new BlockHitboxData{ { 0.84f, 2.52f }, { 0.08f, -0.76f }, { 0.42f, 1.25f } },
                 new BlockSpecialData{ SD_PORTAL, SD_UPSIDE_DOWN },
-                new Zindex{ T1, 10 }
             };
             blocks["6_20"] = {
                 SPECIAL,
-                new BlockTextureData{ "6_20.png", 0, { 1.5f, 2.8f }, { -0.25f, -0.9f }, { 0.75f, 1.4f }, COL_WHITE },
+                new BlockTextureData{ "6_20.png", 0, { 1.5f, 2.8f }, { -0.25f, -0.9f }, { 0.75f, 1.4f }, COL_WHITE, { T1, 10 } },
                 std::nullopt,
                 std::nullopt,
                 new BlockHitboxData{ { 1.14f, 2.84f }, { -0.07f, -0.92f }, { 0.57f, 1.41f } },
                 new BlockSpecialData{ SD_PORTAL, SD_CUBE },
-                new Zindex{ T1, 10 }
             };
             blocks["6_21"] = {
                 SPECIAL,
-                new BlockTextureData{ "6_21.png", 0, { 1.5f, 2.8f }, { -0.25f, -0.9f }, { 0.75f, 1.4f }, COL_WHITE },
+                new BlockTextureData{ "6_21.png", 0, { 1.5f, 2.8f }, { -0.25f, -0.9f }, { 0.75f, 1.4f }, COL_WHITE, { T1, 10 } },
                 std::nullopt,
                 std::nullopt,
                 new BlockHitboxData{ { 1.14f, 2.84f }, { -0.07f, -0.92f }, { 0.57f, 1.41f } },
                 new BlockSpecialData{ SD_PORTAL, SD_SHIP },
-                new Zindex{ T1, 10 }
             };
 
             blocks["11_1"] = {
                 DECORATION,
-                new BlockTextureData{ "11_1.png", 0, { 0.63f, 2.305f }, { 0.185f, -0.01f }, { 0.315f, 1.805f }, COL_P_1 },
+                new BlockTextureData{ "11_1.png", 0, { 0.63f, 2.305f }, { 0.185f, -0.01f }, { 0.315f, 1.805f }, COL_P_1, { B1, 9 } },
                 std::nullopt,
                 std::nullopt,
                 std::nullopt,
                 std::nullopt,
-                new Zindex{ B1, 9 }
             };
             blocks["11_2"] = {
                 DECORATION,
-                new BlockTextureData{ "11_2.png", 0, { 0.63f, 1.11f }, { 0.185f, -0.01f }, { 0.315f, 0.61f }, COL_P_1 },
+                new BlockTextureData{ "11_2.png", 0, { 0.63f, 1.11f }, { 0.185f, -0.01f }, { 0.315f, 0.61f }, COL_P_1, { B1, 9 } },
                 std::nullopt,
                 std::nullopt,
                 std::nullopt,
                 std::nullopt,
-                new Zindex{ B1, 9 }
             };
             blocks["11_193"] = {
                 DECORATION,
-                new BlockTextureData{ "11_193.png", 0, { 4.2f, 1.4f }, { -1.6f, -0.05f }, { 2.1f, 0.85f }, COL_P_1 },
+                new BlockTextureData{ "11_193.png", 0, { 4.2f, 1.4f }, { -1.6f, -0.05f }, { 2.1f, 0.85f }, COL_P_1, { B1, 9 } },
                 std::nullopt,
                 std::nullopt,
                 std::nullopt,
                 std::nullopt,
-                new Zindex{ B1, 9 }
             };
             blocks["11_194"] = {
                 DECORATION,
-                new BlockTextureData{ "11_194.png", 0, { 3.6f, 1.15f }, { -1.3f, 0.0f }, { 1.8f, 0.65f }, COL_P_1 },
+                new BlockTextureData{ "11_194.png", 0, { 3.6f, 1.15f }, { -1.3f, 0.0f }, { 1.8f, 0.65f }, COL_P_1, { B1, 9 } },
                 std::nullopt,
                 std::nullopt,
                 std::nullopt,
                 std::nullopt,
-                new Zindex{ B1, 9 }
             };
             blocks["11_195"] = {
                 DECORATION,
-                new BlockTextureData{ "11_195.png", 0, { 2.3f, 0.9f }, { -0.65f, 0.0f }, { 1.15f, 0.4f }, COL_P_1 },
+                new BlockTextureData{ "11_195.png", 0, { 2.3f, 0.9f }, { -0.65f, 0.0f }, { 1.15f, 0.4f }, COL_P_1, { B1, 9 } },
                 std::nullopt,
                 std::nullopt,
                 std::nullopt,
                 std::nullopt,
-                new Zindex{ B1, 9 }
             };
             blocks["11_196"] = {
                 DECORATION,
-                new BlockTextureData{ "11_196.png", 0, { 1.4f, 0.4f }, { -0.2f, 0.05f }, { 0.7f, -0.05f }, COL_P_1 },
+                new BlockTextureData{ "11_196.png", 0, { 1.4f, 0.4f }, { -0.2f, 0.05f }, { 0.7f, -0.05f }, COL_P_1, { B1, 9 } },
                 std::nullopt,
                 std::nullopt,
                 std::nullopt,
                 std::nullopt,
-                new Zindex{ B1, 9 }
             };
 
             blocks["12_77"] = {
                 DECORATION,
-                new BlockTextureData{ "12_77.png", 0, { 0.215f, 1.4f }, { 0.3925f, 0.0f }, { 0.1075f, 0.9f }, COL_WHITE },
+                new BlockTextureData{ "12_77.png", 0, { 0.215f, 1.4f }, { 0.3925f, 0.0f }, { 0.1075f, 0.9f }, COL_WHITE, { B2, -6 } },
                 std::nullopt,
                 std::nullopt,
                 std::nullopt,
                 std::nullopt,
-                new Zindex{ B2, -6 }
             };
             blocks["12_78"] = {
                 DECORATION,
-                new BlockTextureData{ "12_78.png", 0, { 0.2f, 0.88f }, { 0.4f, 0.0f }, { 0.1f, 0.38f }, COL_WHITE },
+                new BlockTextureData{ "12_78.png", 0, { 0.2f, 0.88f }, { 0.4f, 0.0f }, { 0.1f, 0.38f }, COL_WHITE, { B2, -6 } },
                 std::nullopt,
                 std::nullopt,
                 std::nullopt,
                 std::nullopt,
-                new Zindex{ B2, -6 }
             };
             blocks["12_79"] = {
                 DECORATION,
-                new BlockTextureData{ "12_79.png", 0, { 0.175f, 0.405f }, { 0.4125f, 0.0f }, { 0.0875f, -0.095f }, COL_WHITE },
+                new BlockTextureData{ "12_79.png", 0, { 0.175f, 0.405f }, { 0.4125f, 0.0f }, { 0.0875f, -0.095f }, COL_WHITE, { B2, -6 } },
                 std::nullopt,
                 std::nullopt,
                 std::nullopt,
                 std::nullopt,
-                new Zindex{ B2, -6 }
             };
         
             triggers["13_1"] = { T_STARTPOS };
@@ -578,7 +543,6 @@ struct GameData {
                 if (pair.second.detailTexture.has_value()) delete pair.second.detailTexture.value();
                 if (pair.second.glow.has_value()) delete pair.second.glow.value();
                 if (pair.second.hitboxData.has_value()) delete pair.second.hitboxData.value();
-                delete pair.second.zIndex;
             }
         }
     };

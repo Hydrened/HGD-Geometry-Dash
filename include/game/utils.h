@@ -24,7 +24,7 @@ struct Velocity {
 struct Color {
     Uint8 r, g, b, a;
 
-    explicit operator H2DE_RGB() const {
+    operator H2DE_RGB() const {
         return { r, g, b, a };
     }
 };
@@ -130,7 +130,6 @@ private:
     Layer layer;
     int order;
     int range = 100;
-    int offset = 2;
     
 public:
     Zindex(Layer l, int o) : layer(l), order(o) {};
@@ -141,7 +140,11 @@ public:
         };
         return layers[layer];
     }
-    int getIndex() { return (layer * range * 2 + layer + order + range) * offset; };
+    int getIndex() const { return layer * range * 2 + layer + std::clamp(order, -range, range) + range; };
+    int operator +(const Zindex& other) const { return this->getIndex() + other.getIndex(); }
+    int operator -(const Zindex& other) const { return this->getIndex() - other.getIndex(); }
+    bool operator<(const Zindex& other) const { return this->getIndex() < other.getIndex(); }
+    bool operator>(const Zindex& other) const { return this->getIndex() > other.getIndex(); }
 };
 
 enum BlockSpecialDataType {
@@ -186,6 +189,7 @@ struct BlockTextureData {
     LevelOffset offset;
     LevelPos origin;
     LevelColor color;
+    Zindex zIndex;
 };
 
 struct BlockGlowData {
@@ -215,7 +219,6 @@ struct BlockData {
     std::optional<BlockGlowData*> glow;
     std::optional<BlockHitboxData*> hitboxData;
     std::optional<BlockSpecialData*> specialData;
-    Zindex* zIndex;
 };
 
 struct BufferedBlock {
