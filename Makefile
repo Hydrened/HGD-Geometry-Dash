@@ -1,35 +1,40 @@
-CC = g++
+CXX = g++
+APP_NAME = Geometry_Dash
 CPP_VERSION = c++17
-SRC_DIR = src
+
 BIN_DIR = bin
+OBJECT_DIR = $(BIN_DIR)/objects
 INCLUDE_DIR = include
 LIB_DIR = lib
-SDL_TAGS = -lSDL2main -lSDL2 -lSDL2_image -lSDL2_mixer -lSDL2_gfx -lSDL2_ttf
-APP_NAME = Geometry_Dash.exe
+SRC_DIR = src
 
-all:
-	make game
+CXX_FLAGS = -std=$(CPP_VERSION) -m64 -I$(INCLUDE_DIR) -I$(INCLUDE_DIR)/game -I$(INCLUDE_DIR)/$(APP_NAME)
+SDL_FLAGS = -lSDL2main -lSDL2 -lSDL2_image -lSDL2_mixer -lSDL2_gfx
+LD_FLAGS = -L$(LIB_DIR) -lmingw32 $(SDL_FLAGS) -lbase64 -linih -lH2DE
+
+SRC = $(wildcard $(SRC_DIR)/**/*.cpp) $(wildcard $(SRC_DIR)/*.cpp)
+OBJ = $(patsubst $(SRC_DIR)/%.cpp, $(OBJECT_DIR)/%.o, $(SRC))
+
+all: 
+	make objects -j
 	make run
 
-f:
-	make game
-	make run_f
+data:
+	del "$(OBJECT_DIR)\data.o"
+	make
 
-d:
-	make game
-	make run_d
+objects: $(OBJ)
+	$(CXX) $(CXX_FLAGS) -o $(BIN_DIR)/$(APP_NAME).exe $^ $(LD_FLAGS) $(SDL_FLAGS) $(DLL_FLAG)
 
-game:
-	$(CC) -std=$(CPP_VERSION) -m64 -o $(BIN_DIR)/$(APP_NAME) $(SRC_DIR)/*.cpp -I$(INCLUDE_DIR) -I$(INCLUDE_DIR)/game -L$(LIB_DIR) -lmingw32 $(SDL_TAGS) -lH2DE
-
-wl:
-	$(CC) -std=$(CPP_VERSION) -m64 -mwindows -static-libgcc -static-libstdc++ -o $(BIN_DIR)/$(APP_NAME) $(SRC_DIR)/*.cpp -I$(INCLUDE_DIR) -I$(INCLUDE_DIR)/game -L$(LIB_DIR) -lmingw32 $(SDL_TAGS) -lH2DE
+$(OBJECT_DIR)/%.o: $(SRC_DIR)/%.cpp
+	$(CXX) $(CXX_FLAGS) -c $< -o $@
 
 run:
 	cd $(BIN_DIR) && $(APP_NAME)
 
-run_f:
-	cd $(BIN_DIR) && $(APP_NAME) -f
+clean:
+	if exist "$(OBJECT_DIR)" rmdir /s /q "$(OBJECT_DIR)"
+	cd $(BIN_DIR) && mkdir objects
+	for /d %%d in ($(SRC_DIR)\*) do if exist %%d mkdir "$(OBJECT_DIR)"/%%~nxd
 
-run_d:
-	cd $(BIN_DIR) && $(APP_NAME) -d
+rebuild: clean all

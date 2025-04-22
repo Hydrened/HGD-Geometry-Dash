@@ -2,42 +2,47 @@
 #define MENU_H
 
 #include "game.h"
-#include "utils.h"
+#include "scenery.h"
+#include "player.h"
 class Game;
+class Scenery;
+class Player;
 
 class Menu {
 private:
     Game* game;
+    MenuID id;
 
-    int levelIndex = 0;
-    MenuIcon* icon = nullptr;
+    Scenery* scenery = nullptr;
+    int mainMenuColorLoop = -1;
 
-    LevelPos backgroundPos;
-    Color backgroundColor;
-    Color groundColor;
+    std::unordered_map<MenuID, std::string> strMenus {
+        { MAIN_MENU, "main menu" },
+        { LEVEL_MENU, "level menu" },
+    };
+    std::vector<H2DE_Object*> objects = {};
 
-    H2DE_TimelineManager* tm = H2DE_CreateTimelineManager();
+    void createObjects();
+    void createBarObject(const ObjectBuffer& buffer);
+    void createBasicObject(const ObjectBuffer& buffer);
+    void createButtonObject(const ObjectBuffer& buffer);
+    void createTextObject(const ObjectBuffer& buffer);
+    void createObjectInitBOD(const ObjectBuffer& buffer, const std::unordered_map<std::string, SurfaceDataBuffer>& surfaceDataBuffers, std::unordered_map<std::string, H2DE_Surface*>& surfaces);
+    void initMainMenu();
+    void playSong() const;
 
-    void updateIcon();
-    void renderMainMenu();
-    void renderLevelMenu();
-    void renderIcon();
-    void renderMainTexture();
-    void renderSecondTexture();
-
-    void spawnIcon();
+    void destroyScenery();
+    void destroyMainMenuColorLoop();
 
 public:
-    Menu(Game* game);
+    Menu(Game* game, MenuID id);
     ~Menu();
 
     void update();
-    void render();
-    void resetMainMenu();
 
-    int getLevelIndex() const;
+    void disableButtons() const;
 
-    void incrLevelIndex(int incr);
+    const MenuID getId() const;
 };
 
 #endif

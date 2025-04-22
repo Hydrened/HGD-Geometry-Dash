@@ -1,103 +1,66 @@
 #ifndef LEVEL_H
 #define LEVEL_H
 
-
 #include "game.h"
-#include "level_loader.h"
-#include "item.h"
+#include "scenery.h"
 #include "player.h"
-
+#include "items/item.h"
 class Game;
-class Item;
+class Scenery;
 class Player;
+class Item;
 
 class Level {
 private:
     Game* game;
-    LevelData* data = nullptr;
-    GameData* gameData = new GameData();
-    
-    H2DE_TimelineManager* topGroundTM = H2DE_CreateTimelineManager();
-    H2DE_TimelineManager* botGroundTM = H2DE_CreateTimelineManager();
-
     int id;
-    int attempts = 0;
-    int speed;
-    int levelLength;
+    const Checkpoint* checkpoint;
 
-    LevelMode mode = NORMAL_MODE;
-    float bestNormalMode;
-    float bestPracticeMode;
-
-    LevelPos backgroundPos;
-    LevelPos botGroundPos;
-    LevelPos botGroundVisualPos;
-    LevelPos topGroundPos;
-    LevelPos topGroundVisualPos;
-    Color backgroundColor;
-    Color groundColor;
-    Color lineColor;
-
-    std::vector<Item*> items;
-    std::vector<bool> savedCoins;
-    std::vector<bool> coins;
-    bool finished = false;
-
-    BlockEffect currentBlockEffect = FADE;
-
+    json data;
+    std::vector<std::pair<ItemBuffer, std::pair<std::optional<BlockBuffer>, std::optional<TriggerBuffer>>>> itemBuffer = {};
+    int itemBufferIndex = 0;
+    int startDelayID = -1;
+    
+    Scenery* scenery = nullptr;
     Player* player = nullptr;
+    std::vector<Item*> items = {};
 
-    void initFromSave();
-    void initCamera();
-    void initLevelElements();
-    void initItems();
-    void initConfig();
-    void saveData();
+    int speed = -1;
 
-    void updateBackground();
-    void updateBackgroundY();
-    void renderElements();
-    void renderPracticeUI();
+    void loadData();
+    void initItemBuffer();
+    void initItemBlockBuffer();
+    void initItemTriggerkBuffer();
+    void initCamera() const;
+    void initScenery();
+    void initPlayer();
+    void initSpeed();
+    void initStartDelay();
+    void playSong() const;
 
-    static bool sortItems(Item* item1, Item* item2);
+    void stopStartDelay();
+    void destroyScenery();
+    void destroyPlayer();
+    void destroyItems();
+
+    void updateCamera();
+    void updateScenery();
+    void updatePlayer();
+    void updateItemBuffer();
+    void updateItems();
+
+    static const ItemBuffer getItemBuffer(const json& item);
 
 public:
-    Level(Game* game, int id);
-    ~Level() noexcept(false);
+    Level(Game* game, int id, const Checkpoint* checkpoint);
+    ~Level();
 
     void update();
-    void render();
 
-    void finish();
-    void pause();
-    void resume();
-    void respawn();
-    void refreshCoins();
-
-    LevelData* getData() const;
-    LevelPos getBotGroundPos() const;
-    LevelPos getTopGroundPos() const;
-    Color getBackgroundColor() const;
-    Color getGroundColor() const;
-    Color getLineColor() const;
     Player* getPlayer() const;
-    std::vector<Item*>* getItems();
-    int getCurrentSpeed() const;
-    int getLevelLength() const;
-    LevelMode getMode() const;
-    BlockEffect getBlockEffect() const;
-    std::vector<bool> getSavedCoins() const;
+    const int getSpeed() const;
 
-    void setBackgroundColor(Color color);
-    void setGroundColor(Color color);
-    void setLineColor(Color color);
-    void setTopGroundPos(LevelPos pos, unsigned int ms);
-    void setBotGroundPos(LevelPos pos, unsigned int ms);
-    void setMode(LevelMode mode);
-    void setBestNormalMode(float percentage);
-    void setBestPracticeMode(float percentage);
-    void setBlockEffect(BlockEffect effect);
-    void gotCoinNb(unsigned int nb);
+    void setSpeed(int speed);
 };
 
 #endif

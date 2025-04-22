@@ -2,88 +2,79 @@
 #define GAME_H
 
 #include <H2DE/H2DE.h>
-#include <functional>
-#include <iostream>
-#include <optional>
-#include <random>
-#include <thread>
-#include <unordered_map>
-#include <vector>
 #include "utils.h"
-#include "functions.h"
 #include "data.h"
-#include "calculator.h" 
-#include "camera.h" 
-#include "megahack.h"
+#include "functions.h"
 #include "menu.h"
 #include "level.h"
-#include "modal.h"
-class Camera;
-class Megahack;
+#include "save.h"
+class Data;
 class Menu;
 class Level;
-class Calculator;
-class Modal;
+class Save;
 
 class Game {
 private:
-    SDL_Window* window;
-    SDL_Renderer* renderer;
-    H2DE_Engine* engine;
-    int FPS;
-    bool isRunning = true;
-    bool debug = false;
-    GameData* data = new GameData();
-    Calculator* calculator;
-    H2DE_TimelineManager* tm = H2DE_CreateTimelineManager();
+    H2DE_Engine* engine = nullptr;
 
-    Camera* camera = nullptr;
-    Megahack* megahack = nullptr;
+    Data* data = nullptr;
     Menu* menu = nullptr;
     Level* level = nullptr;
-    Modal* modal = nullptr;
-    GameState state;
 
-    Uint8 transitionOpacity = 0;
-    bool canAddCheckpoint = true;
-    bool canRemoveCheckpoint = true;
+    GameState state = LOADING_ASSETS;
+    bool inTransition = true;
+    Save* save;
+    
+    H2DE_BasicObject* transition = nullptr;
 
-    void createWindow(SDL_WindowFlags flag);
-    void loadVolumes();
-    void saveSettings();
-    void resizeWindow(int w, int h);
+    void initEngine();
+    void initData();
+    void initTransition();
 
-    void openMenu();
+    void destroySave();
+    void destroyTransition();
+    void destroyMenu();
+    void destroyData();
+    void destroyEngine();
+
+    void event_keydown(SDL_Keycode keycode);
+    void event_keydown_menu(SDL_Keycode keycode);
+    void event_keydown_level(SDL_Keycode keycode);
+    void event_keyup(SDL_Keycode keycode);
+    void event_keyup_level(SDL_Keycode keycode);
+    void event_button_down(Uint8 button);
+    void event_button_down_level(Uint8 button);
+    void event_button_up(Uint8 button);
+    void event_button_up_level(Uint8 button);
+
     void closeMenu();
-    void openLevel();
     void closeLevel();
+    void transitionIn();
+    void transitionOut();
 
 public:
-    Game(int fps, int argc, char** argv);
+    Game();
     ~Game();
 
     void run();
-    void quit();
+ 
     void handleEvents(SDL_Event event);
     void update();
-    void render();
+    void updateCamera(int speed) const;
 
-    void openModal(GameState state);
-    void closeModal();
+    void openMenu(MenuID id, const std::function<void()>& call);
+    void openLevel(int id, const std::function<void()>& call);
 
-    static void delay(int ms, std::function<void()> callback);
+    void destroyObjects(const std::vector<H2DE_Object*>& objects) const;
 
-    GameData* getData() const;
     H2DE_Engine* getEngine() const;
-    Calculator* getCalculator() const;
-    Camera* getCamera() const;
-    Megahack* getMegahack() const;
-    Level* getLevel() const;
-    GameState getState() const;
-    unsigned int getTransitionDuration(unsigned int ms) const;
+    const Data* getData() const;
+    const Save* getSave() const;
 
-    void setState(GameState state);
-    void setState(GameState state, unsigned int ms, std::function<void()> then);
+    H2DE_LevelPos convertToCamPos(const H2DE_LevelPos& pos) const;
+    H2DE_LevelPos convertToLevelPos(const H2DE_LevelPos& pos, const H2DE_LevelSize& size) const;
+    H2DE_LevelPos convertToGdPos(const H2DE_LevelPos& pos, const H2DE_LevelSize& size) const;
+    H2DE_LevelRect convertToLevelRect(const H2DE_LevelRect& rect) const;
 };
 
 #endif

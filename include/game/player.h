@@ -2,81 +2,55 @@
 #define PLAYER_H
 
 #include "game.h"
-
-class Level;
-class Block;
+class Game;
 
 class Player {
 private:
     Game* game;
-    Level* level;
+    const Checkpoint* checkpoint;
 
-    Icons* icons;
+    H2DE_Object* cube = nullptr;
 
-    Checkpoint* startpos;
-    int jumps = 0;
-    int clicks = 0;
-    
-    LevelPos pos;
-    Velocity velocity;
-    Gravity gravity;
-    Gamemode gamemode;
-    Size size;
-    int rotation;
+    H2DE_LevelPos pos = { 0.0f, 0.0f };
+    H2DE_LevelVelocity velocity = { 0.0f, 0.0f };
+    float rotation = 0.0f;
 
-    bool botOnSolid = false;
-    bool topOnSolid = false;
-    bool clicking = false;
-    bool clickInit = false;
-    bool orbBuffer = false;
+    PlayerGamemode gamemode = PLAYER_GAMEMODE_CUBE;
+    PlayerSize size = PLAYER_SIZE_NORMAL;
+    PlayerGravity gravity = PLAYER_GRAVITY_NORMAL;
 
-    float percentage = 0.0f;
-    int startingItem = 0;
-    std::optional<Block*> hoveredOrb;
-    std::vector<Checkpoint*> practiceCheckpoints;
-    std::unordered_map<int, Face> collidedBlockFace;
+    bool botOnSolid = true;
+    bool topOnSolid = true;
+    bool mouseDown = false;
 
-    void click();
-    void kill();
+    void initCheckpoint();
+    void initIcons();
+    void initIconCreateLayers(const std::string& textureName, const std::vector<std::tuple<std::string, H2DE_AbsRect, H2DE_LevelRect, H2DE_ColorRGB>>& layers, std::unordered_map<std::string, H2DE_Surface*>& surfaces) const;
+    void initCube();
 
-    void updatePositions();
-    void checkGroundCollisions();
-    void checkBlocksCollisions();
-    void updateRotation();
-    void updatePercentage();
+    void destroyIcons();
+
+    void updateGravity();
     void updateClicks();
-
-    void renderMainTexture();
-    void renderSecondTexture();
-    void renderHitboxes();
-    void renderPracticeCheckpoints();
+    void updateRotation();
+    void updateRotationOnSolid();
+    void updateRotationInAir();
+    void updateRotationClamp();
+    void updatePosition();
 
 public:
-    Player(Game* game, Level* level, Checkpoint* startpos);
+    Player(Game* game, const Checkpoint* checkpoint);
     ~Player();
 
     void update();
-    void render();
-    void reset(Checkpoint* checkpoint);
 
-    void addCheckpoint();
-    void removeLastCheckpoint();
-    void clearCheckpoints();
+    void kill();
+    void click();
 
-    LevelPos getPos() const;
-    int getJumps() const;
-    int getClicks() const;
-    Gamemode getGamemode() const;
-    Size getSize() const;
-    Gravity getGravity() const;
-    Checkpoint* getLastPracticeCheckpoint() const;
-    Icons* getIcons() const;
-    
-    void setClicking(bool value);
-    void setGamemode(Gamemode gamemode, float y, unsigned int ms);
-    void setGravity(Gravity gravity);
-    void setYvelocity(float yv);
-    void setHoveredOrb(Block* block);
+    const H2DE_LevelPos getPos() const;
+
+    void setVelocityX(float vx);
+    void setMouseDown(bool state);
 };
 
-#endif 
+#endif

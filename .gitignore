@@ -1,7 +1,9 @@
 .vscode/
 todo.md
 errors.md
-*.gmd
-infos.md
-gdAssets/
-test.json
+layers.md
+bin/*.exe
+bin/settings.ini
+save.dat
+hitboxes.md
+blocks.json

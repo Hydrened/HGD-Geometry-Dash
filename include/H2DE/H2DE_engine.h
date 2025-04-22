@@ -1,279 +1,165 @@
 #ifndef H2DE_ENGINE_H
 #define H2DE_ENGINE_H
 
-#include <SDL2/SDL.h>
-#include <SDL2/SDL2_gfxPrimitives.h>
-#include <H2DE/H2DE_loader.h>
-#include <H2DE/H2DE_calculator.h>
-#include <H2DE/H2DE_types.h>
-#include <H2DE/H2DE_color.h>
-#include <H2DE/H2DE_graphic.h>
-#include <H2DE/H2DE_timeline.h>
-#include <H2DE/H2DE_json.h>
-#include <algorithm>
-#include <climits>
-#include <optional>
 #include <filesystem>
+#include <functional>
 #include <iostream>
-#include <string>
-#include <unordered_map>
-#include <vector>
+#include <Windows.h>
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
+#include <SDL2/SDL2_gfxPrimitives.h>
+#include <SDL2/SDL_mixer.h>
+#include <H2DE/H2DE_utils.h>
+#include <H2DE/surfaces/H2DE_surface.h>
+#include <H2DE/objects/H2DE_object.h>
+#include <H2DE/H2DE_json.h>
+class H2DE_BarObject;
+class H2DE_ButtonObject;
+class H2DE_BasicObject;
+class H2DE_TextObject;
+class H2DE_Sprite;
 
-class H2DE_Timeline;
-
-namespace fs = std::filesystem;
-
-/**
- * The type used to identify an engine
- * \since H2DE-1.0.0
- */
 class H2DE_Engine {
 private:
-    int fps;
-    H2DE_Size size;
-    H2DE_Size maxSize = { -1, -1 };
+    H2DE_EngineData data;
+
+    class H2DE_Window;
+    class H2DE_Renderer;
+    class H2DE_Volume;
+    class H2DE_AssetLoader;
+    class H2DE_Settings;
+    class H2DE_Camera;
+    class H2DE_Delay;
+    class H2DE_Timeline;
+
+    H2DE_Window* window = nullptr;
+    H2DE_Renderer* renderer = nullptr;
+    H2DE_Volume* volume = nullptr;
+    H2DE_AssetLoader* assetLoader = nullptr;
+    H2DE_Settings* settings = nullptr;
+    H2DE_Camera* camera = nullptr;
+    H2DE_Delay* delay = nullptr;
+    H2DE_Timeline* timeline = nullptr;
+
+    unsigned int fps;
+    unsigned int currentFPS = 0;
     bool isRunning = true;
-    SDL_Renderer* renderer;
-    int dataToLoad, loadedData = 0;
-    bool debug = false;
+    bool paused = false;
 
-    std::unordered_map<std::string, SDL_Texture*> textures;
-    std::unordered_map<std::string, Mix_Chunk*> sounds;
-    std::unordered_map<std::string, TTF_Font*> fonts;
+    std::function<void(SDL_Event)> handleEventsCall = nullptr;
+    std::function<void()> updateCall = nullptr;
 
-    std::vector<H2DE_GraphicObject*> graphicObjects;
-    std::optional<H2DE_SClick*> click = std::nullopt;
+    std::vector<H2DE_Object*> objects = {};
 
-    /**
-     * Counts the number of file to be loaded from a parent directory
-     * \param dir parent directory
-     * \return the number of files
-     * \since H2DE-1.0.0
-     */
-    static int countFiles(const fs::path& dir);
-    /**
-     * Imports the files
-     * \param dir parent directory
-     * \since H2DE-1.0.0
-     */
-    void importFiles(const fs::path& dir);
-    /**
-     * Imports a texture from a png file
-     * \param img png file
-     * \since H2DE-1.0.0
-     */
-    void importTexture(const fs::path& img);
-    /**
-     * Imports a sound from a mp3 or ogg file
-     * \param sound mp3 file
-     * \since H2DE-1.0.0
-     */
-    void importSound(const fs::path& sound);
-    /**
-     * Imports a font from a ttf file
-     * \param font ttf file
-     * \since H2DE-1.0.0
-     */
-    void importFont(const fs::path& font);
-    /**
-     * Indicates that an asset has been loaded
-     * \since H2DE-1.0.0
-     */
-    void assetImported();
-    
-    /**
-     * Duplicates `H2DE_GraphicObject` which have the `repeatX` property
-     * \return a graphic object vector of the duplicated graphic objects
-     * \since H2DE-1.0.0
-     */
-    std::vector<H2DE_GraphicObject*> getRepeatXGraphicObjects();
-    /**
-     * Duplicates `H2DE_GraphicObject` which have the `repeatY` property
-     * \return a graphic object vector of the duplicated graphic objects
-     * \since H2DE-1.0.0
-     */
-    std::vector<H2DE_GraphicObject*> getRepeatYGraphicObjects();
+    H2DE_AbsPos mousePos = { 0, 0 };
+    H2DE_ButtonObject* mouseDown = nullptr;
+    H2DE_ButtonObject* hovered = nullptr;
 
-    /**
-     * Renders a pixel on the renderer
-     * \param pos position of the pixel
-     * \param color color of the pixel
-     * \since H2DE-1.0.0
-     */
-    void renderPixel(H2DE_Pos pos, H2DE_RGB rgb);
-    /**
-     * Renders an image on the renderer
-     * \param g the image to render
-     * \since H2DE-1.0.0
-     */
-    void renderImage(H2DE_GraphicObject* g);
-    /**
-     * Renders a polygon on the renderer
-     * \param g the polygon to render
-     * \since H2DE-1.0.0
-     */
-    void renderPolygon(H2DE_GraphicObject* g);
-    /**
-     * Renders a circle on the renderer
-     * \param g the circle to render
-     * \since H2DE-1.0.0
-     */
-    void renderCircle(H2DE_GraphicObject* g);
-    /**
-     * Renders a text on the renderer
-     * \param g the text to render
-     * \since H2DE-1.0.0
-     */
-    void renderText(H2DE_GraphicObject* g);
-
-    /**
-     * Simulates a click on a graphic element
-     * \param g a pointer to a graphic element
-     * \return a boolean
-     * \since H2DE-1.1.0
-     */
-    bool isElementClicked(H2DE_GraphicObject* g);
-
-    friend class H2DE_Calculator;
-
-public:
-    H2DE_Engine(SDL_Renderer* renderer, int w, int h, int fps);
+    H2DE_Engine(H2DE_EngineData data);
     ~H2DE_Engine();
 
-    /**
-     * Renders all graphic objects added during this frame
-     * \param engine a pointer to an engine
-     * \since H2DE-1.0.0
-     */
-    friend void H2DE_RenderEngine(H2DE_Engine* engine);
-    /**
-     * Loads every assets from a parent directory
-     * \param engine a pointer to an engine
-     * \param dir parent directory
-     * \since H2DE-1.0.0
-     */
-    friend void H2DE_LoadAssets(H2DE_Engine* engine, const fs::path& dir);
-    /**
-     * Adds a graphic object to be rendered this frame
-     * \param engine a pointer to an engine
-     * \param g a pointer the graphic object
-     * \since H2DE-1.0.0
-     */
-    friend void H2DE_AddGraphicObject(H2DE_Engine* engine, H2DE_GraphicObject* g);
+    void handleEvents(SDL_Event event);
+    void handleButtonsEvents(SDL_Event event);
+    void handleButtonsMouseDownEvent();
+    void handleButtonsMouseUpEvent();
+    void handleButtonsBlurEvents();
+    void handleButtonsHoverEvents();
+    void update();
+    void updateObjects();
 
-    /**
-     * Clicks on a specified point on an engine
-     * \param engine a pointer to an engine
-     * \param x x position of the click
-     * \param y y position of the click
-     * \since H2DE-1.1.0
-     */
-    friend void H2DE_Click(H2DE_Engine* engine, int x, int y);
+    static bool isPositionGreater(H2DE_Object* object1, H2DE_Object* object2);
+    std::vector<H2DE_ButtonObject*> getValidButtons() const;
 
-    /**
-     * Gets the size of the engine
-     * \param engine a pointer to the engine
-     * \return the size of the engine
-     * \since H2DE-1.0.4
-     */
-    friend H2DE_Size H2DE_GetEngineSize(H2DE_Engine* engine);
-    /**
-     * Sets a new size for the engine
-     * \param engine a pointer to an engine
-     * \param size the new size
-     * \since H2DE-1.0.4
-     */
-    friend void H2DE_SetEngineSize(H2DE_Engine* engine, int w, int h);
-    /**
-     * Sets the maximum size for the specified engine
-     * \param engine a pointer to an engine
-     * \param w maxmum width for the engine
-     * \param h maxmum height for the engine
-     * \since H2DE-1.0.5
-     */
-    friend void H2DE_SetEngineMaximumSize(H2DE_Engine* engine, int w, int h);
-    /**
-     * Gets the maximum size for the specified engine
-     * \param engine a pointer to an engine
-     * \return the maximum size of the engine
-     * \since H2DE-1.0.5
-     */
-    friend H2DE_Size H2DE_GetEngineMaximumSize(H2DE_Engine* engine);
-    /**
-     * Gets the FPS on an engine
-     * \param engine a pointer to an engine
-     * \return fps
-     * \since H2DE-1.0.9
-     */
-    friend int H2DE_GetEngineFPS(H2DE_Engine* engine);
-    /**
-     * Creates a timeline
-     * \param engine a pointer to an engine
-     * \param duration time in ms
-     * \param effect timeline effect
-     * \param update function called every frame
-     * \param completed function called once the timeline is finished
-     * \param loop number of loops (-1 = infinite)
-     * \since H2DE-1.0.9
-     */
-    friend H2DE_Timeline* H2DE_CreateTimeline(H2DE_Engine* engine, unsigned int duration, H2DE_TimelineEffect effect, std::function<void(float)> update, std::function<void()> completed, int loop);
+public:
+    friend H2DE_Engine* H2DE_CreateEngine(const H2DE_EngineData& data);
+    friend void H2DE_DestroyEngine(H2DE_Engine* engine);
 
-    /**
-     * Sets sounds volume
-     * \param engine a pointer to an engine
-     * \param volume the volume (0-100)
-     * \param channel the channel of the target (-1 for all)
-     * \since H2DE-1.0.0
-     */
-    friend void H2DE_SetSoundVolume(H2DE_Engine* engine, int channel, int volume);
-    /**
-     * Plays a sound
-     * \param engine a pointer to an engine
-     * \param channel the channel of the target (-1 for all)
-     * \param sound the name of the loaded sound
-     * \param loop number of loop (-1 = infinite)
-     * \since H2DE-1.0.0
-     */
-    friend void H2DE_PlaySound(H2DE_Engine* engine, int channel, std::string sound, int loop);
-    /**
-     * Pauses a sound
-     * \param engine a pointer to an engine
-     * \param channel the channel of the target (-1 for all)
-     * \since H2DE-1.0.0
-     */
-    friend void H2DE_PauseSound(H2DE_Engine* engine, int channel);
-    /**
-     * Resumes a sound
-     * \param engine a pointer to an engine
-     * \param channel the channel of the target (-1 for all)
-     * \since H2DE-1.0.0
-     */
-    friend void H2DE_ResumeSound(H2DE_Engine* engine, int channel);
+    friend void H2DE_RunEngine(H2DE_Engine* engine);
+    friend void H2DE_StopEngine(H2DE_Engine* engine);
 
-    /**
-     * Debugs engine rendering
-     * \param engine a pointer to an engine
-     * \param active state of the debug
-     * \since H2DE-1.1.5
-     */
-    friend void H2DE_DebugEngineRendering(H2DE_Engine* engine, bool active);
+    friend void H2DE_SetHandleEventsCall(H2DE_Engine* engine, const std::function<void(SDL_Event)>& call);
+    friend void H2DE_SetUpdateCall(H2DE_Engine* engine, const std::function<void()>& call);
+
+    friend void H2DE_LoadAssets(H2DE_Engine* engine, const std::filesystem::path& directory);
+    friend void H2DE_InitFont(H2DE_Engine* engine, const std::string& name, const H2DE_Font& font);
+
+    friend unsigned int H2DE_GetCurrentFps(const H2DE_Engine* engine);
+    friend unsigned int H2DE_GetFps(const H2DE_Engine* engine);
+    friend void H2DE_SetFps(H2DE_Engine* engine, unsigned int fps);
+
+    friend bool H2DE_IsPaused(const H2DE_Engine* engine);
+    friend void H2DE_Pause(H2DE_Engine* engine);
+    friend void H2DE_Resume(H2DE_Engine* engine);
+
+    friend H2DE_AbsPos H2DE_GetWindowPos(const H2DE_Engine* engine);
+    friend H2DE_AbsSize H2DE_GetWindowSize(const H2DE_Engine* engine);
+    friend void H2DE_SetWindowPos(const H2DE_Engine* engine, const H2DE_AbsPos& pos);
+    friend void H2DE_SetWindowSize(const H2DE_Engine* engine, const H2DE_AbsSize& size);
+    friend void H2DE_SetWindowMinimumSize(const H2DE_Engine* engine, const H2DE_AbsSize& minimumSize);
+    friend void H2DE_SetWindowMaximumSize(const H2DE_Engine* engine, const H2DE_AbsSize& maximumSize);
+    friend void H2DE_SetWindowTitle(const H2DE_Engine* engine, const std::string& title);
+    friend void H2DE_SetWindowIcon(const H2DE_Engine* engine, const std::string& textureName);
+    friend void H2DE_SetWindowFullscreen(const H2DE_Engine* engine, bool fullscreen);
+    friend void H2DE_SetWindowResizable(const H2DE_Engine* engine, bool resizable);
+    friend void H2DE_SetWindowGrab(const H2DE_Engine* engine, bool grab);
+    friend void H2DE_SetWindowRatio(const H2DE_Engine* engine, H2DE_WindowRatio ratio);
+
+    friend bool H2DE_SettingsAddSection(const H2DE_Engine* engine, const std::string& section);
+    friend bool H2DE_SettingsAddKey(const H2DE_Engine* engine, const std::string& section, const std::string& key, const std::string& value);
+    friend int H2DE_SettingsGetKeyInteger(const H2DE_Engine* engine, const std::string& section, const std::string& key, int defaultValue);
+    friend std::string H2DE_SettingsGetKeyString(const H2DE_Engine* engine, const std::string& section, const std::string& key, const std::string& defaultValue);
+    friend bool H2DE_SettingsGetKeyBool(const H2DE_Engine* engine, const std::string& section, const std::string& key, bool defaultValue);
+    friend bool H2DE_SettingsSetKeyValue(const H2DE_Engine* engine, const std::string& section, const std::string& key, const std::string& value);
+
+    friend void H2DE_PlaySong(const H2DE_Engine* engine, const std::string& name, int loops, bool pauseSensitive);
+    friend int H2DE_PlaySfx(const H2DE_Engine* engine, const std::string& name, int loops, bool pauseSensitive);
+    friend void H2DE_StopSong(const H2DE_Engine* engine);
+    friend void H2DE_StopSfx(const H2DE_Engine* engine, int id);
+    friend void H2DE_PauseSong(const H2DE_Engine* engine);
+    friend void H2DE_PauseSfx(const H2DE_Engine* engine, int id);
+    friend void H2DE_ResumeSong(const H2DE_Engine* engine);
+    friend void H2DE_ResumeSfx(const H2DE_Engine* engine, int id);
+    friend void H2DE_SetSongVolume(const H2DE_Engine* engine, int volume);
+    friend void H2DE_SetSfxVolume(const H2DE_Engine* engine, int volume);
+    friend bool H2DE_IsSongPlaying(const H2DE_Engine* engine);
+    friend bool H2DE_IsSfxPlaying(const H2DE_Engine* engine, int id);
+
+    friend unsigned int H2DE_Delay(const H2DE_Engine* engine, unsigned int ms, const std::function<void()>& callback, bool pauseSensitive);
+    friend void H2DE_ResetDelay(const H2DE_Engine* engine, unsigned int id);
+    friend void H2DE_StopDelay(const H2DE_Engine* engine, unsigned int id, bool call);
+
+    friend unsigned int H2DE_CreateTimeline(const H2DE_Engine* engine, unsigned int duration, H2DE_Easing easing, const std::function<void(float)>& update, const std::function<void()>& completed, int loops, bool pauseSensitive);
+    friend void H2DE_ResetTimeline(const H2DE_Engine* engine, unsigned int id);
+    friend void H2DE_StopTimeline(const H2DE_Engine* engine, unsigned int id, bool call);
+
+    friend H2DE_LevelPos H2DE_GetCameraPos(const H2DE_Engine* engine);
+    friend H2DE_LevelSize H2DE_GetCameraSize(const H2DE_Engine* engine);
+    friend bool H2DE_CameraContainsObject(const H2DE_Engine* engine, const H2DE_Object* object);
+    friend bool H2DE_CameraContainsHitbox(const H2DE_Engine* engine, const H2DE_LevelPos& pos, const H2DE_Hitbox& hitbox, bool absolute);
+    friend bool H2DE_CameraContainsRect(const H2DE_Engine* engine, const H2DE_LevelRect& rect, bool absolute);
+    friend void H2DE_SetCameraPos(const H2DE_Engine* engine, const H2DE_LevelPos& pos);
+    friend void H2DE_SetCameraPos(const H2DE_Engine* engine, const H2DE_LevelPos& pos, unsigned int duration, H2DE_Easing easing, bool pauseSensitive);
+    friend void H2DE_SetCameraWidth(const H2DE_Engine* engine, float width);
+    friend void H2DE_SetCameraSmoothing(const H2DE_Engine* engine, float smoothing);
+    friend void H2DE_SetCameraReference(const H2DE_Engine* engine, H2DE_Object* object);
+    friend void H2DE_SetCameraLockedToReference(const H2DE_Engine* engine, bool state);
+    friend void H2DE_SetCameraPadding(const H2DE_Engine* engine, const H2DE_LevelPadding& padding);
+    friend void H2DE_SetCameraPaddingFromReference(const H2DE_Engine* engine, const H2DE_LevelPadding& padding);
+
+    friend H2DE_LevelPos H2DE_GetMousePos(const H2DE_Engine* engine, bool absolute);
+
+    friend class H2DE_Object;
+    friend class H2DE_ButtonObject;
+    friend class H2DE_TextObject;
+    friend H2DE_BarObject* H2DE_CreateBarObject(H2DE_Engine* engine, const H2DE_ObjectData& objectData, const H2DE_BarObjectData& barObjectData);
+    friend H2DE_BasicObject* H2DE_CreateBasicObject(H2DE_Engine* engine, const H2DE_ObjectData& objectData, const H2DE_BasicObjectData& basicObjectData);
+    friend H2DE_ButtonObject* H2DE_CreateButtonObject(H2DE_Engine* engine, const H2DE_ObjectData& objectData, const H2DE_ButtonObjectData& buttonObjectData);
+    friend H2DE_TextObject* H2DE_CreateTextObject(H2DE_Engine* engine, const H2DE_ObjectData& objectData, const H2DE_TextObjectData& textObjectData);
+    friend void H2DE_DestroyObject(H2DE_Engine* engine, H2DE_Object* object);
+    friend void H2DE_DebugObjects(const H2DE_Engine* engine, bool state);
 };
 
-/**
- * Creates an engine
- * \param renderer a pointer to the renderer
- * \param w the width of the engine
- * \param h this heigth of the engine
- * \param fps the fps the window is running at
- * \return a pointer to an engine
- * \since H2DE-1.0.0
- */
-extern H2DE_Engine* H2DE_CreateEngine(SDL_Renderer* renderer, int w, int h, int fps);
-/**
- * Destroys an engine
- * \param engine the engine to destroy
- * \since H2DE-1.0.0
- */
-extern void H2DE_DestroyEngine(H2DE_Engine* engine);
+H2DE_Engine* H2DE_CreateEngine(const H2DE_EngineData& data);
+void H2DE_DestroyEngine(H2DE_Engine* engine);
 
 #endif
