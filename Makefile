@@ -15,13 +15,10 @@ LD_FLAGS = -L$(LIB_DIR) -lmingw32 $(SDL_FLAGS) -lbase64 -linih -lH2DE
 SRC = $(wildcard $(SRC_DIR)/**/*.cpp) $(wildcard $(SRC_DIR)/*.cpp)
 OBJ = $(patsubst $(SRC_DIR)/%.cpp, $(OBJECT_DIR)/%.o, $(SRC))
 
-all: 
+all:
+	make createObjFolder
 	make objects -j
 	make run
-
-data:
-	del "$(OBJECT_DIR)\data.o"
-	make
 
 objects: $(OBJ)
 	$(CXX) $(CXX_FLAGS) -o $(BIN_DIR)/$(APP_NAME).exe $^ $(LD_FLAGS) $(SDL_FLAGS) $(DLL_FLAG)
@@ -32,9 +29,11 @@ $(OBJECT_DIR)/%.o: $(SRC_DIR)/%.cpp
 run:
 	cd $(BIN_DIR) && $(APP_NAME)
 
+createObjFolder:
+	@if not exist "$(OBJECT_DIR)" mkdir "$(OBJECT_DIR)"
+	@for /d %%d in ($(SRC_DIR)\*) do if not exist "$(OBJECT_DIR)/%%d" mkdir "$(OBJECT_DIR)/%%~nxd"
+
 clean:
-	if exist "$(OBJECT_DIR)" rmdir /s /q "$(OBJECT_DIR)"
-	cd $(BIN_DIR) && mkdir objects
-	for /d %%d in ($(SRC_DIR)\*) do if exist %%d mkdir "$(OBJECT_DIR)"/%%~nxd
+	@if exist "$(OBJECT_DIR)" rmdir /s /q "$(OBJECT_DIR)"
 
 rebuild: clean all

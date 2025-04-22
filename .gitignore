@@ -1,9 +1,11 @@
+# GLOBAL
 .vscode/
-todo.md
-errors.md
-layers.md
-bin/*.exe
-bin/settings.ini
-save.dat
-hitboxes.md
-blocks.json
+*.md
+!changelog.md
+!README.md
+
+# BIN
+bin/*
+!bin/assets/
+!bin/data/
+!bin/*.dll
