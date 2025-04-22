@@ -1,4 +1,0 @@
-1xx INIT: 0
-2xx READ: 0
-3xx WRITE: 0
-4xx OTHER: 6
