@@ -8,5 +8,4 @@ bin/save.dat
 bin/settings.ini
 bin/objects/
 bin/jsonToGdd/
-bin/data/*
-!bin/data/*.gdd
+bin/data/**/*.json
