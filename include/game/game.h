@@ -59,6 +59,7 @@ public:
     void run();
  
     void handleEvents(SDL_Event event);
+
     void update();
     void updateCamera(int speed) const;
 
@@ -67,9 +68,9 @@ public:
 
     void destroyObjects(const std::vector<H2DE_Object*>& objects) const;
 
-    H2DE_Engine* getEngine() const;
-    const Data* getData() const;
-    const Save* getSave() const;
+    inline H2DE_Engine* getEngine() const { return engine; }
+    inline const Data* getData() const { return data; }
+    inline const Save* getSave() const { return save; }
 
     H2DE_LevelPos convertToCamPos(const H2DE_LevelPos& pos) const;
     H2DE_LevelPos convertToLevelPos(const H2DE_LevelPos& pos, const H2DE_LevelSize& size) const;

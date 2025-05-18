@@ -3,9 +3,13 @@
 
 #include <map>
 #include <H2DE/H2DE_engine.h>
+class H2DE_Transform;
 
 class H2DE_Engine::H2DE_Renderer {
 private:
+    using T = H2DE_Transform;
+    using R = H2DE_Engine::H2DE_Renderer;
+
     H2DE_Engine* engine;
     SDL_Renderer* renderer;
     std::vector<H2DE_Object*>& objects;
@@ -26,25 +30,21 @@ private:
 
     void renderSurfaces(H2DE_Object* object) const;
     void renderSurface(const H2DE_Object* object, const H2DE_SurfaceBuffer& surfaceBuffer, bool absolute) const;
-    const H2DE_AbsRect renderSurfaceGetDestRect(const H2DE_Object* object, const H2DE_SurfaceBuffer& surfaceBuffer, bool absolute) const;
     void renderSurfaceSetTextureProperties(SDL_Texture* texture, const H2DE_Surface* surface) const;
-    SDL_Texture* renderSurfaceCreateTempTexture(const SDL_Rect& destRect) const;
-    void renderSurfaceRenderTextureToTarget(const H2DE_Object* object, const H2DE_SurfaceBuffer& surfaceBuffer) const;
-    void renderSurfaceRenderFinalTexture(const H2DE_Object* object, const H2DE_Surface* surface, SDL_Texture* tempTexture, const SDL_Rect& destRect) const;
+    void renderSurfaceRenderTexture(SDL_Texture* texture, const H2DE_Object* object, const H2DE_SurfaceBuffer& surfaceBuffer, bool absolute) const;
+    static const H2DE_LevelRect renderSurfaceGetWorldDestRect(const H2DE_Object* object, const H2DE_SurfaceBuffer& surfaceBuffer);
+    static const float renderSurfaceGetWorldRotation(const H2DE_Object* object, const H2DE_Surface* surface);
 
     void renderObjectsHitboxes();
     void renderHitboxes(const H2DE_Object* object) const;
-    void renderHitbox(const H2DE_Object* object, const H2DE_Hitbox& hitbox, bool absolute) const;
+    void renderHitbox(const H2DE_LevelRect& rect, const H2DE_ColorRGB& color, bool absolute) const;
 
     const bool isSurfaceValid(const H2DE_Surface* surface) const;
 
     const unsigned int getBlockSize() const;
     static SDL_ScaleMode getScaleMode(H2DE_ScaleMode scaleMode);
+    static SDL_BlendMode getBlendMode(H2DE_BlendMode blendMode);
     static SDL_RendererFlip getFlip(H2DE_Flip flip);
-
-    static H2DE_LevelRect flipRect(const H2DE_LevelRect& objRect, const H2DE_LevelRect& rect, H2DE_Flip flip);
-    static float flipRotation(float rotation, H2DE_Flip flip);
-    static H2DE_LevelPos flipPivot(const H2DE_LevelRect& rect, const H2DE_LevelPos& pivot, H2DE_Flip flip);
 
     H2DE_AbsPos lvlToAbsPos(const H2DE_LevelPos& pos, bool absolute) const;
     H2DE_AbsPos lvlToAbsPivot(const H2DE_LevelPos& pos) const;
@@ -63,7 +63,7 @@ public:
 
     H2DE_LevelPos absToLvl(const H2DE_AbsPos& pos, bool absolute) const;
 
-    const std::unordered_map<std::string, H2DE_Font>& getFonts() const;
+    inline const std::unordered_map<std::string, H2DE_Font>& getFonts() const { return fonts; }
 };
 
 #endif

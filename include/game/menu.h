@@ -42,7 +42,7 @@ public:
 
     void disableButtons() const;
 
-    const MenuID getId() const;
+    inline const MenuID getId() const { return id; }
 };
 
 #endif

@@ -173,8 +173,3 @@ void Menu::update() {
     game->updateCamera(1);
     scenery->update();
 }
-
-// GETTER
-const MenuID Menu::getId() const {
-    return id;
-}

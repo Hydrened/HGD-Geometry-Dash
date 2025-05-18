@@ -8,8 +8,10 @@ Game::Game() : save(new Save()) {
 
     openMenu(MAIN_MENU, nullptr);
 
-    H2DE_DebugObjects(engine, false);
-    H2DE_SetSongVolume(engine, 10);
+    H2DE_DebugObjects(engine, true);
+
+    H2DE_SetSongVolume(engine, 0);
+    H2DE_SetSfxVolume(engine, 0);
 }
 
 void Game::initEngine() {
@@ -17,9 +19,9 @@ void Game::initEngine() {
 
     engineData.window.title = "Geometry Dash";
     engineData.window.fps = 60;
-    engineData.window.pos = { SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED };
-    engineData.window.size = { 1280, 720 };
-    engineData.window.resizable = true;
+    engineData.window.pos = { 10, 30 };
+    engineData.window.size = { 1520, 855 };
+    engineData.window.resizable = false;
     engineData.window.ratio = H2DE_WINDOW_RATIO_16_9;
     engineData.window.saveState = false;
     engineData.window.fullscreen = false;
@@ -57,8 +59,7 @@ void Game::initTransition() {
     H2DE_Surface* surface = H2DE_CreateTexture(engine, sd, H2DE_TextureData());
     
     H2DE_ObjectData od = H2DE_ObjectData();
-    od.pos = { 0.0f, 0.0f };
-    od.size = gameSize;
+    od.rect = H2DE_LevelPos{ 0.0f, 0.0f }.makeRect(gameSize);
     od.absolute = true;
     od.index = INT_MAX;
 
@@ -160,22 +161,30 @@ void Game::event_keydown_menu(SDL_Keycode keycode) {
 
     switch (keycode) {
         case SDLK_ESCAPE: switch (id) {
+
             case MAIN_MENU: H2DE_StopEngine(engine); break;
+            
             case LEVEL_MENU: openMenu(MAIN_MENU, [this]() {
                 closeMenu();
             }); break;
+
             default: break;
+
         } break;
 
         case SDLK_SPACE: switch (id) {
+
             case MAIN_MENU: openMenu(LEVEL_MENU, [this]() {
                 closeMenu();
             }); break;
+
             case LEVEL_MENU: openLevel(0, [this]() {
                 H2DE_StopSong(engine);
                 closeMenu();
             }); break;
+
             default: break;
+
         } break;
 
         default: break;
@@ -205,6 +214,14 @@ void Game::event_keydown_level(SDL_Keycode keycode) {
 
         case SDLK_UP:
             callShortcut(SDLK_SPACE);
+            break;
+
+        case SDLK_d:
+            H2DE_ToggleDebugMode(engine);
+            break;
+
+        case SDLK_RIGHT:
+            H2DE_DebugModeNextFrame(engine);
             break;
 
         default: break;
@@ -246,7 +263,7 @@ void Game::event_button_down(Uint8 button) {
 
 void Game::event_button_down_level(Uint8 button) {
     switch (button) {
-        case 1:
+        case SDL_BUTTON_LEFT:
             level->getPlayer()->setMouseDown(true);
             break;
     }
@@ -262,7 +279,7 @@ void Game::event_button_up(Uint8 button) {
 
 void Game::event_button_up_level(Uint8 button) {
     switch (button) {
-        case 1:
+        case SDL_BUTTON_LEFT:
             level->getPlayer()->setMouseDown(false);
             break;
     }
@@ -288,7 +305,7 @@ void Game::updateCamera(int speed) const {
 void Game::openMenu(MenuID id, const std::function<void()>& call) {
     const int duration = save->getTransitionDuration();
 
-    if (menu) {
+    if (menu != nullptr) {
         menu->disableButtons();
     }
 
@@ -308,7 +325,7 @@ void Game::openMenu(MenuID id, const std::function<void()>& call) {
 }
 
 void Game::closeMenu() {
-    if (menu) {
+    if (menu != nullptr) {
         delete menu;
         menu = nullptr;
     }
@@ -316,13 +333,13 @@ void Game::closeMenu() {
 
 void Game::transitionIn() {
     inTransition = true;
-    H2DE_SetSurfaceColor(H2DE_GetBasicObjectSurface(transition, "main"), { 0, 0, 0, 255 }, save->getTransitionDuration(), H2DE_EASING_LINEAR, false);
+    H2DE_SetSurfaceColor(H2DE_GetBasicObjectSurface(transition, "main"), { 0, 0, 0, 255 }, save->getTransitionDuration(), H2DE_EASING_LINEAR, nullptr, false);
 }
 
 void Game::transitionOut() {
     const int duration = save->getTransitionDuration();
 
-    H2DE_SetSurfaceColor(H2DE_GetBasicObjectSurface(transition, "main"), { 0, 0, 0, 0 }, duration, H2DE_EASING_LINEAR, false);
+    H2DE_SetSurfaceColor(H2DE_GetBasicObjectSurface(transition, "main"), { 0, 0, 0, 0 }, duration, H2DE_EASING_LINEAR, nullptr, false);
     H2DE_Delay(engine, duration, [this]() {
         inTransition = false;
     }, false);
@@ -330,6 +347,10 @@ void Game::transitionOut() {
 
 // LEVELS
 void Game::openLevel(int id, const std::function<void()>& call) {
+    if (level != nullptr) {
+        return;
+    }
+
     const int duration = save->getTransitionDuration();
 
     transitionIn();
@@ -341,8 +362,12 @@ void Game::openLevel(int id, const std::function<void()>& call) {
             call();
         }
 
+        Checkpoint checkpoint = Checkpoint();
+        checkpoint.pos = { 58.0f, 3.0f };
+
         H2DE_Resume(engine);
-        level = new Level(this, id, nullptr);
+        // level = new Level(this, id);
+        level = new Level(this, id, checkpoint);
         state = LEVEL;
 
         transitionOut();
@@ -350,7 +375,7 @@ void Game::openLevel(int id, const std::function<void()>& call) {
 }
 
 void Game::closeLevel() {
-    if (level) {
+    if (level != nullptr) {
         H2DE_StopSong(engine);
         delete level;
         level = nullptr;
@@ -368,19 +393,6 @@ void Game::destroyObjects(const std::vector<H2DE_Object*>& objects) const {
             H2DE_DestroyObject(engine, object);
         }
     }
-}
-
-// GETTER
-H2DE_Engine* Game::getEngine() const {
-    return engine;
-}
-
-const Data* Game::getData() const {
-    return data;
-}
-
-const Save* Game::getSave() const {
-    return save;
 }
 
 // CONVERT

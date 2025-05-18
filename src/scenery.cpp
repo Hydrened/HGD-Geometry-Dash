@@ -8,6 +8,7 @@ Scenery::Scenery(Game* g, int bgID, int gID) : game(g), backgroundID(bgID), grou
     createLines();
 
     addMissingTiles();
+    update();
 }
 
 void Scenery::initDefaultValues() {
@@ -55,16 +56,8 @@ H2DE_Object* Scenery::createGround(SceneryType type) {
 
     const H2DE_LevelPos pos = (type == BOT_GROUND) ? defaultBotGroundPos : defaultTopGroundPos;
 
-    H2DE_Hitbox blueHitbox = H2DE_Hitbox();
-    blueHitbox.rect = H2DE_LevelPos{ 0.0f, 0.0f }.makeRect(groundSize);
-    blueHitbox.color = { 127, 127, 255, 255 };
-    blueHitbox.collisionIndex = 2;
-
     H2DE_ObjectData od = H2DE_ObjectData();
-    od.pos = game->convertToLevelPos(pos, groundSize);
-    od.size = groundSize;
-    od.index = getIndex(LAYER_H, 0);
-    od.hitboxes["snap"] = blueHitbox;
+    od.rect = game->convertToLevelPos(pos, groundSize).makeRect(groundSize);
 
     return H2DE_CreateBasicObject(engine, od, H2DE_BasicObjectData());
 }
@@ -87,8 +80,7 @@ H2DE_Object* Scenery::createLine(SceneryType type) {
         : H2DE_LevelPos{ camPosX + lineOffsetX, displayedTopGroundPosY };
 
     H2DE_ObjectData od = H2DE_ObjectData();
-    od.pos = game->convertToLevelPos(pos, lineSize);
-    od.size = lineSize;
+    od.rect = game->convertToLevelPos(pos, lineSize).makeRect(lineSize);
     od.index = getIndex(LAYER_G, 1);
 
     H2DE_SurfaceData sd = H2DE_SurfaceData();
@@ -111,6 +103,7 @@ Scenery::~Scenery() {
     destroyGrounds();
     destroyTiles();
     destroyLines();
+    stopTimelines();
 }
 
 void Scenery::destroyGrounds() {
@@ -119,12 +112,33 @@ void Scenery::destroyGrounds() {
 
 void Scenery::destroyTiles() {
     game->destroyObjects(backgroundTiles);
+    backgroundTiles.clear();
+
     game->destroyObjects(botGroundTiles);
+    botGroundTiles.clear();
+
     game->destroyObjects(topGroundTiles);
+    topGroundTiles.clear();
 }
 
 void Scenery::destroyLines() {
     game->destroyObjects(lines);
+}
+
+void Scenery::stopTimelines() {
+    stopTimeline(backgroundColorTimlineID);
+    stopTimeline(botGroundColorTimlineID);
+    stopTimeline(topGroundColorTimlineID);
+    stopTimeline(lineColorTimlineID);
+}
+
+void Scenery::stopTimeline(std::optional<unsigned int>& id) {
+    static H2DE_Engine* engine = game->getEngine();
+
+    if (id.has_value()) {
+        H2DE_StopTimeline(engine, id.value(), false);
+        id = std::nullopt;
+    }
 }
 
 // UDPATE
@@ -143,19 +157,27 @@ void Scenery::updatePositions() {
 }
 
 void Scenery::updateBackgroundTilesPosition() {
-    // static H2DE_Engine* engine = game->getEngine();
-    // static const H2DE_LevelSize& backgroundTileSize = game->getData()->getBackgroundTileSize();
-    // const float camX = H2DE_GetCameraPos(engine).x;
-    // const float t = 0.9f; // temp
+    static H2DE_Engine* engine = game->getEngine();
+    static const H2DE_LevelPos& defaultBackgroundPos = game->getData()->getDefaultBackgroundPos();
+    static const H2DE_LevelSize& backgroundTileSize = game->getData()->getBackgroundTileSize();
+    static const float backgroundRatio = game->getData()->getBackgroundRatio();
 
-    // for (size_t i = 0; i < backgroundTiles.size(); i++) {
-    //     H2DE_Object* tile = backgroundTiles[i];
+    const float minCamX = H2DE_GetCameraPos(engine).x;
+    const float backgroundPosX = minCamX * backgroundRatio - 1.0f;
 
-    //     const float x = (camX * t) + (backgroundTileSize.x * i);
-    //     const float y = 0.0f;
+    float xOffset = backgroundPosX;
+    while (xOffset + backgroundTileSize.x < minCamX) {
+        xOffset += backgroundTileSize.x;
+    }
+    
+    for (size_t i = 0; i < backgroundTiles.size(); i++) {
+        H2DE_Object* tile = backgroundTiles[i];
 
-    //     H2DE_SetObjectPos(tile, game->convertToLevelPos({ x, y }, backgroundTileSize));
-    // }
+        const float x = xOffset + (backgroundTileSize.x * i);
+        const float y = displayedBackgroundPosY;
+
+        H2DE_SetObjectPos(tile, game->convertToLevelPos({ x, y }, backgroundTileSize));
+    }
 }
 
 void Scenery::updateGroundTilesPosition() {
@@ -221,11 +243,9 @@ void Scenery::removeOutOfScreenTiles(std::vector<H2DE_Object*>& tiles, const H2D
     
         if (minCamX > tileRect.x + tileRect.w) {
             H2DE_DestroyObject(engine, *it);
-            it = tiles.erase(it);
-
-        } else {
-            break;
+            tiles.erase(it);
         }
+        break;
     }
 }
 
@@ -246,13 +266,13 @@ void Scenery::addMissingTiles(std::vector<H2DE_Object*>& tiles, const H2DE_Level
     static H2DE_Engine* engine = game->getEngine();
     const float camMaxX = H2DE_GetCameraPos(engine).x + H2DE_GetCameraSize(engine).x;
 
-    float lastTilePosX = !tiles.empty()
+    float lastTilePosMaxX = !tiles.empty()
         ? H2DE_GetObjectPos(tiles.back()).x + tileSize.x
         : defaultPos.x;
 
-    while (lastTilePosX < camMaxX) {
-        createTile(lastTilePosX, type);
-        lastTilePosX += tileSize.x;
+    while (lastTilePosMaxX < camMaxX) {
+        createTile(lastTilePosMaxX, type);
+        lastTilePosMaxX += tileSize.x;
     }
 }
 
@@ -271,15 +291,13 @@ void Scenery::createBackgroundTile(float posX) {
     static const H2DE_LevelSize& backgroundTileSize = game->getData()->getBackgroundTileSize();
 
     H2DE_ObjectData od = H2DE_ObjectData();
-    od.pos = game->convertToLevelPos(H2DE_LevelPos{ posX, displayedBackgroundPosY }, backgroundTileSize);
-    od.size = backgroundTileSize;
+    od.rect = game->convertToLevelPos(H2DE_LevelPos{ posX, displayedBackgroundPosY }, backgroundTileSize).makeRect(backgroundTileSize);
     od.index = getIndex(LAYER_BG, 0);
 
     H2DE_SurfaceData sd = H2DE_SurfaceData();
     sd.textureName = "game_bg_0" + std::to_string(backgroundID) + "_001-uhd.png";
-    sd.rect = H2DE_LevelPos { 0.0f, 0.0f }.makeRect(backgroundTileSize);
+    sd.rect = H2DE_LevelPos{ 0.0f, 0.0f }.makeRect(backgroundTileSize);
     sd.color = backgroundColor;
-    sd.scaleMode = H2DE_SCALE_MODE_LINEAR;
 
     H2DE_Surface* surface = H2DE_CreateTexture(engine, sd, H2DE_TextureData());
     
@@ -298,15 +316,14 @@ void Scenery::createGroundTile(float posX, SceneryType type) {
         : H2DE_LevelPos{ posX, displayedTopGroundPosY };
 
     H2DE_ObjectData od = H2DE_ObjectData();
-    od.pos = game->convertToLevelPos(pos, groundTileSize);
-    od.size = groundTileSize;
+    od.rect = game->convertToLevelPos(pos, groundTileSize).makeRect(groundTileSize);
     od.index = getIndex(LAYER_G, 0);
 
     H2DE_SurfaceData sd = H2DE_SurfaceData();
     sd.textureName = "groundSquare_0" + std::to_string(groundID) + "_001-uhd.png";
-    sd.rect = H2DE_LevelPos { 0.0f, 0.0f }.makeRect(groundTileSize);
+    sd.rect = H2DE_LevelPos{ 0.0f, 0.0f }.makeRect(groundTileSize);
     sd.color = groundColor;
-    sd.scaleMode = H2DE_SCALE_MODE_LINEAR;
+
     if (type == TOP_GROUND) {
         sd.flip = H2DE_FLIP_Y;
     }
@@ -320,18 +337,60 @@ void Scenery::createGroundTile(float posX, SceneryType type) {
     tiles.push_back(H2DE_CreateBasicObject(engine, od, bod));
 }
 
-// SETTER
-void Scenery::setBackgroundColor(const H2DE_ColorRGB& color, int duration, H2DE_Easing easing) {
-    setColors(backgroundTiles, backgroundColor, color, duration, easing);
+// ACTIONS
+void Scenery::reset() {
+    destroyTiles();
+    stopTimelines();
 }
 
-void Scenery::setGroundColor(const H2DE_ColorRGB& color, int duration, H2DE_Easing easing) {
-    setColors(botGroundTiles, groundColor, color, duration, easing);
-    setColors(topGroundTiles, groundColor, color, duration, easing);
+// SETTER
+void Scenery::setBackgroundColor(const H2DE_ColorRGB& color, unsigned int duration, float defaultBlend) {
+    stopTimeline(backgroundColorTimlineID);
+    backgroundColorTimlineID = setColors(backgroundTiles, backgroundColor, color, duration, defaultBlend);
+}
+
+void Scenery::setBackgroundColor(const H2DE_ColorRGB& color, float defaultBlend) {
+    H2DE_ColorRGB blendedColor = H2DE_ColorRGB();
+    blendedColor.r = static_cast<Uint8>(backgroundColor.r + (color.r - backgroundColor.r) * defaultBlend);
+    blendedColor.g = static_cast<Uint8>(backgroundColor.g + (color.g - backgroundColor.g) * defaultBlend);
+    blendedColor.b = static_cast<Uint8>(backgroundColor.b + (color.b - backgroundColor.b) * defaultBlend);
+    blendedColor.a = static_cast<Uint8>(backgroundColor.a + (color.a - backgroundColor.a) * defaultBlend);
+
+    setColors(backgroundTiles, blendedColor);
+}
+
+void Scenery::setGroundColor(const H2DE_ColorRGB& color, unsigned int duration, float defaultBlend) {
+    stopTimeline(botGroundColorTimlineID);
+    botGroundColorTimlineID = setColors(botGroundTiles, groundColor, color, duration, defaultBlend);
+
+    stopTimeline(topGroundColorTimlineID);
+    topGroundColorTimlineID = setColors(topGroundTiles, groundColor, color, duration, defaultBlend);
 }   
 
-void Scenery::setLineColor(const H2DE_ColorRGB& color, int duration, H2DE_Easing easing) {
-    setColors(lines, lineColor, color, duration, easing);
+void Scenery::setGroundColor(const H2DE_ColorRGB& color, float defaultBlend) {
+    H2DE_ColorRGB blendedColor = H2DE_ColorRGB();
+    blendedColor.r = static_cast<Uint8>(groundColor.r + (color.r - groundColor.r) * defaultBlend);
+    blendedColor.g = static_cast<Uint8>(groundColor.g + (color.g - groundColor.g) * defaultBlend);
+    blendedColor.b = static_cast<Uint8>(groundColor.b + (color.b - groundColor.b) * defaultBlend);
+    blendedColor.a = static_cast<Uint8>(groundColor.a + (color.a - groundColor.a) * defaultBlend);
+
+    setColors(botGroundTiles, blendedColor);
+    setColors(topGroundTiles, blendedColor);
+}  
+
+void Scenery::setLineColor(const H2DE_ColorRGB& color, unsigned int duration, float defaultBlend) {
+    stopTimeline(lineColorTimlineID);
+    lineColorTimlineID = setColors(lines, lineColor, color, duration, defaultBlend);
+}
+
+void Scenery::setLineColor(const H2DE_ColorRGB& color, float defaultBlend) {
+    H2DE_ColorRGB blendedColor = H2DE_ColorRGB();
+    blendedColor.r = static_cast<Uint8>(lineColor.r + (color.r - lineColor.r) * defaultBlend);
+    blendedColor.g = static_cast<Uint8>(lineColor.g + (color.g - lineColor.g) * defaultBlend);
+    blendedColor.b = static_cast<Uint8>(lineColor.b + (color.b - lineColor.b) * defaultBlend);
+    blendedColor.a = static_cast<Uint8>(lineColor.a + (color.a - lineColor.a) * defaultBlend);
+
+    setColors(lines, color);
 }
 
 void Scenery::setColors(const std::vector<H2DE_Object*>& tiles, const H2DE_ColorRGB& color) {
@@ -345,19 +404,26 @@ void Scenery::setColors(const std::vector<H2DE_Object*>& tiles, const H2DE_Color
     }
 }
 
-void Scenery::setColors(const std::vector<H2DE_Object*>& tiles, H2DE_ColorRGB& defaultColor, const H2DE_ColorRGB& color, int duration, H2DE_Easing easing) {
+unsigned int Scenery::setColors(const std::vector<H2DE_Object*>& tiles, H2DE_ColorRGB& defaultColor, const H2DE_ColorRGB& color, unsigned int duration, float defaultBlend) {
     static H2DE_Engine* engine = game->getEngine();
 
-    const H2DE_ColorRGB defaultColorCopy = defaultColor;
+    duration = std::round((1.0f - defaultBlend) * duration);
 
-    H2DE_CreateTimeline(engine, duration, easing, [this, &tiles, defaultColorCopy, &defaultColor, color](float blend) {
+    H2DE_ColorRGB blendedDefaultColor = H2DE_ColorRGB();
+    blendedDefaultColor.r = static_cast<Uint8>(defaultColor.r + (color.r - defaultColor.r) * defaultBlend);
+    blendedDefaultColor.g = static_cast<Uint8>(defaultColor.g + (color.g - defaultColor.g) * defaultBlend);
+    blendedDefaultColor.b = static_cast<Uint8>(defaultColor.b + (color.b - defaultColor.b) * defaultBlend);
+    blendedDefaultColor.a = static_cast<Uint8>(defaultColor.a + (color.a - defaultColor.a) * defaultBlend);
+
+    return H2DE_CreateTimeline(engine, duration, H2DE_EASING_LINEAR, [this, &tiles, blendedDefaultColor, &defaultColor, color](float blend) {
         H2DE_ColorRGB interpoledColor = H2DE_ColorRGB();
-        interpoledColor.r = static_cast<Uint8>(defaultColorCopy.r + (color.r - defaultColorCopy.r) * blend);
-        interpoledColor.g = static_cast<Uint8>(defaultColorCopy.g + (color.g - defaultColorCopy.g) * blend);
-        interpoledColor.b = static_cast<Uint8>(defaultColorCopy.b + (color.b - defaultColorCopy.b) * blend);
-        interpoledColor.a = static_cast<Uint8>(defaultColorCopy.a + (color.a - defaultColorCopy.a) * blend);
+        interpoledColor.r = static_cast<Uint8>(blendedDefaultColor.r + (color.r - blendedDefaultColor.r) * blend);
+        interpoledColor.g = static_cast<Uint8>(blendedDefaultColor.g + (color.g - blendedDefaultColor.g) * blend);
+        interpoledColor.b = static_cast<Uint8>(blendedDefaultColor.b + (color.b - blendedDefaultColor.b) * blend);
+        interpoledColor.a = static_cast<Uint8>(blendedDefaultColor.a + (color.a - blendedDefaultColor.a) * blend);
 
         defaultColor = interpoledColor;
         setColors(tiles, interpoledColor);
+
     }, nullptr, 0, true);
 }

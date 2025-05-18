@@ -14,12 +14,13 @@ class Level {
 private:
     Game* game;
     int id;
-    const Checkpoint* checkpoint;
+    Checkpoint checkpoint;
 
     json data;
-    std::vector<std::pair<ItemBuffer, std::pair<std::optional<BlockBuffer>, std::optional<TriggerBuffer>>>> itemBuffer = {};
+    std::vector<ItemData> itemBuffer = {};
     int itemBufferIndex = 0;
     int startDelayID = -1;
+    int respawnDelayID = -1;
     
     Scenery* scenery = nullptr;
     Player* player = nullptr;
@@ -27,40 +28,61 @@ private:
 
     int speed = -1;
 
+    bool isValid = true;
+
+    void init();
     void loadData();
     void initItemBuffer();
     void initItemBlockBuffer();
-    void initItemTriggerkBuffer();
+    void initItemTriggerBuffer();
     void initCamera() const;
     void initScenery();
     void initPlayer();
+    void initItems();
     void initSpeed();
     void initStartDelay();
     void playSong() const;
 
     void stopStartDelay();
+    void stopRespawnDelay();
     void destroyScenery();
     void destroyPlayer();
     void destroyItems();
 
+    void updatePlayer();
     void updateCamera();
     void updateScenery();
-    void updatePlayer();
     void updateItemBuffer();
     void updateItems();
 
-    static const ItemBuffer getItemBuffer(const json& item);
+    void reset();
+    void resetScenery();
+    void simulateTriggers(float poxX);
+
+    static const ItemData getItemData(const json& item);
+    const int getPosTime(float posX) const;
 
 public:
-    Level(Game* game, int id, const Checkpoint* checkpoint);
+    Level(Game* game, int id);
+    Level(Game* game, int id, const Checkpoint& checkpoint);
     ~Level();
 
     void update();
 
-    Player* getPlayer() const;
-    const int getSpeed() const;
+    void respawn();
+    void removeTrigger(const Trigger* trigger);
+
+    inline Player* getPlayer() const { return player; }
+    inline const int getSpeed() const { return speed; }
+    inline const std::vector<Item*>& getItems() const { return items; }
+    const H2DE_Object* getBotGround() const;
+    const H2DE_Object* getTopGround() const;
 
     void setSpeed(int speed);
+    void setBackgroundColor(const H2DE_ColorRGB& color, int duration, float blend);
+    void setGroundColor(const H2DE_ColorRGB& color, int duration, float blend);
+    void setLineColor(const H2DE_ColorRGB& color, int duration, float blend);
+    void playerDied();
 };
 
 #endif

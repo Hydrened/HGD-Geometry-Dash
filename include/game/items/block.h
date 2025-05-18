@@ -5,22 +5,24 @@
 
 class Block : public Item {
 private:
-    BlockBuffer blockBuffer;
     H2DE_Object* object = nullptr;
-    BlockData data;
+    BlockData blockData;
 
-    void loadData();
     void initObject();
 
     void destroyObject();
 
 public:
-    Block(Game* game, const ItemBuffer& itemBuffer, const BlockBuffer& buffer);
+    Block(Game* game, const ItemData& itemData, const BlockData& blockData);
     ~Block() override;
 
     void update() override;
+
+    void specialEffect(const Player* player) const;
     
-    bool hasToBeRemoved(const H2DE_LevelPos& camPos, const H2DE_LevelPos& playerPos) const override;
+    const std::optional<H2DE_LevelRect> getHitbox() const;
+    inline const BlockType getType() const { return blockData.type; }
+    const std::optional<int> getSpeedValue() const;
 };
 
 #endif

@@ -1,3 +1,14 @@
+## HGD-2.0.1-beta
+#### ADDED
+- checkpoint
+- player gravity
+- ground collision
+- main menu interface
+- level items
+- senery background parallax effect
+- player death  
+- player respawn
+
 ## HGD-2.0.0-beta
 #### REMAKE FROM SCRATCH
 #### ADDED

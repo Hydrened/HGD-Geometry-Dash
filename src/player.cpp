@@ -1,27 +1,20 @@
 #include "player.h"
 
+#undef min
+
 // INIT
-Player::Player(Game* g, const Checkpoint* c) : game(g), checkpoint(c) {
+Player::Player(Game* g, Level* l, const Checkpoint& c) : game(g), level(l), checkpoint(c) {
     initCheckpoint();
     initIcons();
 }
 
 void Player::initCheckpoint() {
-    if (checkpoint == nullptr) {
-        return;
-    }
-
-    pos = checkpoint->pos;
-    velocity = checkpoint->velocity;
-    rotation = checkpoint->rotation;
-
-    gamemode = checkpoint->gamemode;
-    size = checkpoint->size;
-    gravity = checkpoint->gravity;
+    respawn(checkpoint);
 }
 
 void Player::initIcons() {
     initCube();
+    initShip();
 }
 
 void Player::initIconCreateLayers(const std::string& textureName, const std::vector<std::tuple<std::string, H2DE_AbsRect, H2DE_LevelRect, H2DE_ColorRGB>>& layers, std::unordered_map<std::string, H2DE_Surface*>& surfaces) const {
@@ -43,36 +36,28 @@ void Player::initIconCreateLayers(const std::string& textureName, const std::vec
 
 void Player::initCube() {
     static H2DE_Engine* engine = game->getEngine();
+    static const Data* gameData = game->getData();
 
-    int cubeID = 1; // temp
-    const IconData& cubeData = game->getData()->getCube(cubeID);
+    int cubeID = 1; // temp 
+    const IconData& cubeData = gameData->getCube(cubeID);
     const std::string textureName = "player_" + formatID(cubeID, 2) + "-uhd.png";
 
-    static const std::pair<H2DE_LevelRect, H2DE_LevelRect>& bigCubeHitboxes = game->getData()->getPlayerHitbox(gamemode, size);
+    static const PlayerHitbox& bigCubeHitboxes = gameData->getPlayerHitbox(gamemode, size);
 
-    H2DE_Hitbox blueSnapHitbox = H2DE_Hitbox();
-    blueSnapHitbox.rect = bigCubeHitboxes.first;
-    blueSnapHitbox.color = { 255, 127, 127, 255 };
-    blueSnapHitbox.collisionIndex = 2;
-    blueSnapHitbox.snap = true;
-    blueSnapHitbox.onCollide = [this](H2DE_Object* object, H2DE_Face face) {
-        bool normalGravityAndBotOnSolid = (gravity == PLAYER_GRAVITY_NORMAL && face == H2DE_FACE_BOTTOM);
-        bool upsideDownGravityAndTopOnSolid = (gravity == PLAYER_GRAVITY_UPSIDE_DOWN && face == H2DE_FACE_TOP);
+    H2DE_Hitbox redHitbox = H2DE_Hitbox();
+    redHitbox.rect = bigCubeHitboxes.red;
+    redHitbox.color = gameData->getHitboxColor("red");
 
-        botOnSolid = normalGravityAndBotOnSolid || upsideDownGravityAndTopOnSolid;
-
-        bool normalGravityAndTopOnSolid = (gravity == PLAYER_GRAVITY_NORMAL && face == H2DE_FACE_TOP);
-        bool upsideDownGravityAndBotOnSolid = (gravity == PLAYER_GRAVITY_UPSIDE_DOWN && face == H2DE_FACE_BOTTOM);
-
-        topOnSolid = normalGravityAndTopOnSolid || upsideDownGravityAndBotOnSolid;
-    };
+    H2DE_Hitbox blueHitbox = H2DE_Hitbox();
+    blueHitbox.rect = bigCubeHitboxes.blue;
+    blueHitbox.color = gameData->getHitboxColor("blue");
 
     H2DE_ObjectData od = H2DE_ObjectData();
-    od.pos = game->convertToLevelPos(pos, bigCubeHitboxes.first.getSize());
-    od.size = bigCubeHitboxes.first.getSize();
-    od.pivot = od.size.getCenter();
+    od.rect = pos.makeRect({ 1.0f, 1.0f });
+    od.pivot = od.rect.getSize().getCenter();
     od.index = getIndex(LAYER_P, 0);
-    od.hitboxes["blue-snap"] = blueSnapHitbox;
+    od.hitboxes["red"] = redHitbox;
+    od.hitboxes["blue"] = blueHitbox;
 
     const std::vector<std::tuple<std::string, H2DE_AbsRect, H2DE_LevelRect, H2DE_ColorRGB>> layers = {
         { "glow", cubeData.glowSrcRect, cubeData.glowDestRect, { 255, 255, 255, 0 } },
@@ -84,6 +69,10 @@ void Player::initCube() {
     initIconCreateLayers(textureName, layers, bod.surfaces);
 
     cube = H2DE_CreateBasicObject(engine, od, bod);
+}
+
+void Player::initShip() {
+
 }
 
 // CLEANUP
@@ -98,62 +87,247 @@ void Player::destroyIcons() {
 
 // UPDATE
 void Player::update() {
-    updateGravity();
-    updateClicks();
-    updateRotation();
+    onSolid = false;
+
+    updateVelocity();
     updatePosition();
+    updateRotation();
+}
+
+// velocity
+void Player::updateVelocity() {
+    /**
+     * - 1: CALCUL DE LA VELOCITY :
+     *          but: calcul de la velocity finale pour ensuite faire les calcul en fonction de la position modifiée par la velocity
+     *          inclus : gravity, special blocks collisions, click
+     */
+
+    updateGravity();
+    updateSpecialBlocksCollision();
+    updateClick();
+
+    pos += velocity;
+    H2DE_SetObjectPos(getCurrentGamemodeObject(), pos);
 }
 
 void Player::updateGravity() {
-    static const Data* data = game->getData();
+    static const Data* gameData = game->getData();
+    const float& g = gameData->getGravity(gamemode, size);
+    const float& maxGravity = gameData->getMaxGravity(gamemode, size);
 
-    const float& gravity = data->getGravity(gamemode, size);
-    const float& maxGravity = data->getMaxGravity(gamemode, size);
-
-    pos = game->convertToGdPos(H2DE_GetObjectPos(cube), { 1.0f, 1.0f }); // temp
-
-    velocity.y += gravity;
-
-    if (velocity.y > maxGravity) {
-        velocity.y = maxGravity;
-
-    } else if (velocity.y < -maxGravity) {
-        velocity.y = -maxGravity;
-    }
+    velocity.y += g * gravity;
+    velocity.y = std::clamp(velocity.y, -maxGravity, maxGravity);
 }
 
-void Player::updateClicks() {
-    if (mouseDown) {
+void Player::updateSpecialBlocksCollision() {
+    // exemple: les pads peuvent changer la velocity, donc il faut qu'il soit avant les recaluls de positions
+    // avant le jump pour que les pads prennent le dessus sur les jumps
+    // avant le jump aussi pour que quand je rentre dans un portail de ship, les clicks deviennent des clicks de ship et pas de cube
+}
+
+void Player::updateClick() {
+    if (mouseDown && !dead) {
         click();
     }
 }
 
+// positions
+void Player::updatePosition() {
+    /** 
+     * - 2: RECALCUL DES POSITIONS :
+     *          but: une fois qu'on a la velocity de fin de frame en soit, on peut faire tout les calculs de positions
+     *          note: peut reset la velocity.y à 0.0f
+     *          inclus : ground collision, block collision
+     */
+
+    updateGroundsCollisions();
+    updateItemsCollisions();
+    H2DE_SetObjectPos(getCurrentGamemodeObject(), pos);
+}
+
+void Player::updateGroundsCollisions() {
+    static const Data* gameData = game->getData();
+
+    const H2DE_LevelRect botGroundRect = H2DE_GetObjectRect(level->getBotGround());
+    const H2DE_LevelRect topGroundRect = H2DE_GetObjectRect(level->getTopGround());
+
+    H2DE_LevelRect redHitboxRect = getCurrentRedHitboxWorldRect();
+    const H2DE_LevelPos playerRedHitboxOffset = getCurrentRedHitboxOffset();
+    const PlayerSnap& playerSnap = gameData->getPlayerSnap(gamemode, size);
+
+    if (redHitboxRect.collides(botGroundRect)) {
+
+        const std::optional<H2DE_Face> possibleCollidedFace = redHitboxRect.getCollidedFace(botGroundRect);
+
+        if (canSnap(possibleCollidedFace)) {
+            snapPlayerHitboxToItemHitbox(playerRedHitboxOffset, redHitboxRect, botGroundRect, possibleCollidedFace.value());
+            velocity.y = 0.0f;
+            onSolid = true;
+        }
+
+    } else if (redHitboxRect.collides(topGroundRect)) {
+        
+        const std::optional<H2DE_Face> possibleCollidedFace = redHitboxRect.getCollidedFace(topGroundRect);
+
+        if (canSnap(possibleCollidedFace)) {
+            snapPlayerHitboxToItemHitbox(playerRedHitboxOffset, redHitboxRect, topGroundRect, possibleCollidedFace.value());
+            velocity.y = 0.0f;
+            onSolid = true;
+        }
+    }
+}
+
+void Player::updateItemsCollisions() {
+    H2DE_LevelRect playerRedHitboxRect = getCurrentRedHitboxWorldRect();
+    H2DE_LevelRect playerBlueHitboxRect = getCurrentBlueHitboxWorldRect();
+
+    for (const Item* item : level->getItems()) {
+        if (dead) {
+            break;
+        }
+
+        const Block* block = dynamic_cast<const Block*>(item);
+        if (block != nullptr) {
+            updateBlockCollisions(block, playerRedHitboxRect, playerBlueHitboxRect);
+            continue;
+        }
+
+        const Trigger* trigger = dynamic_cast<const Trigger*>(item);
+        if (trigger != nullptr) {
+            updateTriggerCollisions(trigger, playerRedHitboxRect);
+        }
+    }
+}
+
+void Player::updateBlockCollisions(const Block* block, H2DE_LevelRect& playerRedHitboxRect, H2DE_LevelRect& playerBlueHitboxRect) {
+    const BlockType& blockType = block->getType();
+    if (blockType == BLOCK_TYPE_DECORATION) {
+        return;
+    }
+
+    const std::optional<H2DE_LevelRect> possibleItemHitboxRect = block->getHitbox();
+    if (!possibleItemHitboxRect.has_value()) {
+        return;
+    }
+
+    const H2DE_LevelRect& itemHitboxRect = possibleItemHitboxRect.value();
+
+    if (playerRedHitboxRect.collides(itemHitboxRect)) {
+        const H2DE_LevelPos playerRedHitboxOffset = getCurrentRedHitboxOffset();
+        bool snaped = updateBlockCollisions_redHitboxCollided(playerRedHitboxRect, playerRedHitboxOffset, itemHitboxRect, blockType);
+
+        if (snaped) {
+            return;
+        }
+    }
+
+    if (playerBlueHitboxRect.collides(itemHitboxRect)) {
+        const H2DE_LevelPos playerBlueHitboxOffset = getCurrentBlueHitboxOffset();
+        bool snaped = updateBlockCollisions_blueHitboxCollided(playerBlueHitboxRect, playerBlueHitboxOffset, itemHitboxRect, blockType);
+    }
+}
+
+bool Player::updateBlockCollisions_redHitboxCollided(H2DE_LevelRect& playerRedHitboxRect, const H2DE_LevelPos& playerRedHitboxOffset, const H2DE_LevelRect& itemHitboxRect, BlockType blockType) {
+    return updateBlockCollisions_hitboxCollided(playerRedHitboxRect, playerRedHitboxOffset, "red", itemHitboxRect, blockType);
+}
+
+bool Player::updateBlockCollisions_blueHitboxCollided(H2DE_LevelRect& playerBlueHitboxRect, const H2DE_LevelPos& playerBlueHitboxOffset, const H2DE_LevelRect& itemHitboxRect, BlockType blockType) {
+    return updateBlockCollisions_hitboxCollided(playerBlueHitboxRect, playerBlueHitboxOffset, "blue", itemHitboxRect, blockType);
+}
+
+bool Player::updateBlockCollisions_hitboxCollided(H2DE_LevelRect& playerHitboxRect, const H2DE_LevelPos& playerHitboxOffset, const std::string& playerHitboxColor, const H2DE_LevelRect& itemHitboxRect, BlockType blockType) {
+    static const Data* gameData = game->getData();
+    
+    const std::optional<H2DE_Face> possibleCollidedFace = playerHitboxRect.getCollidedFace(itemHitboxRect);
+    if (!possibleCollidedFace.has_value()) {
+        return false;
+    }
+
+    const H2DE_Face collidedFace = possibleCollidedFace.value();
+
+    switch (blockType) {
+        case BLOCK_TYPE_SOLID: {
+            bool isPlayerHitboxRed = (playerHitboxColor == "red");
+
+            if (isPlayerHitboxRed) {
+
+                if (canSnap(collidedFace)) {
+                    snapPlayerHitboxToItemHitbox(playerHitboxOffset, playerHitboxRect, itemHitboxRect, collidedFace);
+                    onSolid = true;
+                    return true;
+                }
+
+            } else {
+                snapPlayerHitboxToItemHitbox(playerHitboxOffset, playerHitboxRect, itemHitboxRect, collidedFace);
+                kill();
+                return true;
+            }
+
+            break;
+        }
+
+        case BLOCK_TYPE_OBSTACLE:
+            snapPlayerHitboxToItemHitbox(playerHitboxOffset, playerHitboxRect, itemHitboxRect, collidedFace);
+            kill();
+            return true;
+        
+        default: break;
+    }
+
+    return false;
+}
+
+void Player::updateTriggerCollisions(const Trigger* trigger, H2DE_LevelRect& playerRedHitboxRect) {
+    static const float& triggerSize = game->getData()->getTriggerSize();
+    static H2DE_LevelRect triggerHitbox = { 0.0f, 0.0f, triggerSize, triggerSize };
+
+    bool isTouchTrigger = trigger->getTouchTrigger();
+    if (isTouchTrigger) {
+        triggerHitbox.addPos(trigger->getPos());
+
+        if (triggerHitbox.collides(playerRedHitboxRect)) {
+            trigger->activate(level);
+        }
+        
+    } else {
+        if (pos.x >= trigger->getPos().x) {
+            trigger->activate(level);
+        }
+    }
+}
+
+// rotation
 void Player::updateRotation() {
-    updateRotationOnSolid();
-    updateRotationInAir();
-    updateRotationClamp();
-    H2DE_SetObjectRotation(cube, rotation);
+    /** 
+     * - 3: CALUL DE LA ROTATION :
+     *          but: une fois que la position et la velocity son surs, on peut determiner la rotation de l'icon
+     */
+
+    if (!dead) {
+        updateRotationOnSolid();
+        updateRotationInAir();
+        updateClampRotation();
+        updateObjectRotation();
+    }
 }
 
 void Player::updateRotationOnSolid() {
     static const Data* gameData = game->getData();
 
-    bool onSolid = (botOnSolid || topOnSolid);
     if (!onSolid) {
         return;
     }
-
-    const float& rotationIncr = gameData->getRotation(PLAYER_GAMEMODE_CUBE, size);
-
+    
     const float remain = (gravity == PLAYER_GRAVITY_NORMAL)
         ? 90.0f - fmod(std::abs(rotation), 90.0f)
         : fmod(std::abs(rotation), 90.0f);
+
+    const float& rotationIncr = gameData->getRotation(PLAYER_GAMEMODE_CUBE, size);
     const int gravityMultiplier = gravity;
 
     if (remain != 0.0f) {
         if (remain < 45.0f) {
             rotation += ((remain > rotationIncr) ? rotationIncr : remain) * gravityMultiplier;
-
         } else {
             rotation -= ((90.0f - remain > rotationIncr) ? rotationIncr : 90.0f - remain) * gravityMultiplier;
         }
@@ -163,8 +337,7 @@ void Player::updateRotationOnSolid() {
 void Player::updateRotationInAir() {
     static const Data* gameData = game->getData();
 
-    bool inAir = (!botOnSolid && !topOnSolid);
-    if (!inAir) {
+    if (onSolid) {
         return;
     }
 
@@ -185,7 +358,7 @@ void Player::updateRotationInAir() {
     }
 }
 
-void Player::updateRotationClamp() {
+void Player::updateClampRotation() {
     if (rotation > 360.0f) {
         rotation -= 360.0f;
 
@@ -194,14 +367,19 @@ void Player::updateRotationClamp() {
     }
 }
 
-void Player::updatePosition() {
-    pos += velocity;
-    H2DE_SetObjectPos(cube, game->convertToLevelPos(pos, { 1.0f, 1.0f })); // temp
+void Player::updateObjectRotation() {
+    H2DE_SetObjectRotation(getCurrentGamemodeObject(), rotation);
 }
 
-// EVENTS
+// ACTIONS
 void Player::kill() {
+    dead = true;
 
+    for (const auto& [name, surface] : H2DE_GetBasicObjectSurfaces(getCurrentGamemodeObject())) {
+        H2DE_HideSurface(surface);
+    }
+
+    level->playerDied();
 }
 
 void Player::click() {
@@ -209,26 +387,208 @@ void Player::click() {
     const float& click = gameData->getClick(gamemode, size);
 
     switch (gamemode) {
-        case PLAYER_GAMEMODE_CUBE:
-            if (!botOnSolid) {
-                break;
+        case PLAYER_GAMEMODE_CUBE: {
+            if (isOnSolid()) {
+                velocity.y = -click * gravity;
             }
-
-            velocity.y = click;
-            botOnSolid = false;
             break;
+        }
 
-        case PLAYER_GAMEMODE_SHIP:
-            
-            break;
+        case PLAYER_GAMEMODE_SHIP: break;
 
         default: break;
     }
 }
 
+void Player::respawn(const Checkpoint& checkpoint) {
+    static const Data* gameData = game->getData();
+
+    showGamemodeSurfaces();
+
+    onSolid = false;
+    dead = false;
+
+    const H2DE_LevelSize redHitboxSize = gameData->getPlayerHitbox(checkpoint.gamemode, checkpoint.size).red.getSize();
+
+    pos = game->convertToLevelPos(checkpoint.pos, redHitboxSize);
+    velocity.y = checkpoint.velocityY;
+    rotation = checkpoint.rotation;
+
+    gamemode = checkpoint.gamemode;
+    size = checkpoint.size;
+    gravity = checkpoint.gravity;
+}
+
+void Player::showGamemodeSurfaces() const {
+    if (!dead) {
+        return;
+    }
+
+    const std::vector<std::unordered_map<std::string, H2DE_Surface*>> gamemodesSurfaces = {
+        H2DE_GetBasicObjectSurfaces(cube),
+        // H2DE_GetBasicObjectSurfaces(ship),
+    };
+
+    for (const auto& surfaces : gamemodesSurfaces) {
+        for (const auto& [name, surface] : surfaces) {
+            H2DE_ShowSurface(surface);
+        }
+    }
+}
+
+void Player::snapPlayerHitboxToItemHitbox(const H2DE_LevelPos& hitboxOffset, H2DE_LevelRect& playerHitbox, const H2DE_LevelRect& itemHitbox, H2DE_Face face) {
+    switch (face) {
+        case H2DE_FACE_TOP:
+            pos.y = itemHitbox.y + itemHitbox.h - hitboxOffset.y;
+            break;
+
+        case H2DE_FACE_BOTTOM:
+            pos.y = itemHitbox.y - playerHitbox.h - hitboxOffset.y;
+            break;
+
+        case H2DE_FACE_RIGHT:
+            pos.x = itemHitbox.x - playerHitbox.w - hitboxOffset.x;
+            break;
+
+        case H2DE_FACE_LEFT: {
+            float overlapTop = itemHitbox.y + itemHitbox.h - playerHitbox.y;
+            float overlapBottom = playerHitbox.y + playerHitbox.h - itemHitbox.y;
+
+            float minOverlap = std::min(overlapTop, overlapBottom);
+
+            if (minOverlap == overlapTop) {
+                return snapPlayerHitboxToItemHitbox(hitboxOffset, playerHitbox, itemHitbox, H2DE_FACE_TOP);
+
+            } else {
+                return snapPlayerHitboxToItemHitbox(hitboxOffset, playerHitbox, itemHitbox, H2DE_FACE_BOTTOM);
+            }
+            break;
+        }
+
+        default: return;
+    }
+
+    velocity.y = 0.0f;
+}
+
 // GETTER
-const H2DE_LevelPos Player::getPos() const {
-    return pos;
+H2DE_BasicObject* Player::getCurrentGamemodeObject() const {
+    switch (gamemode) {
+        case PLAYER_GAMEMODE_CUBE: return cube;
+        case PLAYER_GAMEMODE_SHIP: return ship;
+        default: return nullptr;
+    }
+}
+
+H2DE_LevelRect Player::getCurrentRedHitboxWorldRect() const {
+    return getCurrentHitboxWorldRect("red");
+}
+
+H2DE_LevelRect Player::getCurrentBlueHitboxWorldRect() const {
+    return getCurrentHitboxWorldRect("blue");
+}
+
+H2DE_LevelRect Player::getCurrentHitboxWorldRect(const std::string& color) const {
+    return H2DE_GetObjectHitboxWorldRect(getCurrentGamemodeObject(), color);
+}
+
+H2DE_LevelPos Player::getCurrentRedHitboxOffset() const {
+    return getCurrentHitboxOffset("red");
+}
+
+H2DE_LevelPos Player::getCurrentBlueHitboxOffset() const {
+    return getCurrentHitboxOffset("blue");
+}
+
+H2DE_LevelPos Player::getCurrentHitboxOffset(const std::string& color) const {
+    return H2DE_GetObjectHitbox(getCurrentGamemodeObject(), color).rect.getPos();
+}
+
+bool Player::isOnSolid() const {
+    if (isOnGround()) {
+        return true;
+    }
+
+    return isOnBlock();
+}
+
+bool Player::isOnGround() const {
+    const H2DE_LevelRect botGroundRect = H2DE_GetObjectRect(level->getBotGround());
+    const H2DE_LevelRect topGroundRect = H2DE_GetObjectRect(level->getTopGround());
+
+    H2DE_LevelRect playerRedHitboxRect = getCurrentRedHitboxWorldRect();
+    playerRedHitboxRect.y += (gravity == PLAYER_GRAVITY_NORMAL) ? 0.001f : -0.001f;
+
+    if (playerRedHitboxRect.collides(botGroundRect)) {
+        if (canSnap(playerRedHitboxRect.getCollidedFace(botGroundRect))) {
+            return true;
+        }
+    }
+
+    if (playerRedHitboxRect.collides(topGroundRect)) {
+        if (canSnap(playerRedHitboxRect.getCollidedFace(topGroundRect))) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool Player::isOnBlock() const {
+    H2DE_LevelRect playerRedHitboxRect = getCurrentRedHitboxWorldRect();
+    playerRedHitboxRect.y += (gravity == PLAYER_GRAVITY_NORMAL) ? 0.001f : -0.001f;
+
+    for (const Item* item : level->getItems()) {
+        const Block* block = dynamic_cast<const Block*>(item);
+        if (block == nullptr) {
+            continue;
+        }
+
+        const BlockType& blockType = block->getType();
+        if (blockType == BLOCK_TYPE_DECORATION) {
+            continue;
+        }
+
+        const std::optional<H2DE_LevelRect> possibleItemHitboxRect = block->getHitbox();
+        if (!possibleItemHitboxRect.has_value()) {
+            continue;
+        }
+
+        const H2DE_LevelRect& itemHitboxRect = possibleItemHitboxRect.value();
+
+        if (playerRedHitboxRect.collides(itemHitboxRect)) {
+            if (canSnap(playerRedHitboxRect.getCollidedFace(itemHitboxRect))) {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+bool Player::canSnap(const std::optional<H2DE_Face>& possibleCollidedFace) const {
+    static const Data* gameData = game->getData();
+
+    if (!possibleCollidedFace.has_value()) {
+        return false;
+    }
+
+    const H2DE_Face& collidedFace = possibleCollidedFace.value();
+    const PlayerSnap& playerSnap = gameData->getPlayerSnap(gamemode, size);
+
+    const H2DE_Face bottomFace = (gravity == PLAYER_GRAVITY_NORMAL) ? H2DE_FACE_BOTTOM : H2DE_FACE_TOP;
+    const H2DE_Face topFace = (bottomFace == H2DE_FACE_BOTTOM) ? H2DE_FACE_TOP : H2DE_FACE_BOTTOM;
+
+    bool isFalling = (gravity == PLAYER_GRAVITY_NORMAL) ? (velocity.y > 0.0f) : (velocity.y < 0.0f);
+
+    bool canSnapOnBottomFace = (playerSnap.bottom && collidedFace == bottomFace && isFalling);
+    bool canSnapOnTopFace = (playerSnap.top && collidedFace == topFace && !isFalling);
+
+    return (canSnapOnBottomFace || canSnapOnTopFace);
+}
+
+const H2DE_LevelPos Player::getObjectPos() const {
+    return H2DE_GetObjectPos(getCurrentGamemodeObject());
 }
 
 // SETTER 

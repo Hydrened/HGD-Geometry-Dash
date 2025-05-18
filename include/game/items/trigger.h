@@ -2,18 +2,22 @@
 #define TRIGGER_H
 
 #include "game.h"
+class Level;
 
 class Trigger : public Item {
 private:
-    TriggerBuffer triggerBuffer;
+    TriggerData triggerData;
 
 public:
-    Trigger(Game* game, const ItemBuffer& itemBuffer, const TriggerBuffer& buffer);
+    Trigger(Game* game, const ItemData& itemData, const TriggerData& trigerData);
     ~Trigger() override;
 
     void update() override;
 
-    bool hasToBeRemoved(const H2DE_LevelPos& camPos, const H2DE_LevelPos& playerPos) const override;
+    void activate(Level* level, float blend = 0.0f) const;
+
+    inline int getDuration() const { return triggerData.duration; }
+    inline bool getTouchTrigger() const { return triggerData.touchTrigger; }
 };
 
 #endif
