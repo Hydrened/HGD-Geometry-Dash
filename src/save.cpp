@@ -7,27 +7,73 @@ Save::Save() {
 }
 
 void Save::initFile() {
-    if (std::filesystem::exists("save.dat")) {
+    if (std::filesystem::exists(filePath)) {
         return;
     }
 
     json fileData;
+    
+    initMegahack(fileData);
+    initPlayer(fileData);
+
+    H2DE_Json::create(filePath, fileData, false, false);
+}
+
+void Save::initMegahack(json& fileData) {
     fileData["megahack"] = {};
     fileData["megahack"]["transition-duration"] = 500;
-
-    H2DE_CreateJsonFile("save.dat", fileData, false, false);
+    fileData["megahack"]["noclip"] = false;
+    fileData["megahack"]["speedhack"] = false;
+    fileData["megahack"]["speedhack-speed"] = 1.0f;
+    fileData["megahack"]["show-hitboxes"] = false;
+    fileData["megahack"]["hitboxes-trail"] = false;
 }
 
+void Save::initPlayer(json& fileData) {
+    fileData["player"] = {};
+
+    fileData["player"]["icons"] = {};
+    fileData["player"]["icons"]["cube"] = 1;
+    fileData["player"]["icons"]["ship"] = 1;
+
+    fileData["player"]["colors"] = {};
+    fileData["player"]["colors"]["col1"] = 0;
+    fileData["player"]["colors"]["col2"] = 3;
+    fileData["player"]["glow"] = false;
+}
+
+// LOAD
 void Save::loadData() {
-    data = H2DE_ReadJsonFile("save.dat");
+    data = H2DE_Json::read(filePath);
 }
 
-// CLEANUP
-Save::~Save() {
-    
+void Save::reload() {
+    H2DE_Json::write(filePath, data, false);
+    loadData();
 }
 
-// GETTER
-const int Save::getTransitionDuration() const {
-    return static_cast<int>(data["megahack"]["transition-duration"]) / 2;
+// SETTER
+void Save::setPlayerCubeID(Icon_ID id) {
+    data["player"]["icons"]["cube"] = static_cast<int>(id);
+    reload();
+}
+
+void Save::setPlayerShipID(Icon_ID id) {
+    data["player"]["icons"]["ship"] = static_cast<int>(id);
+    reload();
+}
+
+void Save::setPlayerCol1(Color_ID id) {
+    data["player"]["colors"]["col1"] = static_cast<int>(id);
+    reload();
+}
+
+void Save::setPlayerCol2(Color_ID id) {
+    data["player"]["colors"]["col2"] = static_cast<int>(id);
+    reload();
+}
+
+void Save::setPlayerGlow(bool glow) {
+    data["player"]["glow"] = glow;
+    reload();
 }

@@ -9,3 +9,5 @@ bin/settings.ini
 bin/objects/
 bin/jsonToGdd/
 bin/data/**/*.json
+bin/data/save.dat
+bin/assets/examples/

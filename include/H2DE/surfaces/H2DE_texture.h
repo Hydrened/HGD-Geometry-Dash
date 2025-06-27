@@ -1,55 +1,116 @@
-#ifndef H2DE_TEXTURE_H
-#define H2DE_TEXTURE_H
+#ifndef H2DE_SURFACE_TEXTURE_H
+#define H2DE_SURFACE_TEXTURE_H
 
 /**
  * @file H2DE_texture.h
- * @brief Defines the `H2DE_Texture` class for managing textures in the engine.
+ * @brief Texture surface class for H2DE engine.
  * 
- * The `H2DE_Texture` class is a derived class of `H2DE_Surface`, specifically handling texture surfaces.
- * It provides functionality to manipulate texture-specific properties like source rectangles.
+ * Defines the H2DE_Texture class which represents a texture-based drawable surface.
+ * It handles texture naming, color modulation, optional source rectangle cropping,
+ * and animated color changes with easing and callbacks.
+ * 
+ * Textures are a type of surface and inherit common properties and behavior
+ * from the abstract H2DE_Surface base class.
  */
 
 #include <H2DE/surfaces/H2DE_surface.h>
 
 /**
- * @brief Class representing a texture surface.
+ * @class H2DE_Texture
+ * @brief Concrete texture surface implementation for the H2DE engine.
  * 
- * The `H2DE_Texture` class inherits from `H2DE_Surface` and is used for handling textures within the engine.
- * It allows setting a source rectangle for texture mapping and managing texture-specific properties.
+ * This class extends H2DE_Surface to provide texture-specific features:
+ * - Storing and retrieving texture name
+ * - Color modulation (tinting)
+ * - Optional source rectangle for partial texture rendering
+ * - Animated color transitions with timeline, easing, and completion callbacks
+ * 
+ * H2DE_Texture supports instant property changes as well as smooth animations.
  */
 class H2DE_Texture : public H2DE_Surface {
-private:
-    H2DE_TextureData ted;
-
-    H2DE_Texture(H2DE_Engine* engine, const H2DE_SurfaceData& sd, const H2DE_TextureData& ted);
-    ~H2DE_Texture() override;
-
-    inline std::optional<H2DE_AbsRect> getSrcRect() const override { return ted.srcRect; };
-    
 public:
     /**
-     * @brief Creates a new texture surface.
+     * @brief Get the full texture data structure.
      * 
-     * This function creates a new `H2DE_Texture` with the provided engine, surface data, and texture data.
+     * Contains texture name, color tint, source rectangle, etc.
      * 
-     * @param engine A pointer to the H2DE engine instance.
-     * @param surfaceData The surface data to initialize the surface with.
-     * @param textureData The texture data to initialize the texture with.
-     * @return A pointer to the created `H2DE_Texture`.
+     * @return The H2DE_TextureData of the surface.
      */
-    friend H2DE_Surface* H2DE_CreateTexture(H2DE_Engine* engine, const H2DE_SurfaceData& surfaceData, const H2DE_TextureData& textureData);
+    inline H2DE_TextureData getTextureData() const noexcept {
+        return textureData;
+    }
     /**
-     * @brief Sets the source rectangle for the texture.
+     * @brief Get the texture name.
      * 
-     * This function sets the source rectangle for the texture, determining which portion of the texture to use.
-     * 
-     * @param texture A pointer to the `H2DE_Surface` (which is a texture).
-     * @param srcRect The optional source rectangle to set.
+     * @return The texture name string.
      */
-    friend void H2DE_SetTextureSrcRect(H2DE_Surface* texture, const std::optional<H2DE_AbsRect>& srcRect);
-};
+    inline std::string getTextureName() const noexcept override { 
+        return textureData.textureName;
+    }
+    /**
+     * @brief Get the modulating color of the texture.
+     * 
+     * @return The H2DE_ColorRGB color.
+     */
+    inline H2DE_ColorRGB getColor() const noexcept override {
+        return textureData.color; 
+    }
+    /**
+     * @brief Get the source rectangle within the texture.
+     * 
+     * Allows rendering only part of the texture.
+     * 
+     * @return Optional source rectangle.
+     */
+    inline std::optional<H2DE_PixelRect> getSrcRect() const noexcept override {
+        return textureData.srcRect;
+    }
 
-H2DE_Surface* H2DE_CreateTexture(H2DE_Engine* engine, const H2DE_SurfaceData& surfaceData, const H2DE_TextureData& textureData);
-void H2DE_SetTextureSrcRect(H2DE_Surface* texture, const std::optional<H2DE_AbsRect>& srcRect);
+    /**
+     * @brief Set the texture name instantly.
+     * 
+     * @param textureName New texture name.
+     */
+    void setTextureName(const std::string& textureName);
+    /**
+     * @brief Set the modulating color instantly.
+     * 
+     * @param color New color.
+     */
+    void setColor(const H2DE_ColorRGB& color);
+    /**
+     * @brief Set the source rectangle instantly.
+     * 
+     * @param srcRect New optional source rectangle.
+     */
+    void setSrcRect(const std::optional<H2DE_PixelRect>& srcRect);
+
+    /**
+     * @brief Animate the modulating color over time with easing and completion callback.
+     * 
+     * @param color Target color.
+     * @param duration Duration of the animation.
+     * @param easing Easing function to apply for interpolation.
+     * @param completed Callback function called once the animation finishes.
+     * @param pauseSensitive If true, animation pauses when the game is paused.
+     * @return H2DE_TimelineID ID of the timeline controlling this animation.
+     */
+    H2DE_TimelineID setColor(const H2DE_ColorRGB& color, H2DE_TimelineID duration, H2DE_Easing easing, const std::function<void()>& completed, bool pauseSensitive = true);
+
+    using H2DE_DataType = H2DE_TextureData;
+    
+    friend class H2DE_Object;
+    friend class H2DE_TextObject;
+
+private:
+    H2DE_TextureData textureData;
+
+    H2DE_Texture(H2DE_Engine* engine, H2DE_Object* object, const H2DE_SurfaceData& surfaceData, const H2DE_TextureData& textureData) noexcept;
+    ~H2DE_Texture() override = default;
+
+    inline bool isVisible() const noexcept override {
+        return (!isHidden() && textureData.color.isVisible());
+    }
+};
 
 #endif

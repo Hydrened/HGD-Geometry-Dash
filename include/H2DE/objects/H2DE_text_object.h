@@ -3,204 +3,246 @@
 
 /**
  * @file H2DE_text_object.h
- * @brief Header file for the `H2DE_TextObject` class.
+ * @brief Definition of the H2DE_TextObject class for 2D text rendering.
  * 
- * This file defines the `H2DE_TextObject` class, which represents a text object
- * in the H2DE engine. It allows for the creation and manipulation of text-based
- * objects, including the ability to set text, font, size, spacing, alignment, and color.
- * 
- * The class supports dynamic modifications of the text properties, such as animations
- * for font size, spacing, and color changes, as well as basic object transformations like
- * position, size, rotation, and flip. 
+ * This file declares the H2DE_TextObject class, a specialized H2DE_Object
+ * responsible for rendering and managing text within the H2DE 2D engine.
+ * It supports text properties such as font, size, spacing, alignment, and color,
+ * with immediate or animated transitions using the engine's timeline system.
  */
 
 #include <H2DE/objects/H2DE_object.h>
 
 /**
- * @brief A text object class within the H2DE engine.
+ * @class H2DE_TextObject
+ * @brief A 2D object for rendering and animating text in the H2DE engine.
  * 
- * This class extends `H2DE_Object` and represents a text element within the H2DE engine.
- * It provides functionality to set text content, adjust the font, font size, spacing, alignment,
- * and color, with support for animations (e.g., transitioning font size, color, and spacing).
+ * H2DE_TextObject extends H2DE_Object to provide rich text display capabilities.
+ * You can set text content, font, size, spacing, alignment, and color.
+ * It also supports smooth animated transitions of font size, spacing, and color
+ * through the built-in timeline animation system, enabling slick visual effects.
  * 
- * Instances of this class should be created via the `H2DE_CreateTextObject` function.
+ * This class handles all the internal data for text rendering and exposes
+ * getters and setters for easy manipulation.
  */
 class H2DE_TextObject : public H2DE_Object {
-private:
-    H2DE_TextObjectData tod;
-
-    H2DE_TextObject(H2DE_Engine* engine, H2DE_ObjectData od, H2DE_TextObjectData tod);
-    ~H2DE_TextObject() override;
-
-    void resetSurfaceBuffers() override;
-
-    std::vector<std::string> getWords() const;
-    std::vector<std::vector<std::string>> getLines() const;
-    float getLineStartOffsetX(const std::vector<std::string>& line) const;
-
 public:
     /**
-     * @brief Creates a text object.
+     * @brief Get the internal data structure of the text object.
      * 
-     * This function creates and initializes a new `H2DE_TextObject` with the provided engine,
-     * object data, and text-specific data.
+     * Returns a copy of the `H2DE_TextObjectData` which holds all text-related configuration and state.
      * 
-     * @param engine A pointer to the H2DE engine instance.
-     * @param objectData The general object data for initialization.
-     * @param textObjectData The specific data for the text object.
-     * @return A pointer to the created `H2DE_TextObject`.
+     * @return The full data structure of the text object.
      */
-    friend H2DE_TextObject* H2DE_CreateTextObject(H2DE_Engine* engine, const H2DE_ObjectData& objectData, const H2DE_TextObjectData& textObjectData);
+    inline H2DE_TextObjectData getTextData() const noexcept {
+        return textObjectData;
+    }
     /**
-     * @brief Sets the text of the text object.
+     * @brief Get the text string displayed by the text object.
      * 
-     * This function sets the text content of the `H2DE_TextObject`.
+     * Returns the actual string content rendered by the object.
      * 
-     * @param textObject A pointer to the `H2DE_TextObject`.
-     * @param text The text content to display.
+     * @return The displayed text as a std::string.
      */
-    friend void H2DE_SetTextObjectText(H2DE_TextObject* textObject, const std::string& text);
+    inline std::string getText() const {
+        return textObjectData.text.text;
+    }
     /**
-     * @brief Sets the font of the text object.
+     * @brief Get the font name used for rendering the text.
      * 
-     * This function sets the font used by the `H2DE_TextObject`.
+     * Returns the font family or font file name currently set for the text object.
      * 
-     * @param textObject A pointer to the `H2DE_TextObject`.
-     * @param font The name of the font to use.
+     * @return The font name as a std::string.
      */
-    friend void H2DE_SetTextObjectFont(H2DE_TextObject* textObject, const std::string& font);
+    inline std::string getFont() const {
+        return textObjectData.text.font;
+    }
     /**
-     * @brief Sets the font size of the text object.
+     * @brief Get the container scale.
      * 
-     * This function sets the font size of the `H2DE_TextObject`, allowing for dynamic changes
-     * with optional duration and easing effects.
+     * Returns the scale of the container used for containing the text.
      * 
-     * @param textObject A pointer to the `H2DE_TextObject`.
-     * @param fontSize The desired font size.
+     * @return The scale of the container as an H2DE_Scale value.
      */
-    friend void H2DE_SetTextObjectFontSize(H2DE_TextObject* textObject, const H2DE_LevelSize& fontSize);
+    constexpr H2DE_Scale getContainer() const noexcept {
+        return textObjectData.text.container;
+    }
     /**
-     * @brief Sets the font size of the text object with animation.
+     * @brief Get the font size scale.
      * 
-     * This function sets the font size of the `H2DE_TextObject` with an optional animation,
-     * allowing for smooth transitions between sizes.
+     * Returns the scaling factor used for the font size, allowing dynamic resizing.
      * 
-     * @param textObject A pointer to the `H2DE_TextObject`.
-     * @param fontSize The desired font size.
-     * @param duration The duration of the animation.
-     * @param easing The easing function for the animation.
-     * @param completed The callback called when the timeline ends
-     * @param pauseSensitive Whether the animation should pause when the game is paused.
-     * @return The ID of the created timeline.
+     * @return The font size scale as an H2DE_Scale value.
      */
-    friend unsigned int H2DE_SetTextObjectFontSize(H2DE_TextObject* textObject, const H2DE_LevelSize& fontSize, unsigned int duration, H2DE_Easing easing, const std::function<void()>& completed, bool pauseSensitive);
+    constexpr H2DE_Scale getFontSize() const noexcept {
+        return textObjectData.text.fontSize;
+    }
     /**
-     * @brief Sets the spacing between characters in the text object.
+     * @brief Get the spacing between characters.
      * 
-     * This function adjusts the character spacing in the `H2DE_TextObject`, with the ability to
-     * animate the spacing over time.
+     * Returns the horizontal spacing applied between each character in the text.
      * 
-     * @param textObject A pointer to the `H2DE_TextObject`.
-     * @param spacing The desired character spacing.
+     * @return The character spacing as an H2DE_Scale value.
      */
-    friend void H2DE_SetTextObjectSpacing(H2DE_TextObject* textObject, const H2DE_LevelSize& spacing);
+    constexpr H2DE_Scale getSpacing() const noexcept {
+        return textObjectData.text.spacing;
+    }
     /**
-     * @brief Sets the spacing with animation.
+     * @brief Get the horizontal alignment of the text.
      * 
-     * This function adjusts the character spacing with an optional animation, enabling smooth
-     * transitions between spacing values.
+     * Returns the text alignment setting (e.g. left, center, right).
      * 
-     * @param textObject A pointer to the `H2DE_TextObject`.
-     * @param spacing The desired character spacing.
-     * @param duration The duration of the animation.
-     * @param easing The easing function for the animation.
-     * @param completed The callback called when the timeline ends
-     * @param pauseSensitive Whether the animation should pause when the game is paused.
-     * @return The ID of the created timeline.
+     * @return The text alignment as an H2DE_TextAlign enum value.
      */
-    friend unsigned int H2DE_SetTextObjectSpacing(H2DE_TextObject* textObject, const H2DE_LevelSize& spacing, unsigned int duration, H2DE_Easing easing, const std::function<void()>& completed, bool pauseSensitive);
+    constexpr H2DE_TextAlign getTextAlign() const noexcept {
+        return textObjectData.text.textAlign;
+    }
     /**
-     * @brief Sets the text alignment for the text object.
+     * @brief Get the color of the text.
      * 
-     * This function sets the horizontal alignment of the text content in the `H2DE_TextObject`,
-     * such as left, center, or right alignment.
+     * Returns the RGB color currently applied to the rendered text.
      * 
-     * @param textObject A pointer to the `H2DE_TextObject`.
-     * @param textAlign The desired alignment type.
+     * @return The text color as an H2DE_ColorRGB struct.
      */
-    friend void H2DE_SetTextObjectTextAlign(H2DE_TextObject* textObject, H2DE_TextAlign textAlign);
-    /**
-     * @brief Sets the color of the text object.
-     * 
-     * This function sets the color of the text displayed in the `H2DE_TextObject`.
-     * 
-     * @param textObject A pointer to the `H2DE_TextObject`.
-     * @param color The desired color in RGB format.
-     */
-    friend void H2DE_SetTextObjectColor(H2DE_TextObject* textObject, const H2DE_ColorRGB& color);
-    /**
-     * @brief Sets the text color with animation.
-     * 
-     * This function sets the text color with an optional animation, allowing smooth transitions
-     * between colors over a specified duration.
-     * 
-     * @param textObject A pointer to the `H2DE_TextObject`.
-     * @param color The desired color in RGB format.
-     * @param duration The duration of the animation.
-     * @param easing The easing function for the animation.
-     * @param completed The callback called when the timeline ends
-     * @param pauseSensitive Whether the animation should pause when the game is paused.
-     * @return The ID of the created timeline.
-     */
-    friend unsigned int H2DE_SetTextObjectColor(H2DE_TextObject* textObject, const H2DE_ColorRGB& color, unsigned int duration, H2DE_Easing easing, const std::function<void()>& completed, bool pauseSensitive);
+    constexpr H2DE_ColorRGB getColor() const noexcept {
+        return textObjectData.text.color;
+    }
 
     /**
-     * @brief Sets the position of the object.
+     * @brief Set the text string to display.
      * 
-     * This function sets the position of the `H2DE_Object` (inherited by `H2DE_TextObject`),
-     * adjusting its position in the 2D world.
+     * Updates the text content rendered by the object.
      * 
-     * @param object A pointer to the `H2DE_Object`.
-     * @param pos The desired position.
+     * @param text The new text string.
      */
-    friend void H2DE_SetObjectPos(H2DE_Object* object, const H2DE_LevelPos& pos);
+    void setText(const std::string& text);
     /**
-     * @brief Sets the size of the object.
+     * @brief Set the font used for the text.
      * 
-     * This function sets the size of the `H2DE_Object` (inherited by `H2DE_TextObject`).
+     * Changes the font family or font file for rendering.
      * 
-     * @param object A pointer to the `H2DE_Object`.
-     * @param size The desired size.
+     * @param font The font name or path.
      */
-    friend void H2DE_SetObjectSize(H2DE_Object* object, const H2DE_LevelSize& size);
+    void setFont(const std::string& font);
     /**
-     * @brief Sets the rotation of the object.
+     * @brief Set the container scale immediately.
      * 
-     * This function sets the rotation angle of the `H2DE_Object` (inherited by `H2DE_TextObject`).
+     * Adjusts the container scale without animation.
      * 
-     * @param object A pointer to the `H2DE_Object`.
-     * @param rotation The desired rotation angle (in degrees).
+     * @param container The new container scale.
      */
-    friend void H2DE_SetObjectRotation(H2DE_Object* object, float rotation);
+    void setContainer(const H2DE_Scale& container);
     /**
-     * @brief Sets the pivot point of the object.
+     * @brief Set the font size scale immediately.
      * 
-     * This function sets the pivot point for the `H2DE_Object` (inherited by `H2DE_TextObject`).
+     * Adjusts the font size scale without animation.
      * 
-     * @param object A pointer to the `H2DE_Object`.
-     * @param pivot The desired pivot position.
+     * @param fontSize The new font size scale.
      */
-    friend void H2DE_SetObjectPivot(H2DE_Object* object, const H2DE_LevelPos& pivot);
+    void setFontSize(const H2DE_Scale& fontSize);
     /**
-     * @brief Sets the flip state of the object.
+     * @brief Set the spacing between characters immediately.
      * 
-     * This function sets the flip state (horizontal/vertical) for the `H2DE_Object`
-     * (inherited by `H2DE_TextObject`).
+     * Adjusts the horizontal space between characters without animation.
      * 
-     * @param object A pointer to the `H2DE_Object`.
-     * @param flip The desired flip state.
+     * @param spacing The new character spacing.
      */
-    friend void H2DE_SetObjectFlip(H2DE_Object* object, H2DE_Flip flip);
+    void setSpacing(const H2DE_Scale& spacing);
+    /**
+     * @brief Set the horizontal text alignment.
+     * 
+     * Changes how the text is aligned inside its bounding box.
+     * 
+     * @param textAlign The new text alignment (left, center, right).
+     */
+    void setTextAlign(H2DE_TextAlign textAlign);
+    /**
+     * @brief Set the color of the text immediately.
+     * 
+     * Changes the RGB color applied to the text without animation.
+     * 
+     * @param color The new text color.
+     */
+    void setColor(const H2DE_ColorRGB& color);
+    /**
+     * @brief Animate the container scale change over time.
+     * 
+     * Smoothly changes the cotnainer scale from current to target value using timeline animation.
+     * 
+     * @param container The target container scale.
+     * @param duration Duration of the animation.
+     * @param easing Easing function to apply for interpolation.
+     * @param completed Callback function called once the animation finishes.
+     * @param pauseSensitive If true, animation pauses when the game is paused.
+     * @return H2DE_TimelineID ID of the timeline controlling this animation.
+     */
+    H2DE_TimelineID setContainer(const H2DE_Scale& container, H2DE_TimelineID duration, H2DE_Easing easing, const std::function<void()>& completed, bool pauseSensitive = true);
+    /**
+     * @brief Animate the font size change over time.
+     * 
+     * Smoothly changes the font size scale from current to target value using timeline animation.
+     * 
+     * @param fontSize The target font size scale.
+     * @param duration Duration of the animation.
+     * @param easing Easing function to apply for interpolation.
+     * @param completed Callback function called once the animation finishes.
+     * @param pauseSensitive If true, animation pauses when the game is paused.
+     * @return H2DE_TimelineID ID of the timeline controlling this animation.
+     */
+    H2DE_TimelineID setFontSize(const H2DE_Scale& fontSize, H2DE_TimelineID duration, H2DE_Easing easing, const std::function<void()>& completed, bool pauseSensitive = true);
+    /**
+     * @brief Animate the spacing change over time.
+     * 
+     * Smoothly changes the character spacing from current to target value using timeline animation.
+     * 
+     * @param spacing The target character spacing.
+     * @param duration Duration of the animation.
+     * @param easing Easing function to apply for interpolation.
+     * @param completed Callback function called once the animation finishes.
+     * @param pauseSensitive If true, animation pauses when the game is paused.
+     * @return H2DE_TimelineID ID of the timeline controlling this animation.
+     */
+    H2DE_TimelineID setSpacing(const H2DE_Scale& spacing, H2DE_TimelineID duration, H2DE_Easing easing, const std::function<void()>& completed, bool pauseSensitive = true);
+
+    /**
+     * @brief Animate the color change over time.
+     * 
+     * Smoothly changes the text color from current to target color using timeline animation.
+     * 
+     * @param color The target text color.
+     * @param duration Duration of the animation.
+     * @param easing Easing function to apply for interpolation.
+     * @param completed Callback function called once the animation finishes.
+     * @param pauseSensitive If true, animation pauses when the game is paused.
+     * @return H2DE_TimelineID ID of the timeline controlling this animation.
+     */
+    H2DE_TimelineID setColor(const H2DE_ColorRGB& color, H2DE_TimelineID duration, H2DE_Easing easing, const std::function<void()>& completed, bool pauseSensitive = true);
+
+    using H2DE_DataType = H2DE_TextObjectData;
+
+    friend class H2DE_Engine;
+    friend class H2DE_ButtonObject;
+
+private:
+    H2DE_TextObjectData textObjectData;
+
+    H2DE_TextObject(H2DE_Engine* engine, const H2DE_ObjectData& objectData, const H2DE_TextObjectData& textObjectData);
+    ~H2DE_TextObject() override;
+
+    void refreshSurfaceBuffers() override;
+    void refreshMaxRadius() override;
+
+    const std::vector<std::string> getWords() const;
+    const std::vector<std::vector<std::string>> getLines() const;
+
+    static int getLineLength(const std::vector<std::string>& line);
+
+    float getStartingOffsetY(const std::vector<std::vector<std::string>>& lines) const noexcept;
+    float getStartingOffsetX(const std::vector<std::string>& line) const;
+
+    inline bool isTextNull() const {
+        return (textObjectData.text.text == ""); 
+    }
 };
 
 #endif

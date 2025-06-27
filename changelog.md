@@ -1,22 +1,19 @@
-## HGD-2.0.1-beta
-#### ADDED
-- checkpoint
-- player gravity
-- ground collision
-- main menu interface
-- level items
-- senery background parallax effect
-- player death  
-- player respawn
-
-## HGD-2.0.0-beta
+## HGD-2.0.0
 #### REMAKE FROM SCRATCH
 #### ADDED
 - menu system
-- scenery (ground and background)
+- main menu
+- icon menu
+- icon menu choose icon
+- icon menu choose col1 and col2
+- menu modal system
+- ground and background scenery
 - level system
 - player
-- items
+- cube and ship
+- random player spawing on main menu
+- save player icons and colors
+- button animations
 
 
 

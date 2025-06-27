@@ -3,95 +3,101 @@
 
 /**
  * @file H2DE_basic_object.h
- * @brief Header file for the `H2DE_BasicObject` class.
+ * @brief Defines the H2DE_BasicObject class, a fundamental game object managing multiple surfaces.
  * 
- * This file contains the declaration of the `H2DE_BasicObject` class, which is
- * used to manage basic object types within the H2DE engine. These objects can 
- * have surfaces and can interact with them through various functions such as 
- * adding or removing surfaces.
+ * This header declares the H2DE_BasicObject class, inheriting from H2DE_Object, designed to handle
+ * a collection of visual surfaces (textures, sprites, colors) identified by unique names.
  * 
- * The class inherits from `H2DE_Object`, which provides common object 
- * functionality such as position, size, and rendering, while the basic object
- * focuses on the management of surface-related data.
+ * Surfaces are stored internally as a map from string names to base surface pointers,
+ * allowing type-safe access through templated methods.
  */
 
 #include <H2DE/objects/H2DE_object.h>
 
 /**
- * @brief A basic object class within the H2DE engine.
+ * @class H2DE_BasicObject
+ * @brief A basic drawable object with a collection of 2D surfaces.
  * 
- * This class is a specialization of `H2DE_Object`, specifically designed
- * for objects that can have associated surfaces. It provides functionality to
- * manage these surfaces, including adding, removing, and retrieving them.
+ * This is a simple implementation of an H2DE object that can hold
+ * and manage multiple surfaces (textures, sprites, or colors).
  * 
- * Instances of this class should be created through the `H2DE_CreateBasicObject`
- * function and should be destroyed using standard object management practices.
+ * Surfaces can be dynamically added or removed, and retrieved by name.
+ * Rendering behavior is handled internally based on the `H2DE_Object` base logic.
  */
 class H2DE_BasicObject : public H2DE_Object {
-private:
-    H2DE_BasicObjectData bod;
-
-    H2DE_BasicObject(H2DE_Engine* engine, H2DE_ObjectData od, H2DE_BasicObjectData bod);
-    ~H2DE_BasicObject() override;
-
-    void resetSurfaceBuffers() override;
-
 public:
     /**
-     * @brief Creates a basic object.
+     * @brief Add a surface to the object.
      * 
-     * This function creates and initializes a new `H2DE_BasicObject` with the provided
-     * engine, object data, and basic object-specific data.
+     * Adds a new surface (texture, sprite, or color) to the object.
+     * The surface is stored and identified by a unique name.
      * 
-     * @param engine A pointer to the H2DE engine instance.
-     * @param objectData The general object data for initialization.
-     * @param basicObjectData The specific data for the basic object.
-     * @return A pointer to the created `H2DE_BasicObject`.
+     * @tparam H2DE_Surface_T The type of surface to add (e.g. Texture, Sprite, Color).
+     * @param name The unique name to associate with the surface.
+     * @param surfaceData Common parameters such as position, size, etc.
+     * @param specificData Specific data for the surface type.
+     * @return A pointer to the created surface, or nullptr if it failed.
      */
-    friend H2DE_BasicObject* H2DE_CreateBasicObject(H2DE_Engine* engine, const H2DE_ObjectData& objectData, const H2DE_BasicObjectData& basicObjectData);
+    template<typename H2DE_Surface_T>
+    inline H2DE_Surface_T* addSurface(const std::string& name, const H2DE_SurfaceData& surfaceData, const typename H2DE_Surface_T::H2DE_DataType& specificData) {
+        return H2DE_Object::addSurface<H2DE_Surface_T>(surfaces, name, surfaceData, specificData);
+    }
     /**
-     * @brief Retrieves a surface from the basic object.
+     * @brief Remove a surface from the object.
      * 
-     * This function retrieves a surface associated with the `H2DE_BasicObject`,
-     * identified by the given name.
+     * Removes a surface previously added by its unique name.
      * 
-     * @param basicObject A pointer to the `H2DE_BasicObject`.
-     * @param name The name of the surface to retrieve.
-     * @return A pointer to the requested surface.
+     * @param name The name of the surface to remove.
+     * @return true if the surface was found and removed, false otherwise.
      */
-    friend H2DE_Surface* H2DE_GetBasicObjectSurface(const H2DE_BasicObject* basicObject, const std::string& name);
-    /**
-     * @brief Retrieves all surfaces from the basic object.
-     * 
-     * This function returns all the surfaces associated with the given `H2DE_BasicObject`.
-     * The surfaces are stored in a map, where each key corresponds to a surface name.
-     * 
-     * @param basicObject A pointer to the `H2DE_BasicObject`.
-     * @return A reference to a map of surfaces associated with the basic object.
-     */
-    friend const std::unordered_map<std::string, H2DE_Surface*>& H2DE_GetBasicObjectSurfaces(const H2DE_BasicObject* basicObject);
+    inline bool removeSurface(const std::string& name) {
+        return H2DE_Object::removeSurface(surfaces, name);
+    }
 
     /**
-     * @brief Adds a surface to the basic object.
+     * @brief Get all surfaces of the object.
      * 
-     * This function adds a surface to the `H2DE_BasicObject`, identified by the
-     * provided name.
+     * Returns a map of all currently attached surfaces. Each entry maps the surface name
+     * to its base `H2DE_Surface` pointer.
      * 
-     * @param basicObject A pointer to the `H2DE_BasicObject`.
-     * @param surface A pointer to the surface to be added.
-     * @param name The name to associate with the surface.
+     * @return A map of surface names to their respective surface pointers.
      */
-    friend void H2DE_AddSurfaceToBasicObject(H2DE_BasicObject* basicObject, H2DE_Surface* surface, const std::string& name);
+    inline std::unordered_map<std::string, H2DE_Surface*> getSurfaces() const noexcept {
+        return surfaces; 
+}
     /**
-     * @brief Removes a surface from the basic object.
+     * @brief Get a surface by name and cast it to a specific type.
      * 
-     * This function removes a surface from the `H2DE_BasicObject`, identified by
-     * the given name.
+     * Retrieves a surface of a specific type from the object. If the name is not found or
+     * the type is incorrect, returns nullptr.
      * 
-     * @param basicObject A pointer to the `H2DE_BasicObject`.
-     * @param name The name of the surface to remove.
+     * @tparam H2DE_Surface_T The expected surface type (Texture, Sprite, Color, etc.).
+     * @param name The name of the surface to retrieve.
+     * @return A pointer to the surface cast to the specified type, or nullptr.
      */
-    friend void H2DE_RemoveSurfaceFromBasicObject(H2DE_BasicObject* basicObject, const std::string& name);
+    template<typename H2DE_Surface_T>
+    inline H2DE_Surface_T* getSurface(const std::string& name) const {
+        return H2DE_Object::getSurface<H2DE_Surface_T>(surfaces, name); 
+}
+    /**
+     * @brief Checks whether a surface with the given name exists.
+     * @param name Name of the surface to check.
+     * @return true if the surface exists, false otherwise.
+     */
+    inline bool hasSurface(const std::string& name) const {
+        return H2DE_Object::hasSurface(surfaces, name);
+    }
+
+    friend class H2DE_Engine;
+
+private:
+    std::unordered_map<std::string, H2DE_Surface*> surfaces = {};
+
+    H2DE_BasicObject(H2DE_Engine* engine, const H2DE_ObjectData& objectData);
+    ~H2DE_BasicObject() override;
+
+    void refreshSurfaceBuffers() override;
+    void refreshMaxRadius() override;
 };
 
 #endif

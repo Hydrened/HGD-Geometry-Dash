@@ -3,148 +3,233 @@
 
 /**
  * @file H2DE_surface.h
- * @brief Defines the base class `H2DE_Surface` for managing surfaces within the engine.
+ * @brief Base class for all surface types in H2DE engine.
  * 
- * The `H2DE_Surface` class is the parent class for both `H2DE_Texture` and `H2DE_Sprite`.
- * It provides methods for handling surface properties such as texture, color, scaling, rotation, and flipping.
- * These methods are used by the engine to manipulate and render surfaces during gameplay.
+ * This file defines the abstract class H2DE_Surface, which is the
+ * parent class for various surface implementations like textures,
+ * sprites, and colors. It manages common properties such as
+ * transform, scale mode, blend mode, visibility, and layering.
+ * 
+ * Surfaces represent drawable elements attached to objects and
+ * can be shown, hidden, moved, scaled, rotated, and animated.
  */
 
-#include <H2DE/H2DE_engine.h>
+#include <H2DE/engine/H2DE_engine.h>
 class H2DE_Engine;
 
 /**
- * @brief Base class representing a surface in the engine.
+ * @class H2DE_Surface
+ * @brief Abstract base class for all drawable surfaces in the H2DE engine.
  * 
- * The `H2DE_Surface` class serves as a base class for `H2DE_Texture` and `H2DE_Sprite`.
- * It contains methods to manipulate surfaces such as texture name, color, scaling, rotation, and flipping.
+ * Represents any drawable element (texture, sprite, color fill) that can be attached to
+ * a game object. Manages common properties like transformation (translation, scale, rotation),
+ * visibility, blend modes, layering order, and supports smooth animation via timelines.
+ * 
+ * This class is meant to be inherited by concrete surface implementations,
+ * which provide texture or color data and specific rendering logic.
+ * 
+ * You can instantly set properties or animate them over time with easing
+ * and callback support. Surfaces can be shown or hidden, reordered, and transformed.
  */
 class H2DE_Surface {
-private:
-    H2DE_SurfaceData sd;
+public:
+    /**
+     * @brief Show the surface.
+     * 
+     * Makes the surface visible (hidden = false).
+     */
+    inline void show() noexcept {
+        hidden = false; 
+    }
+    /**
+     * @brief Hide the surface.
+     * 
+     * Makes the surface invisible (hidden = true).
+     */
+    inline void hide() noexcept {
+        hidden = true; 
+    }
 
-    bool hidden = false;
+    /**
+     * @brief Get the full surface data structure.
+     * 
+     * Contains transform, scale mode, blend mode, index (layering order), etc.
+     * 
+     * @return The H2DE_SurfaceData of the surface.
+     */
+    constexpr H2DE_SurfaceData getSurfaceData() const noexcept {
+        return surfaceData; 
+    }
+    /**
+     * @brief Get the transform information of the surface.
+     * 
+     * Includes translation, scale, rotation, and pivot point.
+     * 
+     * @return The H2DE_Transform struct.
+     */
+    constexpr H2DE_Transform getTransform() const noexcept {
+        return surfaceData.transform;
+    }
+    /**
+     * @brief Get the translation vector of the surface.
+     * 
+     * @return The H2DE_Translate struct (position offset).
+     */
+    constexpr H2DE_Translate getTranslate() const noexcept {
+        return surfaceData.transform.translate;
+    }
+    /**
+     * @brief Get the scale factors of the surface.
+     * 
+     * @return The H2DE_Scale struct (x and y scale).
+     */
+    constexpr H2DE_Scale getScale() const noexcept {
+        return surfaceData.transform.scale;
+    }
+    /**
+     * @brief Get the rotation angle in degrees or radians.
+     * 
+     * @return The rotation value as a float.
+     */
+    constexpr float getRotation() const noexcept {
+        return surfaceData.transform.rotation;
+    }
+    /**
+     * @brief Get the pivot point for rotation and scaling.
+     * 
+     * @return The H2DE_Pivot struct.
+     */
+    constexpr H2DE_Pivot getPivot() const noexcept {
+        return surfaceData.transform.pivot;
+    }
+    /**
+     * @brief Get the scale mode (how the surface scales relative to its container).
+     * 
+     * @return The H2DE_ScaleMode enum value.
+     */
+    constexpr H2DE_ScaleMode getScaleMode() const noexcept {
+        return surfaceData.scaleMode;
+    }
+    /**
+     * @brief Get the blend mode used for rendering this surface.
+     * 
+     * @return The H2DE_BlendMode enum value.
+     */
+    constexpr H2DE_BlendMode getBlendMode() const noexcept {
+        return surfaceData.blendMode;
+    }
+    /**
+     * @brief Get the index used for draw order layering.
+     * 
+     * Surfaces with higher index values are drawn above lower ones.
+     * 
+     * @return The index as an integer.
+     */
+    constexpr int getIndex() const noexcept {
+        return surfaceData.index;
+    }
+    /**
+     * @brief Check if the surface is currently hidden.
+     * 
+     * @return true if hidden, false otherwise.
+     */
+    constexpr bool isHidden() const noexcept {
+        return hidden;
+    }
 
-    virtual std::optional<H2DE_AbsRect> getSrcRect() const = 0;
+    /** 
+     * @brief Set the translation vector instantly.
+     * @param translate New translation (position offset).
+     */
+    void setTranslate(const H2DE_Translate& translate);
+    /**
+     * @brief Set the scale factors instantly.
+     * @param scale New scale (x, y).
+     */
+    void setScale(const H2DE_Scale& scale);
+    /**
+     * @brief Set the rotation instantly.
+     * @param rotation New rotation angle (float).
+     */
+    void setRotation(float rotation);
+    /**
+     * @brief Set the pivot point instantly.
+     * @param pivot New pivot point.
+     */
+    void setPivot(const H2DE_Pivot& pivot);
+    /**
+     * @brief Set the scale mode instantly.
+     * @param scaleMode New scale mode enum.
+     */
+    void setScaleMode(H2DE_ScaleMode scaleMode);
+    /**
+     * @brief Set the blend mode instantly.
+     * @param blendMode New blend mode enum.
+     */
+    void setBlendMode(H2DE_BlendMode blendMode);
+    /**
+     * @brief Set the drawing order index instantly.
+     * @param index New index (higher = drawn on top).
+     */
+    void setIndex(int index);
+
+    /**
+     * @brief Animate the translation over time with easing and callback on completion.
+     * 
+     * @param translate Target translation.
+     * @param duration Duration of the animation.
+     * @param easing Easing function to apply for interpolation.
+     * @param completed Callback function called once the animation finishes.
+     * @param pauseSensitive If true, animation pauses when the game is paused.
+     * @return H2DE_TimelineID ID of the timeline controlling this animation.
+     */
+    H2DE_TimelineID setTranslate(const H2DE_Translate& translate, H2DE_TimelineID duration, H2DE_Easing easing, const std::function<void()>& completed, bool pauseSensitive = true);
+    /**
+     * @brief Animate the scale over time with easing and callback on completion.
+     * 
+     * @param scale Target scale.
+     * @param duration Duration of the animation.
+     * @param easing Easing function to apply for interpolation.
+     * @param completed Callback function called once the animation finishes.
+     * @param pauseSensitive If true, animation pauses when the game is paused.
+     * @return H2DE_TimelineID ID of the timeline controlling this animation.
+     */
+    H2DE_TimelineID setScale(const H2DE_Scale& scale, H2DE_TimelineID duration, H2DE_Easing easing, const std::function<void()>& completed, bool pauseSensitive = true);
+    /**
+     * @brief Animate the rotation over time with easing and completion callback.
+     * 
+     * @param rotation Target rotation angle.
+     * @param duration Duration of the animation.
+     * @param easing Easing function to apply for interpolation.
+     * @param completed Callback function called once the animation finishes.
+     * @param pauseSensitive If true, animation pauses when the game is paused.
+     * @return H2DE_TimelineID ID of the timeline controlling this animation.
+     */
+    H2DE_TimelineID setRotation(float rotation, H2DE_TimelineID duration, H2DE_Easing easing, const std::function<void()>& completed, bool pauseSensitive = true);
+
+    friend class H2DE_Renderer;
+    friend class H2DE_Object;
 
 protected:
     H2DE_Engine* engine;
+    H2DE_Object* object;
 
-    H2DE_Surface(H2DE_Engine* engine, const H2DE_SurfaceData& sd);
-    virtual ~H2DE_Surface();
+    H2DE_Surface(H2DE_Engine* engine, H2DE_Object* object, const H2DE_SurfaceData& surfaceData) noexcept;
+    virtual ~H2DE_Surface() = default;
 
-public:
-    /**
-     * @brief Sets the texture name of the surface.
-     * 
-     * This function sets the texture name associated with the surface.
-     * 
-     * @param surface A pointer to the `H2DE_Surface`.
-     * @param textureName The name of the texture to set.
-     */
-    friend void H2DE_SetSurfaceTextureName(H2DE_Surface* surface, const std::string& textureName);
-    /**
-     * @brief Sets the color of the surface.
-     * 
-     * This function sets the color of the surface.
-     * 
-     * @param surface A pointer to the `H2DE_Surface`.
-     * @param color The color to set the surface to.
-     */
-    friend void H2DE_SetSurfaceColor(H2DE_Surface* surface, const H2DE_ColorRGB& color);
-    /**
-     * @brief Sets the color of the surface with animation.
-     * 
-     * This function sets the color of the surface with optional animation.
-     * 
-     * @param surface A pointer to the `H2DE_Surface`.
-     * @param color The color to set the surface to.
-     * @param duration The duration of the animation.
-     * @param easing The easing function for the animation.
-     * @param completed The callback called when the timeline ends
-     * @param pauseSensitive Whether the animation should pause when the game is paused.
-     * @return The ID of the created timeline.
-     */
-    friend unsigned int H2DE_SetSurfaceColor(H2DE_Surface* surface, const H2DE_ColorRGB& color, unsigned int duration, H2DE_Easing easing, const std::function<void()>& completed, bool pauseSensitive);
-    /**
-     * @brief Sets the scaling mode of the surface.
-     * 
-     * This function sets how the surface should scale.
-     * 
-     * @param surface A pointer to the `H2DE_Surface`.
-     * @param scaleMode The scale mode to set (e.g., stretch, fit).
-     */
-    friend void H2DE_SetSurfaceScaleMode(H2DE_Surface* surface, H2DE_ScaleMode scaleMode);
-    /**
-     * @brief Sets the rotation of the surface.
-     * 
-     * This function sets the rotation of the surface.
-     * 
-     * @param surface A pointer to the `H2DE_Surface`.
-     * @param rotation The rotation angle to apply (in degrees).
-     */
-    friend void H2DE_SetSurfaceRotation(H2DE_Surface* surface, float rotation);
-    /**
-     * @brief Sets the rotation of the surface with animation.
-     * 
-     * This function sets the rotation of the surface with optional animation.
-     * 
-     * @param surface A pointer to the `H2DE_Surface`.
-     * @param rotation The rotation angle to apply (in degrees).
-     * @param duration The duration of the animation.
-     * @param easing The easing function for the animation.
-     * @param completed The callback called when the timeline ends
-     * @param pauseSensitive Whether the animation should pause when the game is paused.
-     * @return The ID of the created timeline.
-     */
-    friend unsigned int H2DE_SetSurfaceRotation(H2DE_Surface* surface, float rotation, unsigned int duration, H2DE_Easing easing, const std::function<void()>& completed, bool pauseSensitive);
-    /**
-     * @brief Sets the pivot point of the surface.
-     * 
-     * This function sets the pivot point for the surface.
-     * 
-     * @param surface A pointer to the `H2DE_Surface`.
-     * @param pivot The desired pivot point as an (x, y) position.
-     */
-    friend void H2DE_SetSurfacePivot(H2DE_Surface* surface, const H2DE_LevelPos& pivot);
-    /**
-     * @brief Sets the flip state of the surface.
-     * 
-     * This function flips the surface horizontally or vertically.
-     * 
-     * @param surface A pointer to the `H2DE_Surface`.
-     * @param flip The desired flip state (horizontal, vertical, or none).
-     */
-    friend void H2DE_SetSurfaceFlip(H2DE_Surface* surface, H2DE_Flip flip);
+private:
+    H2DE_SurfaceData surfaceData;
 
-    /**
-     * @brief Shows a previously hidden surface.
-     * 
-     * This function makes a previously hidden surface visible again during rendering.
-     * The surface must have been hidden using `H2DE_HideSurface`.
-     * 
-     * @param surface A pointer to the `H2DE_Surface` to show.
-     */
-    friend void H2DE_ShowSurface(H2DE_Surface* surface);
-    /**
-     * @brief Hides a surface.
-     * 
-     * This function hides the specified surface, making it invisible during rendering.
-     * The surface remains in memory and can be shown again later using `H2DE_ShowSurface`.
-     * 
-     * @param surface A pointer to the `H2DE_Surface` to hide.
-     */
-    friend void H2DE_HideSurface(H2DE_Surface* surface);
+    bool hidden = false;
 
-    friend class H2DE_Engine;
-    friend class H2DE_BarObject;
-    friend class H2DE_BasicObject;
-    friend class H2DE_ButtonObject;
-    friend class H2DE_TextObject;
-    friend class H2DE_Object;
+    virtual std::string getTextureName() const = 0;
+    virtual H2DE_ColorRGB getColor() const noexcept = 0;
+    virtual std::optional<H2DE_PixelRect> getSrcRect() const noexcept = 0;
+    virtual bool isVisible() const noexcept = 0;
 };
 
 #include <H2DE/surfaces/H2DE_texture.h>
 #include <H2DE/surfaces/H2DE_sprite.h>
+#include <H2DE/surfaces/H2DE_color.h>
 
 #endif

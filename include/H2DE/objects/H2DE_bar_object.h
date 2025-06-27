@@ -3,184 +3,280 @@
 
 /**
  * @file H2DE_bar_object.h
- * @brief Defines the `H2DE_BarObject` class for creating and manipulating bar objects.
+ * @brief Defines the H2DE_BarObject class used for creating customizable bar elements (e.g. HP bars, progress bars).
  * 
- * This file includes functions to modify the properties of bar objects, such as
- * setting the value, minimum, and maximum range. It also provides functions to
- * manage the surfaces of the bar's front and background. The `H2DE_BarObject`
- * class is derived from `H2DE_Object`, allowing it to inherit general object
- * functionality.
+ * This header declares the H2DE_BarObject class, which inherits from H2DE_Object and provides a flexible 2D bar component 
+ * capable of displaying dynamic values using surfaces for the background and foreground. It supports both direct and animated updates.
+ * 
+ * Surfaces can be added either to the front (e.g. fill texture) or to the background (e.g. static panel) with fine-grained control.
+ * 
+ * The bar’s value, minimum, and maximum can be modified directly or animated with timeline support and easing functions.
  */
 
 #include <H2DE/objects/H2DE_object.h>
 
 /**
- * @brief A class representing a bar object in the H2DE engine.
+ * @class H2DE_BarObject
+ * @brief Represents a 2D UI bar component with background and foreground visuals.
  * 
- * This class manages a bar object, typically used to display progress or values
- * with visual representation. It allows control over the value, minimum, and
- * maximum range, as well as adding or removing surfaces for the bar's front
- * and background.
+ * A `H2DE_BarObject` is a flexible element used to visually represent a value between a minimum and maximum.
+ * It can be used for health bars, loading bars, mana bars, experience bars, etc.
  * 
- * Instances of this class are created using `H2DE_CreateBarObject` and can be
- * customized through various setter functions.
+ * This object supports:
+ * - Custom front and background surfaces (textures, sprites, or colors).
+ * - Real-time or animated value updates (with easing support).
+ * - Access to the underlying bar data and surface management.
+ * 
+ * It inherits from `H2DE_Object` and uses the standard H2DE surface system.
  */
 class H2DE_BarObject : public H2DE_Object {
-private:
-    H2DE_BarObjectData bod;
-    float percentage = 0.0f;
-    float value;
-
-    H2DE_BarObject(H2DE_Engine* engine, H2DE_ObjectData od, H2DE_BarObjectData bod);
-    ~H2DE_BarObject() override;
-
-    void refreshPercentage();
-    void resetSurfaceBuffers() override;
-
 public:
     /**
-     * @brief Creates a bar object.
+     * @brief Add a surface to the front of the bar.
      * 
-     * This function creates and initializes a new `H2DE_BarObject` with the given
-     * engine, object data, and bar-specific data.
+     * This function adds a surface (texture, sprite, or color) in front of the bar,
+     * which visually represents the actual filling part of the bar.
      * 
-     * @param engine A pointer to the H2DE engine instance.
-     * @param objectData The general object data for initialization.
-     * @param barObjectData The specific data for the bar object.
-     * @return A pointer to the created `H2DE_BarObject`.
+     * @tparam H2DE_Surface_T The type of the surface (e.g. Texture, Sprite, Color).
+     * @param name The unique identifier for the surface.
+     * @param surfaceData Common surface parameters (position, size, etc.).
+     * @param specificData Additional data specific to the surface type.
+     * @return A pointer to the created surface, or nullptr on failure.
      */
-    friend H2DE_BarObject* H2DE_CreateBarObject(H2DE_Engine* engine, const H2DE_ObjectData& objectData, const H2DE_BarObjectData& barObjectData);
+    template<typename H2DE_Surface_T>
+    inline H2DE_Surface_T* addSurfaceToFront(const std::string& name, const H2DE_SurfaceData& surfaceData, const typename H2DE_Surface_T::H2DE_DataType& specificData) {
+        return H2DE_Object::addSurface<H2DE_Surface_T>(frontSurfaces, name, surfaceData, specificData);
+    }
+    /**
+     * @brief Remove a front surface from the bar.
+     * 
+     * This removes a surface that was previously added in front of the bar
+     * using its unique name.
+     * 
+     * @param name The name of the surface to remove.
+     * @return true if the surface was removed successfully, false otherwise.
+     */
+    inline bool removeSurfaceFromFront(const std::string& name) {
+        return H2DE_Object::removeSurface(frontSurfaces, name);
+    }
+    
+    /**
+     * @brief Add a surface to the background of the bar.
+     * 
+     * This adds a decorative or background surface behind the bar's fill.
+     * 
+     * @tparam H2DE_Surface_T The type of the surface (e.g. Texture, Sprite, Color).
+     * @param name The unique identifier for the surface.
+     * @param surfaceData Common surface parameters (position, size, etc.).
+     * @param specificData Additional data specific to the surface type.
+     * @return A pointer to the created surface, or nullptr on failure.
+     */
+    template<typename H2DE_Surface_T>
+    inline H2DE_Surface_T* addSurfaceToBackground(const std::string& name, const H2DE_SurfaceData& surfaceData, const typename H2DE_Surface_T::H2DE_DataType& specificData) {
+        return H2DE_Object::addSurface<H2DE_Surface_T>(backgroundSurfaces, name, surfaceData, specificData);
+    }
+    /**
+     * @brief Remove a background surface from the bar.
+     * 
+     * This removes a surface that was added behind the bar using its unique name.
+     * 
+     * @param name The name of the surface to remove.
+     * @return true if the surface was removed successfully, false otherwise.
+     */
+    inline bool removeSurfaceFromBackground(const std::string& name) {
+        return H2DE_Object::removeSurface(backgroundSurfaces, name);
+    }
 
     /**
-     * @brief Gets the front surface of the bar.
+     * @brief Get the internal data of the bar.
      * 
-     * This function retrieves the front surface of the bar object, identified by
-     * the given name.
+     * Returns a copy of the entire data structure that defines the bar's
+     * configuration, including its min, max, and current value.
      * 
-     * @param bar A pointer to the `H2DE_BarObject`.
-     * @param name The name of the front surface.
-     * @return A pointer to the surface of the bar's front.
+     * @return The current H2DE_BarObjectData structure.
      */
-    friend H2DE_Surface* H2DE_GetBarFrontSurface(const H2DE_BarObject* bar, const std::string& name);
+    constexpr H2DE_BarObjectData getBarData() const noexcept {
+        return barObjectData; 
+}
     /**
-     * @brief Gets all front surfaces of the bar.
+     * @brief Get the minimum value of the bar.
      * 
-     * This function retrieves all the front surfaces associated with the given bar object.
-     * Each surface is stored in a map where the key is the name of the surface.
+     * This is the lowest possible value the bar can represent.
      * 
-     * @param bar A pointer to the `H2DE_BarObject`.
-     * @return A reference to a map of front surfaces associated with the bar.
+     * @return The minimum float value of the bar.
      */
-    friend const std::unordered_map<std::string, H2DE_Surface*>& H2DE_GetBarFrontSurfaces(const H2DE_BarObject* bar);
+    constexpr float getMin() const noexcept {
+        return barObjectData.min;
+    }
     /**
-     * @brief Gets the background surface of the bar.
+     * @brief Get the maximum value of the bar.
      * 
-     * This function retrieves the background surface of the bar object, identified
-     * by the given name.
+     * This is the highest possible value the bar can represent.
      * 
-     * @param bar A pointer to the `H2DE_BarObject`.
-     * @param name The name of the background surface.
-     * @return A pointer to the surface of the bar's background.
+     * @return The maximum float value of the bar.
      */
-    friend H2DE_Surface* H2DE_GetBarBackgroundSurface(const H2DE_BarObject* bar, const std::string& name);
+    constexpr float getMax() const noexcept {
+        return barObjectData.max;
+    }
     /**
-     * @brief Gets all background surfaces of the bar.
+     * @brief Get the current value of the bar.
      * 
-     * This function retrieves all the background surfaces associated with the given bar object.
-     * Each surface is stored in a map where the key is the name of the surface.
+     * Represents the current fill or progress level of the bar
+     * between its minimum and maximum values.
      * 
-     * @param bar A pointer to the `H2DE_BarObject`.
-     * @return A reference to a map of background surfaces associated with the bar.
+     * @return The current float value of the bar.
      */
-    friend const std::unordered_map<std::string, H2DE_Surface*>& H2DE_GetBarBackgroundSurfaces(const H2DE_BarObject* bar);
-    /**
-     * @brief Adds a surface to the front of the bar.
-     * 
-     * This function adds a surface to the front part of the bar, identified by
-     * the given name.
-     * 
-     * @param bar A pointer to the `H2DE_BarObject`.
-     * @param surface A pointer to the surface to be added.
-     * @param name The name of the surface.
-     */
-    friend void H2DE_AddSurfaceToBarObjectFront(H2DE_BarObject* bar, H2DE_Surface* surface, const std::string& name);
-    /**
-     * @brief Adds a surface to the background of the bar.
-     * 
-     * This function adds a surface to the background part of the bar, identified
-     * by the given name.
-     * 
-     * @param bar A pointer to the `H2DE_BarObject`.
-     * @param surface A pointer to the surface to be added.
-     * @param name The name of the surface.
-     */
-    friend void H2DE_AddSurfaceToBarObjectBackground(H2DE_BarObject* bar, H2DE_Surface* surface, const std::string& name);
-    /**
-     * @brief Removes a surface from the front of the bar.
-     * 
-     * This function removes a surface from the front part of the bar, identified
-     * by the given name.
-     * 
-     * @param bar A pointer to the `H2DE_BarObject`.
-     * @param name The name of the surface to be removed.
-     */
-    friend void H2DE_RemoveSurfaceFromBarObjectFront(H2DE_BarObject* bar, const std::string& name);
-    /**
-     * @brief Removes a surface from the background of the bar.
-     * 
-     * This function removes a surface from the background part of the bar,
-     * identified by the given name.
-     * 
-     * @param bar A pointer to the `H2DE_BarObject`.
-     * @param name The name of the surface to be removed.
-     */
-    friend void H2DE_RemoveSurfaceFromBarObjectBackground(H2DE_BarObject* bar, const std::string& name);
+    constexpr float getValue() const noexcept {
+        return barObjectData.value;
+    }
 
     /**
-     * @brief Sets the value of the bar.
+     * @brief Get all front surfaces of the bar.
      * 
-     * This function sets the value of the bar object, updating the visual
-     * representation accordingly.
+     * Returns a map containing all surfaces rendered in front of the bar background.
+     * These typically include the foreground bar fill or decorative elements.
      * 
-     * @param bar A pointer to the `H2DE_BarObject`.
-     * @param value The new value to set for the bar.
+     * @return A map of surface names to H2DE_Surface pointers.
      */
-    friend void H2DE_SetBarValue(H2DE_BarObject* bar, float value);
+    inline std::unordered_map<std::string, H2DE_Surface*> getFrontSurfaces() const noexcept {
+        return frontSurfaces;
+    }
     /**
-     * @brief Sets the value of the bar with animation.
+     * @brief Get all background surfaces of the bar.
      * 
-     * This function sets the value of the bar object, updating the visual
-     * representation with an optional easing animation.
+     * Returns a map containing all surfaces rendered behind the bar foreground.
+     * These typically include background textures or colored panels.
      * 
-     * @param bar A pointer to the `H2DE_BarObject`.
-     * @param value The new value to set for the bar.
-     * @param duration The duration of the animation.
-     * @param easing The easing type to use for the animation.
-     * @param completed The callback called when the timeline ends
-     * @param pauseSensitive If the animation should be sensitive to pause states.
-     * @return The ID of the created timeline.
+     * @return A map of surface names to H2DE_Surface pointers.
      */
-    friend unsigned int H2DE_SetBarValue(H2DE_BarObject* bar, float value, unsigned int duration, H2DE_Easing easing, const std::function<void()>& completed, bool pauseSensitive);
+    inline std::unordered_map<std::string, H2DE_Surface*> getBackgroundSurfaces() const noexcept {
+        return backgroundSurfaces;
+    }
     /**
-     * @brief Sets the minimum value of the bar.
+     * @brief Get a front surface by name and type.
      * 
-     * This function sets the minimum value of the bar, which defines the lower
-     * bound for the bar's value.
+     * Retrieves a specific surface from the front layer, cast to the requested surface type.
+     * If the name does not exist or the type is incorrect, returns nullptr.
      * 
-     * @param bar A pointer to the `H2DE_BarObject`.
-     * @param min The minimum value to set for the bar.
+     * @tparam H2DE_Surface_T The expected surface type (Texture, Sprite, Color, etc.).
+     * @param name The name of the surface to retrieve.
+     * @return A pointer to the surface, or nullptr if not found or mismatched.
      */
-    friend void H2DE_SetBarMin(H2DE_BarObject* bar, float min);
+    template<typename H2DE_Surface_T>
+    inline H2DE_Surface_T* getFrontSurface(const std::string& name) const {
+        return H2DE_Object::getSurface<H2DE_Surface_T>(frontSurfaces, name);
+    }
     /**
-     * @brief Sets the maximum value of the bar.
+     * @brief Get a background surface by name and type.
      * 
-     * This function sets the maximum value of the bar, which defines the upper
-     * bound for the bar's value.
+     * Retrieves a specific surface from the background layer, cast to the requested surface type.
+     * If the name does not exist or the type is incorrect, returns nullptr.
      * 
-     * @param bar A pointer to the `H2DE_BarObject`.
-     * @param max The maximum value to set for the bar.
+     * @tparam H2DE_Surface_T The expected surface type (Texture, Sprite, Color, etc.).
+     * @param name The name of the surface to retrieve.
+     * @return A pointer to the surface, or nullptr if not found or mismatched.
      */
-    friend void H2DE_SetBarMax(H2DE_BarObject* bar, float max);
+    template<typename H2DE_Surface_T>
+    inline H2DE_Surface_T* getBackgroundSurface(const std::string& name) const {
+        return H2DE_Object::getSurface<H2DE_Surface_T>(backgroundSurfaces, name);
+    }
+    /**
+     * @brief Checks whether a front surface with the given name exists.
+     * @param name Name of the surface to check.
+     * @return true if the front surface exists, false otherwise.
+     */
+    inline bool hasFrontSurface(const std::string& name) const {
+        return H2DE_Object::hasSurface(frontSurfaces, name); 
+}
+    /**
+     * @brief Checks whether a background surface with the given name exists.
+     * @param name Name of the surface to check.
+     * @return true if the background surface exists, false otherwise.
+     */
+    inline bool hasBackgroundSurface(const std::string& name) const {
+        return H2DE_Object::hasSurface(backgroundSurfaces, name);
+    }
+
+    /**
+     * @brief Set the minimum value of the bar.
+     * 
+     * Updates the minimum limit that the bar value can reach.
+     * 
+     * @param min The new minimum value.
+     */
+    void setMin(float min);
+    /**
+     * @brief Set the maximum value of the bar.
+     * 
+     * Updates the maximum limit that the bar value can reach.
+     * 
+     * @param max The new maximum value.
+     */
+    void setMax(float max);
+    /**
+     * @brief Set the current value of the bar.
+     * 
+     * Directly updates the current value of the bar. This does not interpolate the change.
+     * 
+     * @param value The new value to assign.
+     */
+    void setValue(float value);
+
+    /**
+     * @brief Animate the minimum value of the bar.
+     * 
+     * Starts a timeline animation that changes the minimum value over time.
+     * 
+     * @param min The target minimum value.
+     * @param duration Duration of the animation.
+     * @param easing Easing function to apply for interpolation.
+     * @param completed Callback function called once the animation finishes.
+     * @param pauseSensitive If true, animation pauses when the game is paused.
+     * @return H2DE_TimelineID ID of the timeline controlling this animation.
+     */
+    H2DE_TimelineID setMin(float min, H2DE_TimelineID duration, H2DE_Easing easing, const std::function<void()>& completed, bool pauseSensitive = true);
+    /**
+     * @brief Animate the maximum value of the bar.
+     * 
+     * Starts a timeline animation that changes the maximum value over time.
+     * 
+     * @param max The target maximum value.
+     * @param duration Duration of the animation.
+     * @param easing Easing function to apply for interpolation.
+     * @param completed Callback function called once the animation finishes.
+     * @param pauseSensitive If true, animation pauses when the game is paused.
+     * @return H2DE_TimelineID ID of the timeline controlling this animation.
+     */
+    H2DE_TimelineID setMax(float max, H2DE_TimelineID duration, H2DE_Easing easing, const std::function<void()>& completed, bool pauseSensitive = true);
+    /**
+     * @brief Animate the current value of the bar.
+     * 
+     * Starts a timeline animation that changes the bar value over time.
+     * 
+     * @param value The target value to reach.
+     * @param duration Duration of the animation.
+     * @param easing Easing function to apply for interpolation.
+     * @param completed Callback function called once the animation finishes.
+     * @param pauseSensitive If true, animation pauses when the game is paused.
+     * @return H2DE_TimelineID ID of the timeline controlling this animation.
+     */
+    H2DE_TimelineID setValue(float value, H2DE_TimelineID duration, H2DE_Easing easing, const std::function<void()>& completed, bool pauseSensitive = true);
+
+    using H2DE_DataType = H2DE_BarObjectData;
+
+    friend class H2DE_Engine;
+
+private:
+    H2DE_BarObjectData barObjectData;
+
+    std::unordered_map<std::string, H2DE_Surface*> frontSurfaces = {};
+    std::unordered_map<std::string, H2DE_Surface*> backgroundSurfaces = {};
+
+    H2DE_BarObject(H2DE_Engine* engine, const H2DE_ObjectData& objectData, const H2DE_BarObjectData& barObjectData);
+    ~H2DE_BarObject() override;
+
+    void refreshSurfaceBuffers() override;
+    void refreshMaxRadius() override;
 };
 
 #endif
