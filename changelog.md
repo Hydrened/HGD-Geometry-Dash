@@ -1,3 +1,13 @@
+## HGD-2.0.1
+#### ADDED
+- level starting delay
+- level song
+- menu song
+- block & trigger spawn
+#### FIXED
+- ground tiles alignement
+- player checkpoint
+
 ## HGD-2.0.0
 #### REMAKE FROM SCRATCH
 #### ADDED

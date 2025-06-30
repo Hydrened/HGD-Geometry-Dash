@@ -43,7 +43,7 @@ void Events::handle(SDL_Event event) {
 }
 
 void Events::handle_keydown(SDL_Keycode keycode) {
-    if (isInMenuTransition()) {
+    if (isInTransition()) {
         return;
     }
 
@@ -154,7 +154,7 @@ void Events::handle_keydown_level(SDL_Keycode keycode) {
 }
 
 void Events::handle_keyup(SDL_Keycode keycode) {
-    if (isInMenuTransition()) {
+    if (isInTransition()) {
         return;
     }
 
@@ -185,7 +185,7 @@ void Events::handle_keyup_level(SDL_Keycode keycode) {
 }
 
 void Events::handle_button_down(Uint8 button) {
-    if (isInMenuTransition()) {
+    if (isInTransition()) {
         return;
     }
 
@@ -212,7 +212,7 @@ void Events::handle_button_down_level(Uint8 button) {
 }
 
 void Events::handle_button_up(Uint8 button) {
-    if (isInMenuTransition()) {
+    if (isInTransition()) {
         return;
     }
 

@@ -40,6 +40,14 @@ using H2DE_ChannelID = int8_t;
 /** @brief Special value representing an invalid timeline ID. */
 #define H2DE_INVALID_TIMELINE_ID 4294967295u
 
+/** @brief Special value representing an invalid channel ID. */
+#define H2DE_INVALID_CHANNEL_ID 255
+
+/** @brief Minimum volume value. */
+#define H2DE_MIN_VOLUME 0
+/** @brief Maximum volume value. */
+#define H2DE_MAX_VOLUME 100
+
 /** @brief Constant used to represent an infinite loop in timelines or animations. */
 #define H2DE_INFINITE_LOOP 4294967295
 
@@ -243,11 +251,42 @@ namespace H2DE {
      */
     float randomFloatInRange(float min, float max);
     /**
+     * @brief Generate a random float in range [0.0f, 1.0f].
+     * 
+     * @return A random float between 0.0f and 1.0f.
+     */
+    inline float randomFloat() {
+        return H2DE::randomFloatInRange(0.0f, 1.0f);
+    }
+    /**
      * @brief Generate a random boolean.
      * 
      * @return true or false randomly.
      */
     bool randomBool();
+    /**
+     * @brief Get a random valid index from a vector.
+     * 
+     * @tparam T Type of elements in the vector.
+     * @param vector The vector to get a random index from.
+     * @return A random index between 0 and vector.size() - 1.
+     */
+    template<typename T>
+    inline int randomIndexFromVector(const std::vector<T>& vector) {
+        return H2DE::randomIntegerInRange(0, vector.size() - 1);
+    }
+    /**
+     * @brief Get a random value from a vector.
+     * 
+     * @tparam T Type of elements in the vector.
+     * @param vector The vector to get a random value from.
+     * @return A randomly chosen element from the vector.
+     * @warning The vector must not be empty.
+     */
+    template<typename T>
+    inline T randomValueFromVector(const std::vector<T>& vector) {
+        return vector.at(H2DE::randomIndexFromVector(vector));
+    }
 
     /**
      * @brief Linear interpolation with easing.

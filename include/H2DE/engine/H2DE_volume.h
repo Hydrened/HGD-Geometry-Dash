@@ -62,7 +62,7 @@ public:
      * 
      * Stops the sound playing on the channel reserved for songs (usually channel 0).
      */
-    inline void stopSong() const {
+    inline void stopSong() {
         stopSfx(0);
     }
     /**
@@ -72,22 +72,20 @@ public:
      * 
      * @param id The channel ID to stop.
      */
-    inline void stopSfx(H2DE_ChannelID id) const {
-        Mix_HaltChannel(id);
-    }
+    void stopSfx(H2DE_ChannelID id);
     /**
      * @brief Stop all currently playing sounds.
      * 
      * Stops playback on all active audio channels.
      */
-    void stopAll() const;
+    void stopAll();
 
     /**
      * @brief Pause the currently playing song.
      * 
      * Pauses the playback on the channel reserved for songs (usually channel 0).
      */
-    inline void pauseSong() const {
+    inline void pauseSong() {
         pauseSfx(0);
     }
     /**
@@ -97,22 +95,20 @@ public:
      * 
      * @param id The channel ID to pause.
      */
-    inline void pauseSfx(H2DE_ChannelID id) const {
-        Mix_Pause(id);
-    }
+    void pauseSfx(H2DE_ChannelID id);
     /**
      * @brief Pause all currently playing sounds.
      * 
      * Pauses playback on all active audio channels.
      */
-    void pauseAll() const;
+    void pauseAll();
 
     /**
      * @brief Resume playback of the currently paused song.
      * 
      * Resumes playback on the channel reserved for songs (usually channel 0).
      */
-    inline void resumeSong() const {
+    inline void resumeSong() {
         resumeSfx(0); 
     }
     /**
@@ -122,15 +118,13 @@ public:
      * 
      * @param id The channel ID to resume.
      */
-    inline void resumeSfx(H2DE_ChannelID id) const {
-        Mix_Resume(id);
-    }
+    void resumeSfx(H2DE_ChannelID id);
     /**
      * @brief Resume all paused sounds.
      * 
      * Resumes playback on all audio channels that were paused.
      */
-    void resumeAll() const;
+    void resumeAll();
 
     /**
      * @brief Check if a song is currently playing.
@@ -158,7 +152,7 @@ public:
      * Updates the internal song volume and applies it to the song channel (usually channel 0)
      * if a song is currently playing.
      * 
-     * @param volume Volume level (0 to MIX_MAX_VOLUME).
+     * @param volume Volume level (H2DE_MIN_VOLUME (0) to H2DE_MAX_VOLUME (100)).
      */
     void setSongVolume(int volume);
     /**
@@ -166,7 +160,7 @@ public:
      * 
      * Updates the internal SFX volume. The volume is applied to new sound effects as they are played.
      * 
-     * @param volume Volume level (0 to MIX_MAX_VOLUME).
+     * @param volume Volume level (H2DE_MIN_VOLUME (0) to H2DE_MAX_VOLUME (100)).
      */
     void setSfxVolume(int volume);
 
@@ -174,10 +168,17 @@ public:
     friend class H2DE_AssetLoaderManager;
 
 private:
+    struct H2DE_VolumeChannel {
+        bool pauseSensitive = true;
+        bool manuallyPaused = false;
+    };
+
+private:
     H2DE_Engine* engine;
 
     std::unordered_map<std::string, Mix_Chunk*> sounds;
-    std::unordered_map<int, bool> playingChannelsPauseSensitive = {}; 
+    std::unordered_map<int, H2DE_VolumeChannel> channels = {};
+
     int songVolume = -1;
     int sfxVolume = -1;
 
@@ -186,6 +187,8 @@ private:
 
     void initSettings() const;
     void loadData();
+
+    void update();
 
     void pause();
     void resume();

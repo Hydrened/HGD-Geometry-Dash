@@ -6,8 +6,22 @@
 class Game;
 class Scenery;
 class Player;
+class Item;
+class Block;
+class Trigger;
 
 class Level {
+private:
+    struct BlockBuffer {
+        ItemData itemData = ItemData();
+        BlockData blockData = BlockData();
+    };
+
+    struct TriggerBuffer {
+        ItemData itemData = ItemData();
+        TriggerData triggerData = TriggerData();
+    };
+
 public:
     Level(Game* game, Level_ID id);
     Level(Game* game, Level_ID id, const Checkpoint& checkpoint);
@@ -19,22 +33,8 @@ public:
     void update();
 
     inline Player* getPlayer() const { return player; }
-
-private:
-    struct BlockBuffer {
-        std::string id = "";
-        H2DE_Translate translate = { 0.0f, 0.0f };
-        float rotation = 0.0f;
-        BlockFlip flip = BLOCK_FLIP_NONE;
-    };
-
-    struct TriggerBuffer {
-        std::string id = "";
-        H2DE_Translate translate = { 0.0f, 0.0f };
-        std::optional<H2DE_ColorRGB> color = std::nullopt;
-        std::optional<uint32_t> duration = 0;
-        bool touchTrigger = false;
-    };
+    inline const std::vector<Block*>& getBlocks() const { return blocks; }
+    inline const std::vector<Trigger*>& getTriggers() const { return triggers; }
 
 private:
     Game* game;
@@ -46,21 +46,44 @@ private:
     Scenery* scenery = nullptr;
     Player* player = nullptr;
 
-    std::vector<BlockBuffer> blockBuffers = {};
-    std::vector<TriggerBuffer> triggerBuffers = {};
+    std::vector<Item*> items = {};
+    std::vector<Block*> blocks = {};
+    std::vector<Trigger*> triggers = {};
+
+    std::vector<Level::BlockBuffer> blocksBuffer = {};
+    std::vector<Level::TriggerBuffer> triggersBuffer = {};
+    uint32_t blockBufferIndex = 0;
+    uint32_t triggerBufferIndex = 0;
+
+    H2DE_DelayID startingDelayID = H2DE_INVALID_DELAY_ID;
 
     void init();
     void initData();
     void initCheckpoint();
-    void initScenery();
     void initCamera();
+    void initScenery();
     void initItemBuffers();
     void initBlockBuffers();
     void initTriggerBuffers();
+    void initItems();
     void initPlayer();
+    void initSong();
+    void initStartingDelay();
 
+    void destroyItems();
+    void destroyItem(Item* item);
     void destroyScenery();
     void destroyPlayer();
+    void stopSong();
+    void playCloseSfx();
+
+    void updatePlayer();
+    void updateItemsBuffers();
+    void updateBlocksBuffer();
+    void updateTriggersBuffer();
+    void updateItemVector();
+    void updateCamera();
+    void updateScenery();
 };
 
 #endif

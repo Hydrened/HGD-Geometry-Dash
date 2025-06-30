@@ -1,10 +1,12 @@
 #include "level/player.h"
 
 #include "game.h"
+#include "level/level.h"
 #include "level/scenery.h"
+#include "level/items/item.h"
 
 // INIT
-Player::Player(Game* g, Scenery* s, const Checkpoint& c, const PlayerIcons& i) : game(g), scenery(s), checkpoint(c), icons(i) {
+Player::Player(Game* g, Level* l, Scenery* s, const Checkpoint& c, const PlayerIcons& i) : game(g), level(l), scenery(s), checkpoint(c), icons(i) {
     createIcons();
     initState();
 }
@@ -31,7 +33,7 @@ H2DE_BasicObject* Player::createIcon(PlayerGamemode gamemode, PlayerSize size, I
     static const float& miniPlayerRatio = gameData->getMiniPlayerRatio();
 
     H2DE_ObjectData od = H2DE_ObjectData();
-    od.transform.translate = checkpoint.pos;
+    od.transform.translate = checkpoint.translate;
     od.index = Data::getIndex(LAYER_P, 0);
 
     H2DE_BasicObject* icon = engine->createObject<H2DE_BasicObject>(od);
@@ -98,18 +100,18 @@ void Player::destroyObjects() {
 
 // UPDATE
 void Player::update() {
-    onSolid = false;
-    
-    updateVelocity();
-    updateTranslation();
-    updateRotation();
-}
-
-// -- velocity
-void Player::updateVelocity() {
+    updateReset();
     updateGravity();
     updateSpecialBlocksCollision();
     updateClick();
+    updateTranslationFromVelocity();
+    updateGroundCollisions();
+    updateItemCollisions();
+    updateRotation();
+}
+ 
+void Player::updateReset() {
+    onSolid = false;
 }
 
 void Player::updateGravity() {
@@ -133,20 +135,13 @@ void Player::updateClick() {
     }
 }
 
-// -- translate
-void Player::updateTranslation() {
-    updateTranslationAddVelocity();
-    updateGroundsColllisions();
-    updateBlockCollisions();
-}
-
-void Player::updateTranslationAddVelocity() {
+void Player::updateTranslationFromVelocity() {
     H2DE_Translate translate = getTranslate();
     translate += velocity;
     setTranslate(translate);
 }
 
-void Player::updateGroundsColllisions() {
+void Player::updateGroundCollisions() {
     static const Data* gameData = game->getData();
 
     const H2DE_LevelRect& botGroundHitboxRect = scenery->getBotGround()->getHitboxWorldRect("main");
@@ -174,8 +169,52 @@ void Player::updateGroundsColllisions() {
     }
 }
 
-void Player::updateBlockCollisions() {
+void Player::updateItemCollisions() {
+    if (level == nullptr) {
+        return;
+    }
 
+    updateBlockCollisions();
+    updateTriggerCollisions();
+}
+
+void Player::updateBlockCollisions() {
+    if (dead) {
+        return;
+    }
+
+    H2DE_LevelRect playerRedHitboxRect = getCurrentRedHitboxWorldRect();
+    H2DE_LevelRect playerBlueHitboxRect = getCurrentBlueHitboxWorldRect();
+
+    for (Block* block : level->getBlocks()) {
+        if (dead) {
+            return;
+        }
+
+        updateBlockCollisions(block, playerRedHitboxRect, playerBlueHitboxRect);
+    }
+}
+
+void Player::updateBlockCollisions(Block* block, H2DE_LevelRect& playerRedHitboxRect, H2DE_LevelRect& playerBlueHitboxRect) {
+    const BlockType& blockType = block->getType();
+    if (blockType == BLOCK_TYPE_DECORATION) {
+        return;
+    }
+
+    const H2DE_LevelRect& blockHitboxRect = block->getHitboxWorldRect();
+    if (blockHitboxRect.getScale().isNull()) {
+        return;
+    }
+
+    if (playerRedHitboxRect.collides(blockHitboxRect)) {
+        
+    }
+}
+
+void Player::updateTriggerCollisions() {
+    if (dead) {
+        return;
+    }
 }
 
 // -- rotation

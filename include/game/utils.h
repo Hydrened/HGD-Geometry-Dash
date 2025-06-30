@@ -53,8 +53,11 @@ enum Layer {
 };
 
 enum PlayerGamemode {
-    PLAYER_GAMEMODE_CUBE,
-    PLAYER_GAMEMODE_SHIP,
+    PLAYER_GAMEMODE_CUBE    = 0,
+    PLAYER_GAMEMODE_SHIP    = 1,
+    PLAYER_GAMEMODE_BALL    = 2,
+    PLAYER_GAMEMODE_UFO     = 3,
+    PLAYER_GAMEMODE_WAVE    = 4,
 };
 
 enum PlayerSize {
@@ -63,35 +66,28 @@ enum PlayerSize {
 };
 
 enum PlayerGravity {
-    PLAYER_GRAVITY_NORMAL =             1,
-    PLAYER_GRAVITY_UPSIDE_DOWN =       -1,
-};
-
-enum BlockFlip {
-    BLOCK_FLIP_NONE     = 0b00,
-    BLOCK_FLIP_X        = 0b01,
-    BLOCK_FLIP_Y        = 0b10,
-    BLOCK_FLIP_XY       = 0b11,
+    PLAYER_GRAVITY_NORMAL           = 1,
+    PLAYER_GRAVITY_UPSIDE_DOWN      = -1,
 };
 
 enum BlockType {
-    BLOCK_TYPE_SOLID =                  1,
-    BLOCK_TYPE_OBSTACLE =               2,
-    BLOCK_TYPE_SPECIAL =                3,
-    BLOCK_TYPE_DECORATION =             4,
+    BLOCK_TYPE_SOLID        = 0,
+    BLOCK_TYPE_OBSTACLE     = 1,
+    BLOCK_TYPE_SPECIAL      = 2,
+    BLOCK_TYPE_DECORATION   = 3,
 };
 
 enum TriggerType {
-    TRIGGER_TYPE_STARTPOS =             1,
-    TRIGGER_TYPE_BACKGROUND_COLOR =     2,
-    TRIGGER_TYPE_GROUND_COLOR =         3,
-    TRIGGER_TYPE_LINE_COLOR =           4,
-    TRIGGER_TYPE_BE_FADE =              108,
-    TRIGGER_TYPE_BE_FROM_TOP =          109,
-    TRIGGER_TYPE_BE_FROM_BOTTOM =       110,
-    TRIGGER_TYPE_BE_FROM_LEFT =         111,
-    TRIGGER_TYPE_BE_FROM_RIGHT =        112,
-    TRIGGER_TYPE_BE_FROM_SCALE =        113,
+    TRIGGER_TYPE_STARTPOS           = 1,
+    TRIGGER_TYPE_BACKGROUND_COLOR   = 2,
+    TRIGGER_TYPE_GROUND_COLOR       = 3,
+    TRIGGER_TYPE_LINE_COLOR         = 4,
+    TRIGGER_TYPE_BE_FADE            = 108,
+    TRIGGER_TYPE_BE_FROM_TOP        = 109,
+    TRIGGER_TYPE_BE_FROM_BOTTOM     = 110,
+    TRIGGER_TYPE_BE_FROM_LEFT       = 111,
+    TRIGGER_TYPE_BE_FROM_RIGHT      = 112,
+    TRIGGER_TYPE_BE_FROM_SCALE      = 113,
 };
 
 struct PlayerHitbox {
@@ -113,7 +109,7 @@ struct PlayerSnap {
 };
 
 struct Checkpoint {
-    H2DE_Translate pos = H2DE_Translate();
+    H2DE_Translate translate = H2DE_Translate();
     Speed speed = 1;
     float velocityY = 0.0f;
     float rotation = 0.0f;
@@ -122,34 +118,30 @@ struct Checkpoint {
     PlayerSize size = PLAYER_SIZE_NORMAL;
     PlayerGravity gravity = PLAYER_GRAVITY_NORMAL;
 
-    std::optional<int> gamemodeEntryPosY = std::nullopt;
-    std::optional<float> camPosY = std::nullopt;
+    std::optional<int> gamemodeEntryTranslateY = std::nullopt;
+    std::optional<float> camTranslateY = std::nullopt;
 };
 
 struct BlockData {
-    BlockType type = BLOCK_TYPE_DECORATION;
     float rotation = 0.0f;
-    BlockFlip flip = BLOCK_FLIP_NONE;
-    int index = 0;
+    H2DE_Scale flip = { 1.0f, 1.0f };
 };
 
 struct TriggerData {
-    TriggerType type = TRIGGER_TYPE_BACKGROUND_COLOR;
-    H2DE_ColorRGB color = H2DE_ColorRGB();
-    int duration = 0.5f;
+    std::optional<H2DE_ColorRGB> color = std::nullopt;
+    std::optional<int> duration = std::nullopt;
     bool touchTrigger = false;
 };
 
 struct ItemData {
     std::string id = "";
     H2DE_Translate translate = H2DE_Translate();
-
-    std::optional<BlockData> blockData = std::nullopt;
-    std::optional<TriggerData> triggerData = std::nullopt;
 };
 
 void openExternLink(const std::string& link);
 
 void callShortcut(SDL_Keycode keycode);
+
+void logLoadingTime(const std::function<void()>& loading, const std::string& name);
 
 #endif

@@ -26,7 +26,7 @@ public:
     inline const Data* getData() const { return data; }
     inline Save* getSave() const { return save; }
 
-    friend class MenuTransition;
+    friend class Transition;
     friend class Events;
 
 private:
@@ -40,7 +40,7 @@ private:
     Level* level = nullptr;
 
     GameState state = GAME_STATE_LOADING_ASSETS;
-    bool inMenuTransition = true;
+    bool inTransition = true;
 
     void initEngine();
     void initEvents();

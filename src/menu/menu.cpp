@@ -1,12 +1,13 @@
 #include "menu/menu.h"
 
 #include "game.h"
-#include "menu/menu_transition.h"
+#include "menu/transition.h"
 #include "menu/modal.h"
 
 // INIT
 Menu::Menu(Game* g, MenuID i) : game(g), id(i) {
-    MenuTransition* transition = new MenuTransition(game, TRANSITION_STATE_IN, nullptr);
+    Transition* transition = new Transition(game, TRANSITION_STATE_IN, nullptr);
+    initSong();
     initObjects();
 }
 
@@ -15,16 +16,24 @@ void Menu::setCameraTranslate(const H2DE_Translate& translate) {
     engine->getCamera()->setTranslate(translate);
 }
 
+void Menu::initSong() {
+    static H2DE_Audio* audio = game->getEngine()->getAudio();
+
+    if (!audio->isSongPlaying()) {
+        audio->playSong("menu_loop.mp3", -1, false);
+    }
+}
+
 // -- objects
 void Menu::initObjects() {
     static const Data* gameData = game->getData();
 
-    for (const Data::ObjectBuffer& objectBuffer : gameData->getMenuObjects(id)) {
+    for (const Data::MenuObjectBuffer& objectBuffer : gameData->getMenuObjects(id)) {
         createObject(objectBuffer);
     }
 }
 
-void Menu::createObject(const Data::ObjectBuffer& objectBuffer) {
+void Menu::createObject(const Data::MenuObjectBuffer& objectBuffer) {
     H2DE_Object* object = nullptr;
 
     switch (objectBuffer.type) {
@@ -55,7 +64,7 @@ void Menu::createObject(const Data::ObjectBuffer& objectBuffer) {
     objects.push_back(object);
 }
 
-H2DE_BasicObject* Menu::createBasicObject(const Data::ObjectBuffer& objectBuffer) const {
+H2DE_BasicObject* Menu::createBasicObject(const Data::MenuObjectBuffer& objectBuffer) const {
     static H2DE_Engine* engine = game->getEngine();
 
     H2DE_BasicObject* basic = engine->createObject<H2DE_BasicObject>(objectBuffer.objectData);
@@ -68,7 +77,7 @@ H2DE_BasicObject* Menu::createBasicObject(const Data::ObjectBuffer& objectBuffer
     return basic;
 }
 
-H2DE_ButtonObject* Menu::createButtonObject(const Data::ObjectBuffer& objectBuffer) const {
+H2DE_ButtonObject* Menu::createButtonObject(const Data::MenuObjectBuffer& objectBuffer) const {
     static H2DE_Engine* engine = game->getEngine();
 
     if (!objectBuffer.button.has_value()) {
@@ -85,7 +94,7 @@ H2DE_ButtonObject* Menu::createButtonObject(const Data::ObjectBuffer& objectBuff
     return button;
 }
 
-H2DE_TextObject* Menu::createTextObject(const Data::ObjectBuffer& objectBuffer) const {
+H2DE_TextObject* Menu::createTextObject(const Data::MenuObjectBuffer& objectBuffer) const {
     static H2DE_Engine* engine = game->getEngine();
 
     if (!objectBuffer.text.has_value()) {
@@ -120,7 +129,7 @@ void Menu::destroyModal() {
 void Menu::close(const std::function<void()>& callback) {
     disableButtons();
 
-    MenuTransition* transition = new MenuTransition(game, TRANSITION_STATE_OUT, [this, callback]() {
+    Transition* transition = new Transition(game, TRANSITION_STATE_OUT, [this, callback]() {
         delete this;
 
         if (callback) {

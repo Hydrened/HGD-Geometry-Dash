@@ -5,16 +5,19 @@
 #include "data.h"
 class Game;
 class Scenery;
+class Block;
+class Trigger;
 
 class Player {
 public:
-    Player(Game* game, Scenery* scenery, const Checkpoint& checkpoint, const PlayerIcons& icons);
+    Player(Game* game, Level* level, Scenery* scenery, const Checkpoint& checkpoint, const PlayerIcons& icons);
     ~Player();
 
     void update();
 
     void click();
 
+    constexpr const H2DE_Translate getTranslate() const { return normalCube->getTranslate(); }
     const Speed getSpeed() const;
 
     inline void setVelocityX(float vx) { velocity.x = vx; }
@@ -22,6 +25,7 @@ public:
 
 private:
     Game* game;
+    Level* level;
     Scenery* scenery;
     Checkpoint checkpoint;
     PlayerIcons icons;
@@ -52,15 +56,16 @@ private:
 
     void destroyObjects();
 
-    void updateVelocity();
+    void updateReset();
     void updateGravity();
     void updateSpecialBlocksCollision();
     void updateClick();
-
-    void updateTranslation();
-    void updateTranslationAddVelocity();
-    void updateGroundsColllisions();
+    void updateTranslationFromVelocity();
+    void updateGroundCollisions();
+    void updateItemCollisions();
     void updateBlockCollisions();
+    void updateBlockCollisions(Block* block, H2DE_LevelRect& playerRedHitboxRect, H2DE_LevelRect& playerBlueHitboxRect);
+    void updateTriggerCollisions();
 
     void updateRotation();
     void updateRotationOnSolid();
@@ -69,8 +74,6 @@ private:
     void updateObjectRotation();
 
     void snapHitboxRectToOtherHitboxRect(const H2DE_LevelRect& hitboxRect, const H2DE_LevelRect& otherHitboxRect, H2DE_Face face);
-
-    inline H2DE_Translate getTranslate() const { return normalCube->getTranslate(); }
 
     bool canSnap(const std::optional<H2DE_Face>& possibleCollidedFace) const;
     bool isOnSolid() const;

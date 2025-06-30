@@ -6,7 +6,7 @@ Scenery::Scenery(Game* g, Speed s, uint8_t bID, uint8_t gID) : game(g), speed(s)
     initBackground();
     initGrounds();
 
-    addMissingTiles();
+    update();
 }
 
 void Scenery::initDefaultValues() {
@@ -302,7 +302,7 @@ float Scenery::getLastTileTranslateX(const H2DE_BasicObject* object, SceneryType
     static const H2DE_Scale& backgroundScale = gameData->getBackgroundScale();
 
     const H2DE_Scale sceneryTypeScale = (type == SCENERY_TYPE_BACKGROUND) ? backgroundScale : groundScale;
-    float res = H2DE::abs(sceneryTypeScale.x) * -0.5f - H2DE::abs(sceneryTypeScale.y) * 0.5f;
+    float res = H2DE::abs(sceneryTypeScale.x) * -0.5f - H2DE::abs(sceneryTypeScale.y) * 0.5f - 0.5f;
 
     for (H2DE_Texture* tile : getTiles(object)) {
         const float tileTranslateX = tile->getTranslate().x;

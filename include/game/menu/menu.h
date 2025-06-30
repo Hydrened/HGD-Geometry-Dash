@@ -35,11 +35,12 @@ private:
 
     std::vector<H2DE_Object*> objects = {};
 
+    void initSong();
     void initObjects();
-    void createObject(const Data::ObjectBuffer& objectBuffer);
-    H2DE_BasicObject* createBasicObject(const Data::ObjectBuffer& objectBuffer) const;
-    H2DE_ButtonObject* createButtonObject(const Data::ObjectBuffer& objectBuffer) const;
-    H2DE_TextObject* createTextObject(const Data::ObjectBuffer& objectBuffer) const;
+    void createObject(const Data::MenuObjectBuffer& objectBuffer);
+    H2DE_BasicObject* createBasicObject(const Data::MenuObjectBuffer& objectBuffer) const;
+    H2DE_ButtonObject* createButtonObject(const Data::MenuObjectBuffer& objectBuffer) const;
+    H2DE_TextObject* createTextObject(const Data::MenuObjectBuffer& objectBuffer) const;
 
     void destroyObjects();
     void destroyModal();
@@ -47,8 +48,8 @@ private:
     void disableButtons();
 };
 
-#include "menu/main_menu.h"
-#include "menu/level_menu.h"
-#include "menu/icon_menu.h"
+#include "menu/menus/main_menu.h"
+#include "menu/menus/level_menu.h"
+#include "menu/menus/icon_menu.h"
 
 #endif

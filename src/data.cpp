@@ -5,6 +5,7 @@ Data::Data(Game* g) : game(g) {
     initMenuObjects();
     initModalBuffers();
     initIconSurfacesBuffers();
+    initBlockBuffers();
     initPhysics();
 }
 
@@ -40,7 +41,7 @@ void Data::initMenuObjects() {
 }
 
 void Data::initMenuBasicObject(MenuID id, const H2DE_Translate& translate, const std::string& surfaceBuffer, int index) {
-    ObjectBuffer objectBuffer = ObjectBuffer();
+    MenuObjectBuffer objectBuffer = MenuObjectBuffer();
     objectBuffer.type = OBJECT_BUFFER_TYPE_BASIC;
 
     objectBuffer.objectData.transform.translate = translate;
@@ -52,7 +53,7 @@ void Data::initMenuBasicObject(MenuID id, const H2DE_Translate& translate, const
 }
 
 void Data::initMenuButtonObject(MenuID id, const H2DE_Translate& translate, const std::string& surfaceBuffer, int index, const H2DE_Hitbox& hitbox, const std::function<void()>& onMouseUp) {
-    ObjectBuffer objectBuffer = ObjectBuffer();
+    MenuObjectBuffer objectBuffer = MenuObjectBuffer();
     objectBuffer.type = OBJECT_BUFFER_TYPE_BUTTON;
 
     objectBuffer.objectData.transform.translate = translate;
@@ -124,13 +125,12 @@ void Data::initQuitGameModalBuffer() {
     };
 }
 
-// -- icon surfaces
+// -- surfaces
 void Data::initIconSurfacesBuffers() {
     initCubeSurfacesBuffers();
     initShipSurfacesBuffers();
 }
 
-// -- -- cubes
 void Data::initCubeSurfacesBuffers() {
     std::vector<IconSurfaceBuffer> cube_0 = {};
     cube_0.push_back({ "player_00-uhd.png", { 137, 3, 120, 120 }, { 0.0f, 0.0f, 1.0f, 1.0f }, 0.0f, H2DE_ColorRGB(), 2 });
@@ -163,13 +163,125 @@ void Data::initCubeSurfacesBuffers() {
     iconSurfacesBuffers[PLAYER_GAMEMODE_CUBE][4] = cube_4;
 }
 
-// -- -- ships
 void Data::initShipSurfacesBuffers() {
     std::vector<IconSurfaceBuffer> ship_1 = {};
     ship_1.push_back({ "ship_01-uhd.png", { 205, 3, 149, 87 }, { 0.0f, -0.16f, 1.24167f, 0.725f }, 0.0f, H2DE_ColorRGB(), 4 });
     ship_1.push_back({ "ship_01-uhd.png", { 163, 5, 39, 93 }, { 0.04f, 0.01f, 0.325f, 0.775f }, 270.0f, H2DE_ColorRGB(), 3 });
     ship_1.push_back({ "ship_01-uhd.png", { 3, 3, 156, 95 }, { 0.0f, -0.16f, 1.3f, 0.79167f }, 0.0f, H2DE_ColorRGB(), -1 });
     iconSurfacesBuffers[PLAYER_GAMEMODE_SHIP][1] = ship_1;
+}
+
+// -- blocks
+void Data::initBlockBuffers() {
+    json blocks = H2DE_Json::read("data/items/blocks.gdd");
+
+    for (const json& block : blocks) {
+        if (!block.contains("id")) {
+            throw std::runtime_error("Block has no id");
+        }
+
+        if (!block.contains("type")) {
+            throw std::runtime_error("Block has no type");
+        }
+
+        if (!block.contains("index")) {
+            throw std::runtime_error("Block has no index");
+        }
+
+        blockBuffers[block["id"]] = initBlockBuffer(block);
+    }
+}
+
+Data::BlockBuffer Data::initBlockBuffer(const json& blockData) const {
+    Data::BlockBuffer res = Data::BlockBuffer();
+
+    res.type = Data::getBlockType(blockData);
+    res.index = Data::getBlockIndex(blockData);
+
+    if (blockData.contains("surfaces")) {
+        res.surfaces = initBlockBufferSurfaces(blockData);
+    }
+
+    if (blockData.contains("hitbox")) {
+        res.hitbox = initBlockBufferHitbox(blockData, res.type);
+    }
+
+    return res;
+}
+
+const Data::SurfaceBuffers Data::initBlockBufferSurfaces(const json& blockData) const {
+    SurfaceBuffers res = SurfaceBuffers();
+
+    const std::string blockID = blockData["id"];
+    const std::vector<json>& surfaces = blockData["surfaces"];
+    res.normals.reserve(surfaces.size());
+
+    for (const json& surface : surfaces) {
+
+        if (!surface.contains("sheet")) {
+            throw std::runtime_error("Surface from block id \"" + blockID + "\" has no sheet");
+        }
+
+        if (!surface.contains("src")) {
+            throw std::runtime_error("Surface from block id \"" + blockID + "\" has no src");
+        }
+
+        if (!surface.contains("dest")) {
+            throw std::runtime_error("Surface from block id \"" + blockID + "\" has no dest");
+        }
+
+        if (!surface.contains("index")) {
+            throw std::runtime_error("Surface from block id \"" + blockID + "\" has no index");
+        }
+
+        Data::SurfaceBuffer surfaceBuffer = Data::SurfaceBuffer();
+
+        const H2DE_LevelRect dest = H2DE_Json::getRect<float>(surface["dest"]);
+        surfaceBuffer.surface.transform.translate = dest.getTranslate();
+        surfaceBuffer.surface.transform.scale = dest.getScale();
+        surfaceBuffer.surface.index = H2DE_Json::getInteger(surface["index"]);
+
+        surfaceBuffer.texture.textureName = surface["sheet"];
+        surfaceBuffer.texture.srcRect = H2DE_Json::getRect<int>(surface["src"]);
+
+        if (surface.contains("rotation")) {
+            surfaceBuffer.surface.transform.rotation = H2DE_Json::getFloat(surface["rotation"]);
+        }
+
+        if (surface.contains("color")) {
+            surfaceBuffer.texture.color = H2DE_Json::getColorRGB(surface["color"], false);
+        }
+
+        if (surface.contains("random-id")) {
+
+            int randomID = H2DE_Json::getInteger(surface["random-id"]);
+
+            auto it = res.randoms.find(randomID);
+            if (it == res.randoms.end()) {
+                res.randoms[randomID] = { surfaceBuffer };
+            } else {
+                res.randoms[randomID].push_back(surfaceBuffer);
+            }
+
+        } else {
+            res.normals.push_back(surfaceBuffer);
+        }
+    }
+
+    return res;
+}
+
+const H2DE_Hitbox Data::initBlockBufferHitbox(const json& blockData, BlockType type) const {
+    H2DE_Hitbox res = H2DE_Hitbox();
+
+    const H2DE_LevelRect hitboxRect = H2DE_Json::getRect<float>(blockData["hitbox"]);
+    res.transform.translate = hitboxRect.getTranslate();
+    res.transform.scale = hitboxRect.getScale();
+
+    const std::string strColor = (type == BLOCK_TYPE_OBSTACLE) ? "red" : (type == BLOCK_TYPE_SOLID) ? "blue" : "green";
+    res.color = getHitboxColor(strColor);
+
+    return res;
 }
 
 // -- physics
@@ -335,7 +447,7 @@ const Data::SurfaceBuffer Data::getGroundTileSurfaceBuffer(uint8_t groundID, flo
     return getTileSurfaceBuffer(res, groundID, translateX);
 }
 
-const std::vector<Data::ObjectBuffer>& Data::getMenuObjects(MenuID id) const {
+const std::vector<Data::MenuObjectBuffer>& Data::getMenuObjects(MenuID id) const {
     auto it = menuObjects.find(id);
     if (it == menuObjects.end()) {
         throw std::runtime_error("Could not find the menu id \"" + std::to_string(id) + "\"");
@@ -348,6 +460,15 @@ const Data::ModalBuffer& Data::getModalBuffer(ModalID id) const {
     auto it = modalBuffers.find(id);
     if (it == modalBuffers.end()) {
         throw std::runtime_error("Could not find the modal id \"" + std::to_string(id) + "\"");
+    }
+
+    return it->second;
+}
+
+const Data::BlockBuffer& Data::getBlockBuffer(const std::string& id) const {
+    auto it = blockBuffers.find(id);
+    if (it == blockBuffers.end()) {
+        throw std::runtime_error("Could not find the block id \"" + id + "\"");
     }
 
     return it->second;
@@ -581,8 +702,8 @@ const PlayerIcons Data::getRandomPlayerIcons() const {
 
 const std::tuple<Speed, PlayerGamemode, PlayerSize> Data::getRandomPlayerState() const {
     return {
-        H2DE::randomIntegerInRange(1, 1), // temp
-        static_cast<PlayerGamemode>(H2DE::randomIntegerInRange(0, 1)),
-        PLAYER_SIZE_NORMAL // static_cast<PlayerSize>(H2DE::randomIntegerInRange(0, 1))
+        1, // H2DE::randomIntegerInRange(1, speeds.size() - 1) en 1.7
+        static_cast<PlayerGamemode>(H2DE::randomIntegerInRange(0, gamemodes.size() - 1)),
+        PLAYER_SIZE_NORMAL // static_cast<PlayerSize>(H2DE::randomIntegerInRange(0, sizes.size() - 1)) // en 1.4
     };
 }

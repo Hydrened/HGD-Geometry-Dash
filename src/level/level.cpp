@@ -1,8 +1,9 @@
 #include "level/level.h"
 
-#include "menu/menu_transition.h"
+#include "menu/transition.h"
 #include "level/scenery.h"
 #include "level/player.h"
+#include "level/items/item.h"
 
 // INIT
 Level::Level(Game* g, Level_ID i) : game(g), id(i), checkpoint(Checkpoint()) {
@@ -15,18 +16,20 @@ Level::Level(Game* g, Level_ID i, const Checkpoint& c) : game(g), id(i), checkpo
 
 void Level::init() {
     Uint32 startTime = SDL_GetTicks();
-    
-    MenuTransition* transition = new MenuTransition(game, TRANSITION_STATE_IN, nullptr);
 
-    initData();
-    initCheckpoint();
-    initScenery();
-    initCamera();
-    initItemBuffers();
-    initPlayer();
+    logLoadingTime([this]() {
+        Transition* transition = new Transition(game, TRANSITION_STATE_IN, nullptr);
 
-    Uint32 elapsedTime = SDL_GetTicks() - startTime;
-    std::cout << "Opened level " << static_cast<int>(id) << " in " << elapsedTime << "ms" << std::endl;
+        initData();
+        initCheckpoint();
+        initCamera();
+        initScenery();
+        initItemBuffers();
+        initItems();
+        initPlayer();
+        initSong();
+        initStartingDelay();
+    }, "level");
 
     newAttempt();
 }
@@ -40,7 +43,7 @@ void Level::initCheckpoint() {
     static const Data* gameData = game->getData();
     constexpr H2DE_Translate levelOrigin = { 0.0f, 0.0f };
 
-    if (checkpoint.pos != levelOrigin) {
+    if (checkpoint.translate != levelOrigin) {
         return;
     }
 
@@ -48,6 +51,15 @@ void Level::initCheckpoint() {
     checkpoint.gamemode = Data::getLevelPlayerGamemode(data);
     checkpoint.size = Data::getLevelPlayerSize(data);
     checkpoint.gravity = Data::getLevelPlayerGravity(data);
+}
+
+void Level::initCamera() {
+    static const Data* gameData = game->getData();
+    static H2DE_Camera* camera = game->getEngine()->getCamera();
+    static const H2DE_Translate& defaultCameraTranslate = gameData->getDefaultCameraTranslate();
+    
+    const H2DE_Translate cameraTranslate = defaultCameraTranslate.addX(checkpoint.translate.x); // temp => y missing
+    camera->setTranslate(cameraTranslate);
 }
 
 void Level::initScenery() {
@@ -59,19 +71,14 @@ void Level::initScenery() {
     scenery = new Scenery(game, checkpoint.speed, backgroundID, groundID);
 }
 
-void Level::initCamera() {
-    static const Data* gameData = game->getData();
-    static H2DE_Camera* camera = game->getEngine()->getCamera();
-    
-    camera->setTranslate(gameData->getDefaultCameraTranslate());
-}
-
 void Level::initItemBuffers() {
     initBlockBuffers();
     initTriggerBuffers();
 }
 
 void Level::initBlockBuffers() {
+    blocksBuffer.reserve(data["blocks"].size());
+
     for (const json& block : data["blocks"]) {
 
         if (!block.contains("i")) {
@@ -82,23 +89,37 @@ void Level::initBlockBuffers() {
             return throw std::runtime_error("Block has no translate");
         }
 
-        BlockBuffer blockBuffer = BlockBuffer();
-        blockBuffer.id = H2DE_Json::getString(block["i"]);
-        blockBuffer.translate = H2DE_Json::getVector2D<float>(block["p"]);
+        Level::BlockBuffer blockBuffer = Level::BlockBuffer();
+        blockBuffer.itemData.id = H2DE_Json::getString(block["i"]);
+        blockBuffer.itemData.translate = H2DE_Json::getVector2D<float>(block["p"]);
 
         if (block.contains("r")) {
-            blockBuffer.rotation = H2DE_Json::getFloat(block["r"]);
+            blockBuffer.blockData.rotation = H2DE_Json::getFloat(block["r"]);
         }
 
         if (block.contains("f")) {
-            blockBuffer.flip = static_cast<BlockFlip>(H2DE_Json::getInteger(block["f"]));
+            const std::string flip = block["f"];
+
+            if (flip.find('x')) {
+                blockBuffer.blockData.flip.x = -1.0f;
+            }
+
+            if (flip.find('y')) {
+                blockBuffer.blockData.flip.y = -1.0f;
+            }
         }
 
-        blockBuffers.push_back(blockBuffer);
+        blocksBuffer.push_back(blockBuffer);
     }
+
+    std::sort(blocksBuffer.begin(), blocksBuffer.end(), [](const Level::BlockBuffer& a, const Level::BlockBuffer& b) {
+        return (a.itemData.translate.x < b.itemData.translate.x);
+    });
 }
 
 void Level::initTriggerBuffers() {
+    triggersBuffer.reserve(data["triggers"].size());
+    
     for (const json& trigger : data["triggers"]) {
         
         if (!trigger.contains("i")) {
@@ -109,37 +130,82 @@ void Level::initTriggerBuffers() {
             return throw std::runtime_error("Trigger has no translate");
         }
 
-        TriggerBuffer triggerBuffer = TriggerBuffer();
-        triggerBuffer.id = H2DE_Json::getString(trigger["i"]);
-        triggerBuffer.translate = H2DE_Json::getVector2D<float>(trigger["p"]);
+        Level::TriggerBuffer triggerBuffer = Level::TriggerBuffer();
+        triggerBuffer.itemData.id = H2DE_Json::getString(trigger["i"]);
+        triggerBuffer.itemData.translate = H2DE_Json::getVector2D<float>(trigger["p"]);
         
         if (trigger.contains("d")) {
-            triggerBuffer.duration = static_cast<uint32_t>(H2DE_Json::getInteger(trigger["d"]));
+            triggerBuffer.triggerData.duration = static_cast<uint32_t>(H2DE_Json::getInteger(trigger["d"]));
         }
 
         if (trigger.contains("c")) {
-            triggerBuffer.color = H2DE_Json::getColorRGB(trigger["c"], false);
+            triggerBuffer.triggerData.color = H2DE_Json::getColorRGB(trigger["c"], false);
         }
 
         if (trigger.contains("tt")) {
-            triggerBuffer.touchTrigger = H2DE_Json::getBool(trigger["tt"]);
+            triggerBuffer.triggerData.touchTrigger = H2DE_Json::getBool(trigger["tt"]);
         }
 
-        triggerBuffers.push_back(triggerBuffer);
+        triggersBuffer.push_back(triggerBuffer);
     }
+
+    std::sort(triggersBuffer.begin(), triggersBuffer.end(), [](const Level::TriggerBuffer& a, const Level::TriggerBuffer& b) {
+        return (a.itemData.translate.x < b.itemData.translate.x);
+    });
+}
+
+void Level::initItems() {
+    updateBlocksBuffer();
+    updateTriggersBuffer(); // temp => simulate trigger
 }
 
 void Level::initPlayer() {
     static Save* save = game->getSave();
 
     const PlayerIcons playerIcons = save->getPlayerIcons();
-    player = new Player(game, scenery, checkpoint, playerIcons);
+    player = new Player(game, this, scenery, checkpoint, playerIcons);
+}
+
+void Level::initSong() {
+    static H2DE_Engine* engine = game->getEngine();
+    static H2DE_Audio* audio = engine->getAudio();
+
+    audio->playSong(Data::getLevelSong(data), 0, true);
+    audio->pauseSong();
+}
+
+void Level::initStartingDelay() {
+    static H2DE_Engine* engine = game->getEngine();
+    static Save* save = game->getSave();
+    static const Data* gameData = game->getData();
+
+    uint32_t duration = gameData->getStartingLevelDelayDuration() + save->getTransitionDuration() * 0.5f;  
+
+    startingDelayID = engine->delay(duration, [this]() {
+        static H2DE_Audio* audio = game->getEngine()->getAudio();
+        
+        audio->resumeSong();
+        startingDelayID = H2DE_INVALID_DELAY_ID;
+    }, true);
 }
 
 // CLEANUP
 Level::~Level() {
+    destroyItems();
     destroyScenery();
     destroyPlayer();
+    stopSong();
+}
+
+void Level::destroyItems() {
+    for (Item* item : items) {
+        delete item;
+        item = nullptr;
+    }
+
+    items.clear();
+    blocks.clear();
+    triggers.clear();
 }
 
 void Level::destroyScenery() {
@@ -150,9 +216,21 @@ void Level::destroyPlayer() {
     delete player;
 }
 
+void Level::stopSong() {
+    static H2DE_Audio* audio = game->getEngine()->getAudio();
+    audio->stopSong();
+}
+
+void Level::playCloseSfx() {
+    static H2DE_Audio* audio = game->getEngine()->getAudio();
+    audio->playSfx("close-level.ogg", 0, false);
+}
+
 // ACTIONS
 void Level::close(const std::function<void()>& callback) {
-    MenuTransition* transition = new MenuTransition(game, TRANSITION_STATE_OUT, [this, callback]() {
+    playCloseSfx();
+
+    Transition* transition = new Transition(game, TRANSITION_STATE_OUT, [this, callback]() {
         game->getEngine()->resume();
 
         delete this;
@@ -170,8 +248,113 @@ void Level::newAttempt() {
 
 // UPDATE
 void Level::update() {
-    static const Data* gameData = game->getData();
+    bool inStartingDelay = (startingDelayID != H2DE_INVALID_DELAY_ID);
+    if (inStartingDelay) {
+        return;
+    }
+
+    updateItemsBuffers();
+    updateItemVector();
+    updatePlayer();
+    updateCamera();
+    updateScenery();
+}
+
+// -- buffers
+void Level::updateItemsBuffers() {
+    updateBlocksBuffer();
+    updateTriggersBuffer();
+}
+
+void Level::updateBlocksBuffer() {
     static H2DE_Camera* camera = game->getEngine()->getCamera();
+    static const float& cameraItemPadding = game->getData()->getCameraItemPadding();
+
+    const float maxCamX = camera->getWorldRect().getMaxX();
+
+    for (int i = blockBufferIndex; i < blocksBuffer.size(); i++) {
+        const Level::BlockBuffer& buffer = blocksBuffer[i];
+
+        if (buffer.itemData.translate.x - cameraItemPadding > maxCamX) {
+            blockBufferIndex = i;
+            return;
+        }
+
+        Block* block = new Block(game, this, buffer.itemData, buffer.blockData);
+        items.push_back(block);
+        blocks.push_back(block);
+    }
+}
+
+void Level::updateTriggersBuffer() {
+    static H2DE_Camera* camera = game->getEngine()->getCamera();
+    static const float& cameraItemPadding = game->getData()->getCameraItemPadding();
+
+    const float maxCamX = camera->getWorldRect().getMaxX();
+
+    for (int i = triggerBufferIndex; i < triggersBuffer.size(); i++) {
+        const Level::TriggerBuffer& buffer = triggersBuffer[i];
+
+        if (buffer.itemData.translate.x - cameraItemPadding > maxCamX) {
+            triggerBufferIndex = i;
+            return;
+        }
+
+        Trigger* trigger = new Trigger(game, this, buffer.itemData, buffer.triggerData);
+        items.push_back(trigger);
+        triggers.push_back(trigger);
+    }
+}
+
+// -- items
+void Level::updateItemVector() {
+    static H2DE_Camera* camera = game->getEngine()->getCamera();
+
+    const H2DE_LevelRect camRect = camera->getWorldRect();
+    const H2DE_Translate playerTranslate = player->getTranslate();
+
+    for (auto it = items.begin(); it != items.end(); ) {
+        Item* item = *it;
+
+        if (item->hasToBeRemoved(camRect, playerTranslate)) {
+            it = items.erase(it);
+            destroyItem(item);
+
+        } else {
+            ++it;
+        }
+    }
+}
+
+void Level::destroyItem(Item* item) {
+    Block* block = dynamic_cast<Block*>(item);
+    Trigger* trigger = dynamic_cast<Trigger*>(item);
+
+    if (block != nullptr) {
+        auto blockIt = std::find(blocks.begin(), blocks.end(), block);
+        if (blockIt != blocks.end()) {
+            blocks.erase(blockIt);
+        }
+
+    } else if (trigger != nullptr) {
+        auto triggerIt = std::find(triggers.begin(), triggers.end(), trigger);
+        if (triggerIt != triggers.end()) {
+            triggers.erase(triggerIt);
+        }
+    }
+
+    delete item;
+}
+
+// -- player
+void Level::updatePlayer() {
+    player->update();
+}
+
+// -- camera
+void Level::updateCamera() {
+    static H2DE_Camera* camera = game->getEngine()->getCamera();
+    static const Data* gameData = game->getData();
 
     const float& speed = gameData->getSpeedVelocityX(player->getSpeed());
 
@@ -179,8 +362,9 @@ void Level::update() {
     cameraTranslate.x += speed;
 
     camera->setTranslate(cameraTranslate);
-    scenery->update();
-    player->update();
+}
 
-    // update triggers
+// -- scenery
+void Level::updateScenery() {
+    scenery->update();
 }

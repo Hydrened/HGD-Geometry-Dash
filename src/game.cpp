@@ -41,9 +41,8 @@ void Game::initEngine() {
         update();
     });
 
-    engine->loadAssets("assets");
-
     engine->getWindow()->setIcon("game-icon.png");
+    engine->loadAssets("assets");
 
     engine->debugObjects(false);
 }
@@ -132,15 +131,24 @@ Menu* Game::createMenu(MenuID id) {
 }
 
 void Game::openLevel(uint32_t id) {
+    static H2DE_Audio* audio = engine->getAudio();
+
     bool isALevelOpened = (level != nullptr);
     if (isALevelOpened) {
         return;
     }
+
+    audio->stopSong();
+    audio->playSfx("play-level.ogg", 0, false);
     
     bool needToCloseMenu = (menu != nullptr);
     if (needToCloseMenu) {
 
         menu->close([this, id]() {
+            // temp
+            Checkpoint checkpoint = Checkpoint();
+            checkpoint.translate = { 130.0f, 0.0f };
+            
             menu = nullptr;
             level = new Level(this, id);
             state = GAME_STATE_LEVEL;

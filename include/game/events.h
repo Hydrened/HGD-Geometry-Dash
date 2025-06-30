@@ -28,7 +28,7 @@ private:
     inline Menu* getMenu() const { return game->menu; }
     inline Level* getLevel() const { return game->level; }
     inline GameState getGameState() const { return game->state; }
-    inline bool isInMenuTransition() const { return game->inMenuTransition; }
+    inline bool isInTransition() const { return game->inTransition; }
 };
 
 #endif

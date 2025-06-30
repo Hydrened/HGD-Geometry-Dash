@@ -1,13 +1,3 @@
-# GLOBAL
-.vscode/
-mds/
-
-# BIN
-bin/*.exe
-bin/save.dat
-bin/settings.ini
-bin/objects/
-bin/jsonToGdd/
-bin/data/**/*.json
-bin/data/save.dat
-bin/assets/examples/
+.vscode
+bin
+mds
