@@ -8,16 +8,21 @@
 // INIT
 Player::Player(Game* g, Level* l, Scenery* s, const Checkpoint& c, const PlayerIcons& i) : game(g), level(l), scenery(s), checkpoint(c), icons(i) {
     createIcons();
-    initState();
+    respawn();
 }
 
 void Player::initState() {
     static const Data* gameData = game->getData();
 
-    setGamemode(checkpoint.gamemode, 0);
+    int gamemodeEntryTranslateY = (checkpoint.gamemodeEntryTranslateY.has_value()) ? checkpoint.gamemodeEntryTranslateY.value() : 0;
+
+    setTranslate(checkpoint.translate);
+    setGamemode(checkpoint.gamemode, gamemodeEntryTranslateY);
     setSize(checkpoint.size);
     setGravity(checkpoint.gravity);
     setVelocityX(gameData->getSpeedVelocityX(checkpoint.speed));
+    setRotation(0.0f);
+    velocity.y = checkpoint.velocityY;
 }
 
 void Player::createIcons() {
@@ -183,31 +188,75 @@ void Player::updateBlockCollisions() {
         return;
     }
 
-    H2DE_LevelRect playerRedHitboxRect = getCurrentRedHitboxWorldRect();
-    H2DE_LevelRect playerBlueHitboxRect = getCurrentBlueHitboxWorldRect();
-
     for (Block* block : level->getBlocks()) {
+        
         if (dead) {
             return;
         }
+        
+        const BlockType& blockType = block->getType();
+        if (blockType == BLOCK_TYPE_DECORATION) {
+            continue;
+        }
+        
+        const H2DE_LevelRect& blockHitboxRect = block->getHitboxWorldRect();
+        if (blockHitboxRect.getScale().isNull()) {
+            continue;
+        }
+        
+        const H2DE_LevelRect playerRedHitboxRect = getCurrentRedHitboxWorldRect();
+        const H2DE_LevelRect playerBlueHitboxRect = getCurrentBlueHitboxWorldRect();
+        
+        if (playerRedHitboxRect.collides(blockHitboxRect)) {
+            updateBlockCollisions_hitboxCollided(playerRedHitboxRect, blockHitboxRect, blockType);
+        }
 
-        updateBlockCollisions(block, playerRedHitboxRect, playerBlueHitboxRect);
+        if (blockType != BLOCK_TYPE_SOLID) {
+            continue;
+        }
+
+        if (playerBlueHitboxRect.collides(blockHitboxRect)) {
+            updateBlockCollisions_hitboxCollided(playerBlueHitboxRect, blockHitboxRect, blockType);
+        }
     }
 }
 
-void Player::updateBlockCollisions(Block* block, H2DE_LevelRect& playerRedHitboxRect, H2DE_LevelRect& playerBlueHitboxRect) {
-    const BlockType& blockType = block->getType();
-    if (blockType == BLOCK_TYPE_DECORATION) {
+void Player::updateBlockCollisions_hitboxCollided(const H2DE_LevelRect& playerHitboxRect, const H2DE_LevelRect& blockHitboxRect, const BlockType& blockType) {
+    const std::optional<H2DE_Face> possibleCollidedFace = playerHitboxRect.getCollidedFace(blockHitboxRect);
+    if (!possibleCollidedFace.has_value()) {
         return;
     }
 
-    const H2DE_LevelRect& blockHitboxRect = block->getHitboxWorldRect();
-    if (blockHitboxRect.getScale().isNull()) {
-        return;
-    }
+    const H2DE_Face collidedFace = possibleCollidedFace.value();
 
-    if (playerRedHitboxRect.collides(blockHitboxRect)) {
-        
+    switch (blockType) {
+
+        case BLOCK_TYPE_SOLID:
+            updateBlockCollisions_hitboxCollided_solid(playerHitboxRect, blockHitboxRect, collidedFace);
+            break;
+
+        case BLOCK_TYPE_OBSTACLE:
+            snapHitboxRectToOtherHitboxRect(playerHitboxRect, blockHitboxRect, collidedFace);
+            kill();
+            break;
+
+        default: return;
+    }
+}
+
+void Player::updateBlockCollisions_hitboxCollided_solid(const H2DE_LevelRect& playerHitboxRect, const H2DE_LevelRect& blockHitboxRect, const H2DE_Face& collidedFace) {
+    const std::string playerHitboxColor = (getCurrentRedHitboxWorldRect() == playerHitboxRect) ? "red" : "blue";
+
+    if (playerHitboxColor == "red") {
+        if (canSnap(collidedFace)) {
+            snapHitboxRectToOtherHitboxRect(playerHitboxRect, blockHitboxRect, collidedFace);
+            velocity.y = 0.0f;
+            onSolid = true;
+        }
+
+    } else {
+        snapHitboxRectToOtherHitboxRect(playerHitboxRect, blockHitboxRect, collidedFace);
+        kill();
     }
 }
 
@@ -289,7 +338,7 @@ void Player::updateClampRotation() {
 }
 
 void Player::updateObjectRotation() {
-    getCurrentGamemodeObject()->setRotation(rotation);
+    setRotation(rotation);
 }
 
 // ACTIONS
@@ -312,6 +361,33 @@ void Player::click() {
     }
 } 
 
+void Player::kill() {
+    static H2DE_Audio* audio = game->getEngine()->getAudio();
+
+    if (level) {
+        level->playerDied();
+    }
+
+    audio->playSfx("death-sound.ogg", 0, false);
+    dead = true;
+    mouseDown = false;
+
+    for (auto& [name, surface] : getCurrentGamemodeObject()->getSurfaces()) {
+        surface->hide();
+    }
+}
+
+void Player::respawn() {
+    onSolid = false;
+    dead = false;
+
+    initState();
+
+    for (auto& [name, surface] : getCurrentGamemodeObject()->getSurfaces()) {
+        surface->show();
+    }
+}
+
 void Player::snapHitboxRectToOtherHitboxRect(const H2DE_LevelRect& hitboxRect, const H2DE_LevelRect& otherHitboxRect, H2DE_Face face) {
     H2DE_Translate res = getTranslate();
 
@@ -325,9 +401,12 @@ void Player::snapHitboxRectToOtherHitboxRect(const H2DE_LevelRect& hitboxRect, c
             break;
 
         case H2DE_FACE_RIGHT:
+            res.x = otherHitboxRect.getMinX() - hitboxRect.getScale().x * 0.5f;
             break;
 
         case H2DE_FACE_LEFT:
+            // temp => check between minimum overlap between top and bot and call snapHitboxRectToOtherHitboxRect again instead od snaping to left (impossible)
+            res.x = otherHitboxRect.getMaxX() + hitboxRect.getScale().x * 0.5f;
             break;
 
         default: return;
@@ -394,12 +473,27 @@ bool Player::isOnGround() const {
 }
 
 bool Player::isOnBlock() const {
-    H2DE_LevelRect redHitboxRect = getCurrentRedHitboxWorldRect();
-    redHitboxRect.y += (gravity == PLAYER_GRAVITY_NORMAL) ? -0.001f : 0.001f;
+    for (const Block* block : level->getBlocks()) {
+        
+        const BlockType& blockType = block->getType();
+        if (blockType == BLOCK_TYPE_DECORATION) {
+            continue;
+        }
+        
+        const H2DE_LevelRect& blockHitboxRect = block->getHitboxWorldRect();
+        if (blockHitboxRect.getScale().isNull()) {
+            continue;
+        }
 
-    // for (const Item* item : level->getItems()) {
+        H2DE_LevelRect redHitboxRect = getCurrentRedHitboxWorldRect();
+        redHitboxRect.y += (gravity == PLAYER_GRAVITY_NORMAL) ? -0.001f : 0.001f;
 
-    // }
+        if (redHitboxRect.collides(blockHitboxRect)) {
+            if (canSnap(redHitboxRect.getCollidedFace(blockHitboxRect))) {
+                return true;
+            }
+        }
+    }
 
     return false;
 }
@@ -448,8 +542,16 @@ void Player::setSize(PlayerSize s) {
 void Player::setGravity(PlayerGravity g) {
     gravity = g;
 
+    // for (H2DE_BasicObject* object : getObjects()) {
+    //     const H2DE_Scale& scale = object->getScale();
+    //     object->setScale({ scale.x, H2DE::abs(scale.y) * g});
+    // }
+}
+
+void Player::setRotation(float r) {
+    rotation = r;
+
     for (H2DE_BasicObject* object : getObjects()) {
-        const H2DE_Scale& scale = object->getScale();
-        object->setScale({ scale.x, H2DE::abs(scale.y) * g});
+        object->setRotation(rotation);
     }
 }

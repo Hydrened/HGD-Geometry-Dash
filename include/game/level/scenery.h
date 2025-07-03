@@ -5,7 +5,7 @@
 
 class Scenery {
 public:
-    Scenery(Game* game, Speed speed, uint8_t backgroundID, uint8_t groundID);
+    Scenery(Game* game, uint8_t backgroundID, uint8_t groundID);
     ~Scenery();
 
     void update();
@@ -19,7 +19,6 @@ public:
 
 private:
     Game* game;
-    Speed speed;
     uint8_t backgroundID;
     uint8_t groundID;
 
@@ -63,8 +62,8 @@ private:
     void updateTranslations();
     void updateBackroundObjectTranslations();
     void updateGroundObjectsTranslations();
-    void updateBackroundTilesTranslations();
-    void updateGroundTilesTranslations();
+    void updateTilesTransitions();
+    void updateTilesTransitions(H2DE_BasicObject* object, const H2DE_Scale& tileScale, SceneryType type);
 
     void addMissingTiles();
     void addMissingTiles(H2DE_BasicObject* object, const H2DE_Scale& tileScale, SceneryType type);

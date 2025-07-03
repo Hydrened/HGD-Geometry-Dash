@@ -552,6 +552,13 @@ struct H2DE_Vector2D {
         return (x == 0 && y == 0);
     }
     /**
+     * @brief Check if at least one component is zero.
+     * @return True if either x or y is zero.
+     */
+    constexpr bool hasNullMember() const noexcept {
+        return (x == 0 || y == 0);
+    }
+    /**
      * @brief Rotate this vector around a pivot point by a given angle.
      * @param pivot The pivot point to rotate around.
      * @param angle The rotation angle in radians.
@@ -622,6 +629,13 @@ struct H2DE_Rect {
      * @brief Default constructor, initializes rect to (0,0,1,1).
      */
     constexpr H2DE_Rect() noexcept = default;
+    /**
+     * @brief Constructs a rectangle from a translation and a uniform scale.
+     * 
+     * @param translate Value used for both x and y position
+     * @param scale Value used for both width and height
+     */
+    constexpr H2DE_Rect(H2DE_Rect_T translate, H2DE_Rect_T scale) noexcept : x(translate), y(translate), w(scale), h(scale) {}
     /**
      * @brief Constructs a rectangle with specified position and size.
      * 

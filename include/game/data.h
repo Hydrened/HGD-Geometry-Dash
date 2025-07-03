@@ -114,6 +114,7 @@ public:
     constexpr const float& getIconMenuMainIconScaleMultiplier() const { return iconMenuMainIconScaleMultiplier; }
     constexpr const float& getIconMenuButtonSpacing() const { return iconMenuButtonSpacing; }
     constexpr const float& getCameraItemPadding() const { return cameraItemPadding; }
+    constexpr const float& getCamearaOffsetXFromPlayer() const { return camearaOffsetXFromPlayer; }
 
     constexpr const int& getIconMenuMainIconOrder() const { return iconMenuMainIconOrder; }
     constexpr const int& getIconMenuButtonsOrder() const { return iconMenuButtonsOrder; }
@@ -294,6 +295,7 @@ private:
     const float iconMenuMainIconScaleMultiplier = 1.613f;
     const float iconMenuButtonSpacing = 0.198f;
     const float cameraItemPadding = 5.0f;
+    const float camearaOffsetXFromPlayer = 3.0f;
 
 
 

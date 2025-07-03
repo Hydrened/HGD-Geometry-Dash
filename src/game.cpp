@@ -16,7 +16,7 @@ Game::Game() : save(new Save()) {
 void Game::initEngine() {
     H2DE_EngineData engineData = H2DE_EngineData();
 
-    engineData.window.title = "Geometry Dash";
+    engineData.window.title = "Geometry Dash 1.0";
     engineData.window.fps = 60;
     engineData.window.pos = { 10, 30 };
     engineData.window.size = { 1520, 855 };

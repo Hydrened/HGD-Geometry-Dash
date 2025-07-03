@@ -1,3 +1,10 @@
+## HGD-2.0.2
+#### ADDED
+- kill icons on main menu
+- block collisions
+- player death
+- respawn
+
 ## HGD-2.0.1
 #### ADDED
 - level starting delay

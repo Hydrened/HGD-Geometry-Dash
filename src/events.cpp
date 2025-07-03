@@ -17,7 +17,7 @@ void Events::handle(SDL_Event event) {
                 case SDLK_d: engine->toggleDebugMode(); break;
                 case SDLK_LEFT: engine->debugModePreviousFrame(); break;
                 case SDLK_RIGHT: engine->debugModeNextFrame(); break;
-                default: break;
+                default: return;
             } break;
 
         case SDL_KEYUP:
@@ -73,28 +73,28 @@ void Events::handle_keydown_menu(SDL_Keycode keycode) {
             case MENU_ID_MAIN_MENU: getMenu()->openModal(MODAL_ID_QUIT_GAME); break;
             case MENU_ID_LEVEL_MENU: game->openMenu(MENU_ID_MAIN_MENU); break;
             case MENU_ID_ICON_MENU: game->openMenu(MENU_ID_MAIN_MENU); break;
-            default: break;
+            default: return;
         } break;
 
         case SDLK_SPACE: switch (menuID) {
             case MENU_ID_MAIN_MENU: game->openMenu(MENU_ID_LEVEL_MENU); break;
             case MENU_ID_LEVEL_MENU: game->openLevel(levelMenu->getLevelIndex()); break;
-            default: break;
+            default: return;
         } break;
 
         case SDLK_LEFT: switch (menuID) {
             case MENU_ID_LEVEL_MENU: levelMenu->left(); break;
-            default: break;
+            default: return;
         } break;
 
         case SDLK_RIGHT: switch (menuID) {
             case MENU_ID_LEVEL_MENU: levelMenu->right(); break;
-            default: break;
+            default: return;
         } break;
 
         case SDLK_i: switch (menuID) {
             case MENU_ID_MAIN_MENU: game->openMenu(MENU_ID_ICON_MENU); break;
-            default: break;
+            default: return;
         }
 
         default: return;
@@ -149,6 +149,13 @@ void Events::handle_keydown_level(SDL_Keycode keycode) {
             getLevel()->getPlayer()->setMouseDown(true);
             break;
 
+        case SDLK_r:
+            if (engine->isPaused()) {
+                engine->resume();
+                getLevel()->newAttempt();
+            }
+            break;
+
         default: return;
     }
 }
@@ -191,6 +198,7 @@ void Events::handle_button_down(Uint8 button) {
 
     switch (getGameState()) {
         case GAME_STATE_LEVEL: handle_button_down_level(button); break;
+        case GAME_STATE_MENU: handle_button_down_menu(button); break;
         default: return;
     }
 }
@@ -206,6 +214,22 @@ void Events::handle_button_down_level(Uint8 button) {
         case SDL_BUTTON_LEFT:
             getLevel()->getPlayer()->setMouseDown(true);
             break;
+
+        default: return;
+    }
+}
+
+void Events::handle_button_down_menu(Uint8 button) {
+    static H2DE_Engine* engine = game->getEngine();
+
+    const MenuID menuID = getMenu()->getId();
+    MainMenu* mainMenu = dynamic_cast<MainMenu*>(getMenu());
+
+    switch (button) {
+        case SDL_BUTTON_LEFT: switch (menuID) {
+            case MENU_ID_MAIN_MENU: mainMenu->click(engine->getMouseGamePos()); break;
+            default: return;
+        } break;
 
         default: return;
     }

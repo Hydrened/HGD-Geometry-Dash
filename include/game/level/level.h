@@ -26,9 +26,11 @@ public:
     Level(Game* game, Level_ID id);
     Level(Game* game, Level_ID id, const Checkpoint& checkpoint);
     ~Level();
-    
+
     void close(const std::function<void()>& callback);
+    
     void newAttempt();
+    void playerDied();
     
     void update();
 
@@ -56,6 +58,7 @@ private:
     uint32_t triggerBufferIndex = 0;
 
     H2DE_DelayID startingDelayID = H2DE_INVALID_DELAY_ID;
+    H2DE_DelayID respawningDelayID = H2DE_INVALID_DELAY_ID;
 
     void init();
     void initData();
@@ -67,13 +70,14 @@ private:
     void initTriggerBuffers();
     void initItems();
     void initPlayer();
-    void initSong();
     void initStartingDelay();
 
     void destroyItems();
     void destroyItem(Item* item);
     void destroyScenery();
     void destroyPlayer();
+    void destroyStartingDelay();
+    void destroyRespawningDelay();
     void stopSong();
     void playCloseSfx();
 

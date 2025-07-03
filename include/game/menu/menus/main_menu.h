@@ -13,6 +13,8 @@ public:
 
     void update() override;
 
+    void click(const H2DE_Translate& translate);
+
 private:
     Scenery* scenery = nullptr;
     Player* player = nullptr;

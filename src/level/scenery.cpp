@@ -1,7 +1,7 @@
 #include "level/scenery.h"
 
 // INIT
-Scenery::Scenery(Game* g, Speed s, uint8_t bID, uint8_t gID) : game(g), speed(s), backgroundID(bID), groundID(gID) {
+Scenery::Scenery(Game* g, uint8_t bID, uint8_t gID) : game(g), backgroundID(bID), groundID(gID) {
     initDefaultValues();
     initBackground();
     initGrounds();
@@ -126,8 +126,7 @@ void Scenery::updateTranslations() {
     updateBackroundObjectTranslations();
     updateGroundObjectsTranslations();
 
-    updateBackroundTilesTranslations();
-    updateGroundTilesTranslations();
+    updateTilesTransitions();
 }
 
 void Scenery::updateBackroundObjectTranslations() {
@@ -154,35 +153,35 @@ void Scenery::updateGroundObjectsTranslations() {
     }
 }
 
-void Scenery::updateBackroundTilesTranslations() {
+void Scenery::updateTilesTransitions() {
     static const Data* gameData = game->getData();
-    constexpr float PARALLAX_MULTIPLIER = 0.1f;
+    static const H2DE_Scale& backgroundTileScale = gameData->getBackgroundTileScale();
+    static const H2DE_Scale& groundTileScale = gameData->getGroundTileScale();
 
-    const float& speedVelocityX = gameData->getSpeedVelocityX(speed);
-    const float parallaxSpeedValocityX = speedVelocityX * PARALLAX_MULTIPLIER;
-
-    for (const auto& [name, surface] : displayedBackground->getSurfaces()) {
-        H2DE_Translate surfaceTranslate = surface->getTranslate();
-        surfaceTranslate.x -= parallaxSpeedValocityX;
-
-        surface->setTranslate(surfaceTranslate);
-    }
+    updateTilesTransitions(displayedBackground, backgroundTileScale, SCENERY_TYPE_BACKGROUND);
+    updateTilesTransitions(displayedBotGround, groundTileScale, SCENERY_TYPE_GROUND);
+    updateTilesTransitions(displayedTopGround, groundTileScale, SCENERY_TYPE_GROUND);
 }
 
-void Scenery::updateGroundTilesTranslations() {
-    static const Data* gameData = game->getData();
-    
-    const float& speedVelocityX = gameData->getSpeedVelocityX(speed);
-    const std::array<H2DE_BasicObject*, 2> groundsDisplayedObjects = getGroundDisplayedObjects();
+void Scenery::updateTilesTransitions(H2DE_BasicObject* object, const H2DE_Scale& tileScale, SceneryType type) {
+    static H2DE_Camera* camera = game->getEngine()->getCamera();
+    static float halfCameraWidth = camera->getGameScale().x * 0.5f;
 
-    for (H2DE_BasicObject* ground : groundsDisplayedObjects) {
-        for (H2DE_Texture* tile : getTiles(ground)) {
+    constexpr float PARALLAX_MULTIPLIER = 0.1f;
 
-            H2DE_Translate tileTranslate = tile->getTranslate();
-            tileTranslate.x -= speedVelocityX;
+    H2DE_Translate cameraTranslate = camera->getTranslate();
+    if (type == SCENERY_TYPE_BACKGROUND) {
+        cameraTranslate.x *= PARALLAX_MULTIPLIER;
+    }
 
-            tile->setTranslate(tileTranslate);
-        }
+    float offsetX = -std::fmod(cameraTranslate.x, tileScale.x); 
+
+    std::vector<H2DE_Texture*> tiles = getTiles(object);
+    for (int i = 0; i < tiles.size(); i++) {
+        H2DE_Texture* tile = tiles.at(i);
+
+        float x = -halfCameraWidth + offsetX + (i * tileScale.x);
+        tile->setTranslate({ x, 0.0f });
     }
 }
 

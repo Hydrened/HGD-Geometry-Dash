@@ -17,7 +17,7 @@ void MainMenu::initCamera() {
 }
 
 void MainMenu::initScenery() {
-    scenery = new Scenery(game, 1, 1, 1);
+    scenery = new Scenery(game, 1, 1);
 }
 
 void MainMenu::initColorLoop() {
@@ -128,4 +128,16 @@ void MainMenu::spawnPlayer() {
 
     player = new Player(game, nullptr, scenery, checkpoint, icons);
     player->setVelocityX(gameData->getSpeedVelocityX(1) + gameData->getSpeedVelocityX(speed));
+}
+
+void MainMenu::click(const H2DE_Translate& translate) {
+    if (player == nullptr) {
+        return;
+    }
+
+    if (player->getCurrentRedHitboxWorldRect().collides(translate)) {
+        player->kill();
+        delete player;
+        player = nullptr;
+    }
 }

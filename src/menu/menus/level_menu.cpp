@@ -14,7 +14,7 @@ void LevelMenu::initCamera() {
 }
 
 void LevelMenu::initScenery() {
-    scenery = new Scenery(game, 1, 13, 1);
+    scenery = new Scenery(game, 13, 1);
 }
 
 // CLEANUP

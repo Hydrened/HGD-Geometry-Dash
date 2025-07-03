@@ -27,11 +27,11 @@ void Level::init() {
         initItemBuffers();
         initItems();
         initPlayer();
-        initSong();
         initStartingDelay();
-    }, "level");
 
-    newAttempt();
+        updateCamera();
+        updateScenery();
+    }, "level");
 }
 
 void Level::initData() {
@@ -68,7 +68,7 @@ void Level::initScenery() {
     uint8_t backgroundID = Data::getLevelBackgroundID(data);
     uint8_t groundID = Data::getLevelGroundID(data);
 
-    scenery = new Scenery(game, checkpoint.speed, backgroundID, groundID);
+    scenery = new Scenery(game, backgroundID, groundID);
 }
 
 void Level::initItemBuffers() {
@@ -166,14 +166,6 @@ void Level::initPlayer() {
     player = new Player(game, this, scenery, checkpoint, playerIcons);
 }
 
-void Level::initSong() {
-    static H2DE_Engine* engine = game->getEngine();
-    static H2DE_Audio* audio = engine->getAudio();
-
-    audio->playSong(Data::getLevelSong(data), 0, true);
-    audio->pauseSong();
-}
-
 void Level::initStartingDelay() {
     static H2DE_Engine* engine = game->getEngine();
     static Save* save = game->getSave();
@@ -182,9 +174,7 @@ void Level::initStartingDelay() {
     uint32_t duration = gameData->getStartingLevelDelayDuration() + save->getTransitionDuration() * 0.5f;  
 
     startingDelayID = engine->delay(duration, [this]() {
-        static H2DE_Audio* audio = game->getEngine()->getAudio();
-        
-        audio->resumeSong();
+        newAttempt();
         startingDelayID = H2DE_INVALID_DELAY_ID;
     }, true);
 }
@@ -194,6 +184,8 @@ Level::~Level() {
     destroyItems();
     destroyScenery();
     destroyPlayer();
+    destroyStartingDelay();
+    destroyRespawningDelay();
     stopSong();
 }
 
@@ -214,6 +206,22 @@ void Level::destroyScenery() {
 
 void Level::destroyPlayer() {
     delete player;
+}
+
+void Level::destroyStartingDelay() {
+    static H2DE_Engine* engine = game->getEngine();
+
+    if (startingDelayID == H2DE_INVALID_DELAY_ID) {
+        engine->stopDelay(startingDelayID, false);
+    }
+}
+
+void Level::destroyRespawningDelay() {
+    static H2DE_Engine* engine = game->getEngine();
+
+    if (respawningDelayID == H2DE_INVALID_DELAY_ID) {
+        engine->stopDelay(respawningDelayID, false);
+    }
 }
 
 void Level::stopSong() {
@@ -242,8 +250,35 @@ void Level::close(const std::function<void()>& callback) {
 }
 
 void Level::newAttempt() {
+    static H2DE_Audio* audio = game->getEngine()->getAudio();
+
+    initCamera();
+    updateScenery();
+    player->respawn();
+
+    destroyItems();
+
+    blockBufferIndex = 0;
+    triggerBufferIndex = 0;
+
+    updateBlocksBuffer();
+    updateTriggersBuffer();
+
+    audio->playSong(Data::getLevelSong(data), 0, true);
+
     attempts++;
     std::cout << "Attempt " << attempts << std::endl;
+}
+
+void Level::playerDied() {
+    static H2DE_Engine* engine = game->getEngine();
+    
+    stopSong();
+
+    respawningDelayID = engine->delay(1000, [this]() {
+        newAttempt();
+        respawningDelayID = H2DE_INVALID_DELAY_ID;
+    }, true);
 }
 
 // UPDATE
@@ -255,6 +290,7 @@ void Level::update() {
 
     updateItemsBuffers();
     updateItemVector();
+    
     updatePlayer();
     updateCamera();
     updateScenery();
@@ -348,7 +384,9 @@ void Level::destroyItem(Item* item) {
 
 // -- player
 void Level::updatePlayer() {
-    player->update();
+    if (!player->isDead()) {
+        player->update();
+    }
 }
 
 // -- camera
@@ -356,12 +394,12 @@ void Level::updateCamera() {
     static H2DE_Camera* camera = game->getEngine()->getCamera();
     static const Data* gameData = game->getData();
 
-    const float& speed = gameData->getSpeedVelocityX(player->getSpeed());
+    static const float& camearaOffsetXFromPlayer = gameData->getCamearaOffsetXFromPlayer();
 
-    H2DE_Translate cameraTranslate = camera->getTranslate();
-    cameraTranslate.x += speed;
+    float x = player->getTranslate().x + camearaOffsetXFromPlayer;
+    float y = camera->getTranslate().y;
 
-    camera->setTranslate(cameraTranslate);
+    camera->setTranslate({ x, y });
 }
 
 // -- scenery

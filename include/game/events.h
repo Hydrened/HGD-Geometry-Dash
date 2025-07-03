@@ -22,6 +22,7 @@ private:
     void handle_keyup_level(SDL_Keycode keycode);
     void handle_button_down(Uint8 button);
     void handle_button_down_level(Uint8 button);
+    void handle_button_down_menu(Uint8 button);
     void handle_button_up(Uint8 button);
     void handle_button_up_level(Uint8 button);
 

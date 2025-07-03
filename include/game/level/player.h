@@ -16,9 +16,14 @@ public:
     void update();
 
     void click();
+    void kill();
+    void respawn();
 
     constexpr const H2DE_Translate getTranslate() const { return normalCube->getTranslate(); }
     const Speed getSpeed() const;
+    inline H2DE_LevelRect getCurrentRedHitboxWorldRect() const { return getCurrentHitboxWorldRect("red"); }
+    inline H2DE_LevelRect getCurrentBlueHitboxWorldRect() const { return getCurrentHitboxWorldRect("blue"); }
+    constexpr bool isDead() const { return dead; }
 
     inline void setVelocityX(float vx) { velocity.x = vx; }
     inline void setMouseDown(bool state) { mouseDown = state; }
@@ -35,7 +40,6 @@ private:
     H2DE_BasicObject* normalShip = nullptr;
     H2DE_BasicObject* miniShip = nullptr;
 
-    H2DE_Translate translate = { 0.0f, 0.0f };
     H2DE_Velocity velocity = { 0.0f, 0.0f };
     float rotation = 0.0f;
 
@@ -64,7 +68,8 @@ private:
     void updateGroundCollisions();
     void updateItemCollisions();
     void updateBlockCollisions();
-    void updateBlockCollisions(Block* block, H2DE_LevelRect& playerRedHitboxRect, H2DE_LevelRect& playerBlueHitboxRect);
+    void updateBlockCollisions_hitboxCollided(const H2DE_LevelRect& playerHitboxRect, const H2DE_LevelRect& blockHitboxRect, const BlockType& blockType);
+    void updateBlockCollisions_hitboxCollided_solid(const H2DE_LevelRect& playerHitboxRect, const H2DE_LevelRect& blockHitboxRect, const H2DE_Face& collidedFace);
     void updateTriggerCollisions();
 
     void updateRotation();
@@ -81,8 +86,6 @@ private:
     bool isOnBlock() const;
 
     H2DE_BasicObject* getCurrentGamemodeObject() const;
-    inline H2DE_LevelRect getCurrentRedHitboxWorldRect() const { return getCurrentHitboxWorldRect("red"); }
-    inline H2DE_LevelRect getCurrentBlueHitboxWorldRect() const { return getCurrentHitboxWorldRect("blue"); }
     H2DE_LevelRect getCurrentHitboxWorldRect(const std::string& color) const;
     inline const std::array<H2DE_BasicObject*, 4> getObjects() const { return { normalCube, miniCube, normalShip, miniShip }; }
 
@@ -90,6 +93,7 @@ private:
     void setGamemode(PlayerGamemode gamemode, int yEntry);
     void setSize(PlayerSize size);
     void setGravity(PlayerGravity gravity);
+    void setRotation(float rotation);
 };
 
 #endif
