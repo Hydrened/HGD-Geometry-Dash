@@ -1,5 +1,4 @@
-#ifndef H2DE_AUIDIO_H
-#define H2DE_AUIDIO_H
+#pragma once
 
 /**
  * @file H2DE_audio.h
@@ -14,6 +13,9 @@
 
 #include <H2DE/engine/H2DE_engine.h>
 class H2DE_Engine;
+
+/** @brief Type alias for delay identifiers. */
+using H2DE_ChannelID = int8_t;
 
 /**
  * @class H2DE_Audio
@@ -152,7 +154,7 @@ public:
      * Updates the internal song volume and applies it to the song channel (usually channel 0)
      * if a song is currently playing.
      * 
-     * @param volume Volume level (H2DE_MIN_VOLUME (0) to H2DE_MAX_VOLUME (100)).
+     * @param volume Volume level (H2DE_VOLUME_MIN (0) to H2DE_VOLUME_MAX (100)).
      */
     void setSongVolume(int volume);
     /**
@@ -160,7 +162,7 @@ public:
      * 
      * Updates the internal SFX volume. The volume is applied to new sound effects as they are played.
      * 
-     * @param volume Volume level (from H2DE_MIN_VOLUME (0) to H2DE_MAX_VOLUME (100)).
+     * @param volume Volume level (from H2DE_VOLUME_MIN (0) to H2DE_VOLUME_MAX (100)).
      */
     void setSfxVolume(int volume);
 
@@ -201,5 +203,3 @@ private:
     int getNextFreeChannel() const;
     static int lerpVolume(int volume);
 };
-
-#endif

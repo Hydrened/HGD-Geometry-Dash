@@ -1,17 +1,20 @@
-#ifndef SCENERY_H
-#define SCENERY_H
+#pragma once
 
 #include "game.h"
 
 class Scenery {
 public:
-    Scenery(Game* game, uint8_t backgroundID, uint8_t groundID);
+    Scenery(Game* game, BackgroundID backgroundID, GroundID groundID);
     ~Scenery();
 
     void update();
 
-    inline H2DE_BasicObject* getBotGround() const { return botGroundHitbox; }
-    inline H2DE_BasicObject* getTopGround() const { return topGroundHitbox; }
+    inline H2DE_BasicObject* getBotGround() const {
+        return botGroundHitbox;
+    }
+    inline H2DE_BasicObject* getTopGround() const {
+        return topGroundHitbox;
+    }
 
     void setBackgroundColor(const H2DE_ColorRGB& color, uint32_t duration = 0u, uint32_t start = 0u);
     void setGroundColor(const H2DE_ColorRGB& color, uint32_t duration = 0u, uint32_t start = 0u);
@@ -19,8 +22,8 @@ public:
 
 private:
     Game* game;
-    uint8_t backgroundID;
-    uint8_t groundID;
+    BackgroundID backgroundID;
+    GroundID groundID;
 
     enum SceneryType {
         SCENERY_TYPE_BACKGROUND,
@@ -45,10 +48,10 @@ private:
     H2DE_ColorRGB groundColor = { 0, 0, 0, 0 };
     H2DE_ColorRGB lineColor = { 0, 0, 0, 0 };
 
-    H2DE_TimelineID backgroundColorTimelineID = H2DE_INVALID_TIMELINE_ID;
-    H2DE_TimelineID botGroundColorTimelineID = H2DE_INVALID_TIMELINE_ID;
-    H2DE_TimelineID topGroundColorTimelineID = H2DE_INVALID_TIMELINE_ID;
-    H2DE_TimelineID lineColorTimelineID = H2DE_INVALID_TIMELINE_ID;
+    H2DE_Timeline* backgroundColorTimeline = nullptr;
+    H2DE_Timeline* botGroundColorTimeline = nullptr;
+    H2DE_Timeline* topGroundColorTimeline = nullptr;
+    H2DE_Timeline* lineColorTimeline = nullptr;
 
     void initDefaultValues();
     void initBackground();
@@ -58,6 +61,7 @@ private:
 
     void destroyBackground();
     void destroyGrounds();
+    void destroyTimelines();
 
     void updateTranslations();
     void updateBackroundObjectTranslations();
@@ -73,18 +77,22 @@ private:
     void removeOutOfScreenTiles();
     void removeOutOfScreenTiles(H2DE_BasicObject* object, SceneryType type);
 
-    void stopTimeline(H2DE_TimelineID& id);
+    void stopTimeline(H2DE_Timeline* timeline);
 
-    inline std::array<H2DE_BasicObject*, 4> getGroundsObjects() const { return { displayedBotGround, displayedTopGround, botGroundHitbox, topGroundHitbox }; }
-    inline std::array<H2DE_BasicObject*, 2> getGroundDisplayedObjects() const { return { displayedBotGround, displayedTopGround }; }
+    inline std::array<H2DE_BasicObject*, 4> getGroundsObjects() const {
+        return { displayedBotGround, displayedTopGround, botGroundHitbox, topGroundHitbox };
+    }
+    inline std::array<H2DE_BasicObject*, 2> getGroundDisplayedObjects() const {
+        return { displayedBotGround, displayedTopGround };
+    }
     std::vector<H2DE_Texture*> getTiles(const H2DE_BasicObject* object) const;
     std::array<H2DE_Texture*, 2> getLines() const;
 
-    inline bool isSurfaceTile(const std::string& name) const { return (name.find("tile_") != std::string::npos); }
+    inline bool isSurfaceTile(const std::string& name) const {
+        return (name.find("tile_") != std::string::npos);
+    }
     float getLastTileTranslateX(const H2DE_BasicObject* object, SceneryType type) const;
 
     void setColor(const H2DE_BasicObject* object, const H2DE_ColorRGB& color, SceneryType type);
-    H2DE_TimelineID setColor(const H2DE_BasicObject* object, const H2DE_ColorRGB& defaultColor, const H2DE_ColorRGB& color, uint32_t duration, uint32_t start, SceneryType type);
+    H2DE_Timeline* setColor(const H2DE_BasicObject* object, const H2DE_ColorRGB& defaultColor, const H2DE_ColorRGB& color, uint32_t duration, uint32_t start, SceneryType type);
 };
-
-#endif

@@ -6,11 +6,11 @@
 #include "level/items/item.h"
 
 // INIT
-Level::Level(Game* g, Level_ID i) : game(g), id(i), checkpoint(Checkpoint()) {
+Level::Level(Game* g, LevelID i) : game(g), id(i), checkpoint(Checkpoint()) {
     init();
 }
 
-Level::Level(Game* g, Level_ID i, const Checkpoint& c) : game(g), id(i), checkpoint(c) {
+Level::Level(Game* g, LevelID i, const Checkpoint& c) : game(g), id(i), checkpoint(c) {
     init();
 }
 
@@ -65,8 +65,8 @@ void Level::initCamera() {
 void Level::initScenery() {
     static const Data* gameData = game->getData();
 
-    uint8_t backgroundID = Data::getLevelBackgroundID(data);
-    uint8_t groundID = Data::getLevelGroundID(data);
+    BackgroundID backgroundID = Data::getLevelBackgroundID(data);
+    GroundID groundID = Data::getLevelGroundID(data);
 
     scenery = new Scenery(game, backgroundID, groundID);
 }
@@ -156,7 +156,8 @@ void Level::initTriggerBuffers() {
 
 void Level::initItems() {
     updateBlocksBuffer();
-    updateTriggersBuffer(); // temp => simulate trigger
+    updateTriggersBuffer();
+    simulateTriggers(checkpoint.translate.x);
 }
 
 void Level::initPlayer() {
@@ -173,9 +174,9 @@ void Level::initStartingDelay() {
 
     uint32_t duration = gameData->getStartingLevelDelayDuration() + save->getTransitionDuration() * 0.5f;  
 
-    startingDelayID = engine->delay(duration, [this]() {
+    startingDelay = engine->createDelay(duration, [this]() {
         newAttempt();
-        startingDelayID = H2DE_INVALID_DELAY_ID;
+        startingDelay = nullptr;
     }, true);
 }
 
@@ -211,16 +212,16 @@ void Level::destroyPlayer() {
 void Level::destroyStartingDelay() {
     static H2DE_Engine* engine = game->getEngine();
 
-    if (startingDelayID == H2DE_INVALID_DELAY_ID) {
-        engine->stopDelay(startingDelayID, false);
+    if (startingDelay != nullptr) {
+        startingDelay->stop(false);
     }
 }
 
 void Level::destroyRespawningDelay() {
     static H2DE_Engine* engine = game->getEngine();
 
-    if (respawningDelayID == H2DE_INVALID_DELAY_ID) {
-        engine->stopDelay(respawningDelayID, false);
+    if (respawningDelay != nullptr) {
+        respawningDelay->stop(false);
     }
 }
 
@@ -249,6 +250,74 @@ void Level::close(const std::function<void()>& callback) {
     });
 }
 
+void Level::simulateTriggers(float translateX) {
+    // static const Data* gameData = game->getData();
+    // static const uint16_t FPS = game->getEngine()->getFPS();
+    // static const float speedVelocityX = gameData->getSpeedVelocityX(1); // temp => 1 : good luck
+
+    // std::optional<Level::TriggerBuffer> lastBackgroundColorTrigger = std::nullopt;
+    // std::optional<Level::TriggerBuffer> lastGroundColorTrigger = std::nullopt;
+    // std::optional<Level::TriggerBuffer> lastLineColorTrigger = std::nullopt;
+
+    // for (const Level::TriggerBuffer& triggerBuffer : triggersBuffer) {
+
+    //     if (triggerBuffer.itemData.translate.x >= translateX) {
+    //         break;
+    //     }
+
+    //     switch (gameData->getTriggerBuffer(triggerBuffer.itemData.id).type) {
+    //         case TRIGGER_TYPE_BACKGROUND_COLOR: lastBackgroundColorTrigger = triggerBuffer; break;
+    //         case TRIGGER_TYPE_GROUND_COLOR: lastGroundColorTrigger = triggerBuffer; break;
+    //         case TRIGGER_TYPE_LINE_COLOR: lastLineColorTrigger = triggerBuffer; break;
+    //         default: break;
+    //     }
+    // }
+
+    // if (lastBackgroundColorTrigger.has_value()) {
+
+    //     const Level::TriggerBuffer& triggerBuffer = lastBackgroundColorTrigger.value();
+
+    //     if (triggerBuffer.triggerData.duration.has_value()) {
+
+    //         float xDiff = translateX - triggerBuffer.itemData.translate.x;
+
+    //         float totalTriggerBlockDuration = triggerBuffer.triggerData.duration.value() * 0.001f * speedVelocityX * FPS;
+    //         float blockDurationFromStartOffset = totalTriggerBlockDuration - xDiff;
+
+
+    //         Trigger* trigger = new Trigger(game, this, triggerBuffer.itemData, triggerBuffer.triggerData);
+    //         items.push_back(trigger);
+    //         triggers.push_back(trigger);
+
+    //         trigger->trigger(blockDurationFromStartOffset / totalTriggerBlockDuration);
+    //     }
+    // }
+
+
+
+    // for (Trigger* trigger : reversedTriggers) {
+
+    //     float xDiff = translateX - trigger->getTranslate().x;
+
+    //     std::cout << trigger->getTranslate().x << std::endl;
+        
+    //     if (xDiff > 0.0f) {
+    //         break;
+    //     }
+
+    //     const std::optional<uint32_t>& triggerDuration = trigger->getDuration();
+    //     if (!triggerDuration.has_value()) {
+    //         continue;
+    //     }
+
+    //     float totalTriggerBlockDuration = triggerDuration.value() * 0.001f * speedVelocityX * FPS;
+    //     float blockDurationFromStartOffset = totalTriggerBlockDuration - xDiff;
+
+    //     std::cout << "simulate" << std::endl;
+    //     trigger->trigger(blockDurationFromStartOffset / totalTriggerBlockDuration);
+    // }
+}
+
 void Level::newAttempt() {
     static H2DE_Audio* audio = game->getEngine()->getAudio();
 
@@ -267,7 +336,7 @@ void Level::newAttempt() {
     audio->playSong(Data::getLevelSong(data), 0, true);
 
     attempts++;
-    std::cout << "Attempt " << attempts << std::endl;
+    H2DE::print("Attempt " + std::to_string(attempts));
 }
 
 void Level::playerDied() {
@@ -275,25 +344,25 @@ void Level::playerDied() {
     
     stopSong();
 
-    respawningDelayID = engine->delay(1000, [this]() {
+    respawningDelay = engine->createDelay(1000, [this]() {
         newAttempt();
-        respawningDelayID = H2DE_INVALID_DELAY_ID;
+        respawningDelay = nullptr;
     }, true);
 }
 
 // UPDATE
 void Level::update() {
-    bool inStartingDelay = (startingDelayID != H2DE_INVALID_DELAY_ID);
+    bool inStartingDelay = (startingDelay != nullptr);
     if (inStartingDelay) {
         return;
     }
-
-    updateItemsBuffers();
-    updateItemVector();
     
     updatePlayer();
     updateCamera();
     updateScenery();
+
+    updateItemsBuffers();
+    updateItemVector();
 }
 
 // -- buffers
@@ -308,17 +377,17 @@ void Level::updateBlocksBuffer() {
 
     const float maxCamX = camera->getWorldRect().getMaxX();
 
-    for (int i = blockBufferIndex; i < blocksBuffer.size(); i++) {
-        const Level::BlockBuffer& buffer = blocksBuffer[i];
+    while (blockBufferIndex < blocksBuffer.size()) {
+        const Level::BlockBuffer& buffer = blocksBuffer[blockBufferIndex];
 
         if (buffer.itemData.translate.x - cameraItemPadding > maxCamX) {
-            blockBufferIndex = i;
             return;
         }
 
         Block* block = new Block(game, this, buffer.itemData, buffer.blockData);
         items.push_back(block);
         blocks.push_back(block);
+        blockBufferIndex++;
     }
 }
 
@@ -328,17 +397,17 @@ void Level::updateTriggersBuffer() {
 
     const float maxCamX = camera->getWorldRect().getMaxX();
 
-    for (int i = triggerBufferIndex; i < triggersBuffer.size(); i++) {
-        const Level::TriggerBuffer& buffer = triggersBuffer[i];
+    while (triggerBufferIndex < triggersBuffer.size()) {
+        const Level::TriggerBuffer& buffer = triggersBuffer[triggerBufferIndex];
 
         if (buffer.itemData.translate.x - cameraItemPadding > maxCamX) {
-            triggerBufferIndex = i;
-            return;
+            break;
         }
 
         Trigger* trigger = new Trigger(game, this, buffer.itemData, buffer.triggerData);
         items.push_back(trigger);
         triggers.push_back(trigger);
+        triggerBufferIndex++;
     }
 }
 

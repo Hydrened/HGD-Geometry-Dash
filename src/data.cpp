@@ -1,11 +1,14 @@
 #include "data.h"
 
+#include <sstream>
+
 // INIT
 Data::Data(Game* g) : game(g) {
     initMenuObjects();
     initModalBuffers();
     initIconSurfacesBuffers();
     initBlockBuffers();
+    initTriggerBuffers();
     initPhysics();
 }
 
@@ -35,6 +38,7 @@ const H2DE_Hitbox Data::makeHitbox(const H2DE_Scale& scale, const H2DE_ColorRGB&
 
 // -- menu objects
 void Data::initMenuObjects() {
+    initLoadingScreenMenuObjects();
     initMainMenuObjects();
     initLevelMenuObjects();
     initIconMenuObjects();
@@ -64,6 +68,14 @@ void Data::initMenuButtonObject(MenuID id, const H2DE_Translate& translate, cons
     objectBuffer.button = getDefaultButtonObjectData(onMouseUp);
 
     menuObjects[id].push_back(objectBuffer);
+}
+
+// -- -- loading screen menu
+void Data::initLoadingScreenMenuObjects() {
+    menuObjects[MENU_ID_LOADING_SCREEN_MENU] = {};
+
+    initMenuBasicObject(MENU_ID_LOADING_SCREEN_MENU, loadingScreenRobtopLogoTranslate, "loading-screen-robtop-logo", 0);
+    initMenuBasicObject(MENU_ID_LOADING_SCREEN_MENU, loadingScreenGameTitleTranslate, "loading-screen-game-title", 0);
 }
 
 // -- -- main menu
@@ -284,6 +296,23 @@ const H2DE_Hitbox Data::initBlockBufferHitbox(const json& blockData, BlockType t
     return res;
 }
 
+// -- triggers
+void Data::initTriggerBuffers() {
+    json triggers = H2DE_Json::read("data/items/triggers.gdd");
+
+    for (const json& trigger : triggers) {
+        if (!trigger.contains("id")) {
+            throw std::runtime_error("Trigger has no id");
+        }
+
+        if (!trigger.contains("type")) {
+            throw std::runtime_error("Trigger has no type");
+        }
+
+        triggerBuffers[trigger["id"]] = { Data::getTriggerType(trigger) };
+    }
+}
+
 // -- physics
 void Data::initPhysics() {
     initGravities();
@@ -431,7 +460,7 @@ const Data::SurfaceBuffer Data::getTileSurfaceBuffer(Data::SurfaceBuffer& surfac
     return surfaceBuffer;
 }
 
-const Data::SurfaceBuffer Data::getBackgroundTileSurfaceBuffer(uint8_t backgroundID, float translateX) const {
+const Data::SurfaceBuffer Data::getBackgroundTileSurfaceBuffer(BackgroundID backgroundID, float translateX) const {
     Data::SurfaceBuffer res = Data::SurfaceBuffer();
     res.surface = backgroundTile_surfaceData;
     res.texture = backgroundTile_textureData;
@@ -439,7 +468,7 @@ const Data::SurfaceBuffer Data::getBackgroundTileSurfaceBuffer(uint8_t backgroun
     return getTileSurfaceBuffer(res, backgroundID, translateX);
 }
 
-const Data::SurfaceBuffer Data::getGroundTileSurfaceBuffer(uint8_t groundID, float translateX) const {
+const Data::SurfaceBuffer Data::getGroundTileSurfaceBuffer(GroundID groundID, float translateX) const {
     Data::SurfaceBuffer res = Data::SurfaceBuffer();
     res.surface = groundTile_surfaceData;
     res.texture = groundTile_textureData;
@@ -474,6 +503,15 @@ const Data::BlockBuffer& Data::getBlockBuffer(const std::string& id) const {
     return it->second;
 }
 
+const Data::TriggerBuffer& Data::getTriggerBuffer(const std::string& id) const {
+    auto it = triggerBuffers.find(id);
+    if (it == triggerBuffers.end()) {
+        throw std::runtime_error("Could not find the trigger id \"" + id + "\"");
+    }
+
+    return it->second;
+}
+
 const std::vector<Data::IconSurfaceBuffer> Data::getIconSurfacesBuffer(PlayerGamemode gamemode, PlayerSize size, const PlayerIcons& playerIcons, bool gray) const {
     getIconSurfacesBufferCheckID(gamemode, size, playerIcons);
     const std::vector<Data::IconSurfaceBuffer> allSurfaces = getIconSurfacesBufferGetAllSurfaces(gamemode, size, playerIcons, gray);
@@ -489,7 +527,7 @@ void Data::getIconSurfacesBufferCheckID(PlayerGamemode gamemode, PlayerSize size
     bool isCube = (gamemode == PLAYER_GAMEMODE_CUBE);
     bool isMini = (size == PLAYER_SIZE_MINI);
 
-    Icon_ID mainIconID = (isCube) ? playerIcons.cubeID : playerIcons.shipID;
+    IconID mainIconID = (isCube) ? playerIcons.cubeID : playerIcons.shipID;
 
     if (isCube && isMini) {
         mainIconID = 0;
@@ -506,7 +544,7 @@ const std::vector<Data::IconSurfaceBuffer> Data::getIconSurfacesBufferGetAllSurf
     bool isCube = (gamemode == PLAYER_GAMEMODE_CUBE);
     bool isMini = (size == PLAYER_SIZE_MINI);
 
-    Icon_ID mainIconID = (isCube) ? playerIcons.cubeID : playerIcons.shipID;
+    IconID mainIconID = (isCube) ? playerIcons.cubeID : playerIcons.shipID;
 
     if (isCube && isMini) {
         mainIconID = 0;
@@ -647,7 +685,7 @@ const H2DE_ColorRGB& Data::getHitboxColor(const std::string& color) const {
     return hitboxesColors[index];
 }
 
-const H2DE_ColorRGB& Data::getIconColor(Color_ID id) const {
+const H2DE_ColorRGB& Data::getIconColor(ColorID id) const {
     if (id >= iconsColors.size()) {
         throw std::runtime_error("Could not find color id \"" + std::to_string(static_cast<int>(id)) + "\"");    
     }
@@ -659,29 +697,38 @@ const H2DE_ColorRGB& Data::getIconColor(Color_ID id) const {
 const H2DE_ButtonObjectData Data::getDefaultButtonObjectData(const std::function<void()>& onMouseUp) const {
     H2DE_ButtonObjectData buttonData = H2DE_ButtonObjectData();
 
-    buttonData.onMouseDown = [this](H2DE_ButtonObject* button, H2DE_TimelineID& timelineID) {
-        button->stopTimeline();
-
-        timelineID = button->setScale(H2DE_Scale{ 1.0f, 1.0f } * buttonPressedScaleMultiplier, 350, H2DE_EASING_BOUNCE_OUT, [button, &timelineID]() {
-            timelineID = H2DE_INVALID_TIMELINE_ID;
+    buttonData.onMouseDown = [this](H2DE_ButtonEventData& data) {
+        if (data.timeline != nullptr) {
+            data.timeline->stop(false);
+            data.timeline = nullptr;
+        }
+        
+        data.timeline = data.button->setScale(H2DE_Scale{ 1.0f, 1.0f } * buttonPressedScaleMultiplier, 350, H2DE_EASING_BOUNCE_OUT, [&data]() {
+            data.timeline = nullptr;
         }, false);
     };
 
-    buttonData.onMouseUp = [onMouseUp](H2DE_ButtonObject* button, H2DE_TimelineID& timelineID) {
-        button->stopTimeline();
+    buttonData.onMouseUp = [onMouseUp](H2DE_ButtonEventData& data) {
+        if (data.timeline != nullptr) {
+            data.timeline->stop(false);
+            data.timeline = nullptr;
+        }
 
-        button->setScale({ 1.0f, 1.0f });
+        data.button->setScale({ 1.0f, 1.0f });
 
         if (onMouseUp) {
             onMouseUp();
         }
     };
 
-    buttonData.onBlur = [](H2DE_ButtonObject* button, H2DE_TimelineID& timelineID) {
-        button->stopTimeline();
+    buttonData.onBlur = [](H2DE_ButtonEventData& data) {
+        if (data.timeline != nullptr) {
+            data.timeline->stop(false);
+            data.timeline = nullptr;
+        }
 
-        timelineID = button->setScale({ 1.0f, 1.0f }, 500, H2DE_EASING_BOUNCE_OUT, [button, &timelineID]() {
-            timelineID = H2DE_INVALID_TIMELINE_ID;
+        data.timeline = data.button->setScale({ 1.0f, 1.0f }, 500, H2DE_EASING_BOUNCE_OUT, [&data]() {
+            data.timeline = nullptr;
         }, false);
     };
 
@@ -702,7 +749,7 @@ const PlayerIcons Data::getRandomPlayerIcons() const {
 
 const std::tuple<Speed, PlayerGamemode, PlayerSize> Data::getRandomPlayerState() const {
     return {
-        1, // H2DE::randomIntegerInRange(1, speeds.size() - 1) en 1.7
+        1, // H2DE::randomIntegerInRange(1, speeds.size() - 1) // en 1.7
         static_cast<PlayerGamemode>(H2DE::randomIntegerInRange(0, gamemodes.size() - 1)),
         PLAYER_SIZE_NORMAL // static_cast<PlayerSize>(H2DE::randomIntegerInRange(0, sizes.size() - 1)) // en 1.4
     };

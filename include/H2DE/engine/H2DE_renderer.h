@@ -1,8 +1,9 @@
-#ifndef H2DE_RENDERER_H
-#define H2DE_RENDERER_H
+#pragma once
 
 #include <H2DE/engine/H2DE_engine.h>
 class H2DE_Engine;
+class H2DE_Surface;
+class H2DE_Border;
 
 class H2DE_Renderer {
 private:
@@ -52,27 +53,36 @@ private:
     void renderTextureRenderTexture(const H2DE_Object* object, H2DE_Surface* surface, SDL_Texture* texture) const;
 
     void renderColor(const H2DE_Object* object, H2DE_Surface* surface) const;
+    void renderBorder(const H2DE_Object* object, H2DE_Surface* surface) const;
+    void renderRectangle(const H2DE_Object* object, H2DE_Border* border) const;
+    void renderCircle(const H2DE_Object* object, H2DE_Border* border) const;
 
     SDL_Rect renderSurfaceGetWorldDestRect(const H2DE_Object* object, H2DE_Surface* surface) const;
     float renderSurfaceGetWorldRotation(const H2DE_Object* object, H2DE_Surface* surface) const noexcept;
     SDL_Point renderSurfaceGetLocalPivot(const H2DE_Object* object, H2DE_Surface* surface) const;
     static SDL_RendererFlip renderSurfaceGetWorldFlip(const H2DE_Object* object, H2DE_Surface* surface) noexcept;
-    static std::optional<SDL_Rect> renderSurfaceGetPossibleSrcRect(H2DE_Surface* surface);
+    std::optional<SDL_Rect> renderSurfaceGetPossibleSrcRect(const H2DE_Object* object, H2DE_Surface* surface) const;
 
     void renderObjectsHitboxes();
     void renderHitboxes(const H2DE_Object* object);
     void renderHitbox(const H2DE_LevelRect& world_hitboxRect, const H2DE_ColorRGB& color, bool absolute);
 
+    void renderPixelRectangle(const H2DE_Object* object, const std::array<H2DE_PixelPos, 4>& corners, const H2DE_ColorRGB& color, bool filled) const;
+    void renderPixelCircle(const H2DE_PixelPos& pos, int radiusW, int radiusH, const H2DE_ColorRGB& color, bool filled) const;
+
     const float getBlockSize(float width) const;
     const float getGameBlockSize() const;
     const float getInterfaceBlockSize() const;
+
+    const std::array<H2DE_PixelPos, 4> getCorners(const H2DE_Object* object, H2DE_Surface* surface) const;
+
     SDL_Texture* getTexture(const std::string& textureName) const;
     bool isSurfaceVisible(const H2DE_Surface* surface) const;
     static SDL_ScaleMode getScaleMode(H2DE_ScaleMode scaleMode) noexcept;
     static SDL_BlendMode getBlendMode(H2DE_BlendMode blendMode) noexcept;
 
     static constexpr float getOpacityBlend(uint8_t opacity) noexcept {
-        return (static_cast<float>(opacity) / static_cast<float>(H2DE_UINT8_MAX));
+        return (static_cast<float>(opacity) / static_cast<float>(H2DE_OPACITY_MAX));
     }
 
     H2DE_SubPixelPos levelToSubPixelPos(const H2DE_LevelRect& world_rect, bool absolute) const;
@@ -86,5 +96,3 @@ private:
     friend class H2DE_Engine;
     friend class H2DE_AssetLoaderManager;
 };
-
-#endif

@@ -1,5 +1,4 @@
-#ifndef EVENTS_H
-#define EVENTS_H
+#pragma once
 
 #include "game.h"
 class Game;
@@ -26,10 +25,16 @@ private:
     void handle_button_up(Uint8 button);
     void handle_button_up_level(Uint8 button);
 
-    inline Menu* getMenu() const { return game->menu; }
-    inline Level* getLevel() const { return game->level; }
-    inline GameState getGameState() const { return game->state; }
-    inline bool isInTransition() const { return game->inTransition; }
+    inline Menu* getMenu() const {
+        return game->menu;
+    }
+    inline Level* getLevel() const {
+        return game->level;
+    }
+    inline GameState getGameState() const {
+        return game->state;
+    }
+    inline bool isInTransition() const {
+        return game->inTransition;
+    }
 };
-
-#endif

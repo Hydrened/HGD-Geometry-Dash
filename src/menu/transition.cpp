@@ -11,6 +11,7 @@ Transition::Transition(Game* g, TransitionState s, const std::function<void()>& 
         if (completed) {
             completed();
         }
+
         game->inTransition = false;
         delete this;
         return;
@@ -19,14 +20,14 @@ Transition::Transition(Game* g, TransitionState s, const std::function<void()>& 
     game->inTransition = true;
 
     H2DE_ObjectData od = H2DE_ObjectData();
-    od.transform.scale = engine->getCamera()->getInterfaceScale();
+    od.transform.scale = { 1.1f, 1.1f };
     od.index = H2DE_INDEX_MAX;
     od.absolute = true;
 
     H2DE_BasicObject* transitionObject = engine->createObject<H2DE_BasicObject>(od);
 
     H2DE_SurfaceData sd = H2DE_SurfaceData();
-    sd.transform.scale = od.transform.scale;
+    sd.transform.scale = engine->getCamera()->getInterfaceScale();
 
     const uint8_t defaultTransitionOpacity = (state == TRANSITION_STATE_IN) ? 255 : 0;
     const uint8_t finalTransitionOpacity = (state == TRANSITION_STATE_IN) ? 0 : 255;
@@ -43,7 +44,7 @@ Transition::Transition(Game* g, TransitionState s, const std::function<void()>& 
 
         engine->destroyObject(transitionObject);
         game->inTransition = false;
-        
+
         delete this;
     }, false);
 }

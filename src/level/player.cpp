@@ -32,7 +32,7 @@ void Player::createIcons() {
     miniShip = createIcon(PLAYER_GAMEMODE_SHIP, PLAYER_SIZE_MINI, icons.shipID);
 }
 
-H2DE_BasicObject* Player::createIcon(PlayerGamemode gamemode, PlayerSize size, Icon_ID id) {
+H2DE_BasicObject* Player::createIcon(PlayerGamemode gamemode, PlayerSize size, IconID id) {
     static H2DE_Engine* engine = game->getEngine();
     static const Data* gameData = game->getData();
     static const float& miniPlayerRatio = gameData->getMiniPlayerRatio();
@@ -126,8 +126,8 @@ void Player::updateGravity() {
     const float& g = gameData->getGravity(gamemode, size);
     const float& maxGravity = gameData->getMaxGravity(gamemode, size);
 
-    velocity.y -= g * gravity;
-    velocity.y = std::clamp(velocity.y, -maxGravity, maxGravity);
+    velocity.y -= g * static_cast<float>(gravity);
+    velocity.y = H2DE::clamp(velocity.y, -maxGravity, maxGravity);
 }
 
 void Player::updateSpecialBlocksCollision() {
@@ -261,8 +261,34 @@ void Player::updateBlockCollisions_hitboxCollided_solid(const H2DE_LevelRect& pl
 }
 
 void Player::updateTriggerCollisions() {
+    static const H2DE_Scale& triggerScale = game->getData()->getTriggerScale();
+
     if (dead) {
         return;
+    }
+
+    const H2DE_LevelRect redHitboxRect = getCurrentRedHitboxWorldRect();
+    const float maxTranslateX = redHitboxRect.getMaxX();
+
+    for (Trigger* trigger : level->getTriggers()) {
+
+        if (trigger->isTriggered()) {
+            continue;
+        }
+
+        const H2DE_Translate& triggerTranslate = trigger->getTranslate();
+
+        bool isTouchTrigger = trigger->isTouchTrigger();
+        bool passedTrigger = (maxTranslateX > triggerTranslate.x);
+
+        if (passedTrigger && !isTouchTrigger) {
+            trigger->trigger();
+
+        } else if (isTouchTrigger) {
+            if (triggerTranslate.makeRect(triggerScale).collides(redHitboxRect)) {
+                trigger->trigger();
+            }
+        }
     }
 }
 
@@ -350,7 +376,7 @@ void Player::click() {
     switch (gamemode) {
         case PLAYER_GAMEMODE_CUBE:
             if (isOnSolid()) {
-                velocity.y = click * gravity;
+                velocity.y = click * static_cast<float>(gravity);
             }
             break;
 

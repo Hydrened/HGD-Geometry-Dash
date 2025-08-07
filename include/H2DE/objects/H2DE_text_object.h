@@ -1,5 +1,4 @@
-#ifndef H2DE_TEXT_OBJECT_H
-#define H2DE_TEXT_OBJECT_H
+#pragma once
 
 /**
  * @file H2DE_text_object.h
@@ -174,9 +173,9 @@ public:
      * @param easing Easing function to apply for interpolation.
      * @param completed Callback function called once the animation finishes.
      * @param pauseSensitive If true, animation pauses when the game is paused.
-     * @return H2DE_TimelineID ID of the timeline controlling this animation.
+     * @return Timeline controlling this animation.
      */
-    H2DE_TimelineID setContainer(const H2DE_Scale& container, H2DE_TimelineID duration, H2DE_Easing easing, const std::function<void()>& completed, bool pauseSensitive = true);
+    H2DE_Timeline* setContainer(const H2DE_Scale& container, uint32_t duration, H2DE_Easing easing = H2DE_EASING_LINEAR, const std::function<void()>& completed = nullptr, bool pauseSensitive = true);
     /**
      * @brief Animate the font size change over time.
      * 
@@ -187,9 +186,9 @@ public:
      * @param easing Easing function to apply for interpolation.
      * @param completed Callback function called once the animation finishes.
      * @param pauseSensitive If true, animation pauses when the game is paused.
-     * @return H2DE_TimelineID ID of the timeline controlling this animation.
+     * @return Timeline controlling this animation.
      */
-    H2DE_TimelineID setFontSize(const H2DE_Scale& fontSize, H2DE_TimelineID duration, H2DE_Easing easing, const std::function<void()>& completed, bool pauseSensitive = true);
+    H2DE_Timeline* setFontSize(const H2DE_Scale& fontSize, uint32_t duration, H2DE_Easing easing = H2DE_EASING_LINEAR, const std::function<void()>& completed = nullptr, bool pauseSensitive = true);
     /**
      * @brief Animate the spacing change over time.
      * 
@@ -200,9 +199,9 @@ public:
      * @param easing Easing function to apply for interpolation.
      * @param completed Callback function called once the animation finishes.
      * @param pauseSensitive If true, animation pauses when the game is paused.
-     * @return H2DE_TimelineID ID of the timeline controlling this animation.
+     * @return Timeline controlling this animation.
      */
-    H2DE_TimelineID setSpacing(const H2DE_Scale& spacing, H2DE_TimelineID duration, H2DE_Easing easing, const std::function<void()>& completed, bool pauseSensitive = true);
+    H2DE_Timeline* setSpacing(const H2DE_Scale& spacing, uint32_t duration, H2DE_Easing easing = H2DE_EASING_LINEAR, const std::function<void()>& completed = nullptr, bool pauseSensitive = true);
 
     /**
      * @brief Animate the color change over time.
@@ -214,9 +213,9 @@ public:
      * @param easing Easing function to apply for interpolation.
      * @param completed Callback function called once the animation finishes.
      * @param pauseSensitive If true, animation pauses when the game is paused.
-     * @return H2DE_TimelineID ID of the timeline controlling this animation.
+     * @return Timeline controlling this animation.
      */
-    H2DE_TimelineID setColor(const H2DE_ColorRGB& color, H2DE_TimelineID duration, H2DE_Easing easing, const std::function<void()>& completed, bool pauseSensitive = true);
+    H2DE_Timeline* setColor(const H2DE_ColorRGB& color, uint32_t duration, H2DE_Easing easing = H2DE_EASING_LINEAR, const std::function<void()>& completed = nullptr, bool pauseSensitive = true);
 
     using H2DE_DataType = H2DE_TextObjectData;
 
@@ -244,5 +243,3 @@ private:
         return (textObjectData.text.text == ""); 
     }
 };
-
-#endif

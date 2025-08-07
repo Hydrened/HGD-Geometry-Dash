@@ -1,3 +1,10 @@
+## HGD-2.0.3
+#### ADDED
+- loading screen
+#### FIXED
+- exiting level crash
+- last trigger duplication
+
 ## HGD-2.0.2
 #### ADDED
 - kill icons on main menu

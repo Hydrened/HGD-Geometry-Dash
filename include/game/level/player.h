@@ -1,5 +1,4 @@
-#ifndef PLAYER_H
-#define PLAYER_H
+#pragma once
 
 #include "utils.h"
 #include "data.h"
@@ -19,11 +18,19 @@ public:
     void kill();
     void respawn();
 
-    constexpr const H2DE_Translate getTranslate() const { return normalCube->getTranslate(); }
+    constexpr const H2DE_Translate getTranslate() const {
+        return normalCube->getTranslate();
+    }
     const Speed getSpeed() const;
-    inline H2DE_LevelRect getCurrentRedHitboxWorldRect() const { return getCurrentHitboxWorldRect("red"); }
-    inline H2DE_LevelRect getCurrentBlueHitboxWorldRect() const { return getCurrentHitboxWorldRect("blue"); }
-    constexpr bool isDead() const { return dead; }
+    inline H2DE_LevelRect getCurrentRedHitboxWorldRect() const {
+        return getCurrentHitboxWorldRect("red");
+    }
+    inline H2DE_LevelRect getCurrentBlueHitboxWorldRect() const {
+        return getCurrentHitboxWorldRect("blue");
+    }
+    constexpr bool isDead() const {
+        return dead;
+    }
 
     inline void setVelocityX(float vx) { velocity.x = vx; }
     inline void setMouseDown(bool state) { mouseDown = state; }
@@ -54,7 +61,7 @@ private:
     void initState();
 
     void createIcons();
-    H2DE_BasicObject* createIcon(PlayerGamemode gamemode, PlayerSize size, Icon_ID id);
+    H2DE_BasicObject* createIcon(PlayerGamemode gamemode, PlayerSize size, IconID id);
     static void applySurfacesOnIcon(H2DE_BasicObject* icon, const std::vector<Data::IconSurfaceBuffer>& iconSurfacesBuffer);
     void applyHitboxesOnIcon(H2DE_BasicObject* icon, const PlayerHitbox& hitboxes) const;
 
@@ -87,7 +94,9 @@ private:
 
     H2DE_BasicObject* getCurrentGamemodeObject() const;
     H2DE_LevelRect getCurrentHitboxWorldRect(const std::string& color) const;
-    inline const std::array<H2DE_BasicObject*, 4> getObjects() const { return { normalCube, miniCube, normalShip, miniShip }; }
+    inline const std::array<H2DE_BasicObject*, 4> getObjects() const {
+        return { normalCube, miniCube, normalShip, miniShip };
+    }
 
     void setTranslate(const H2DE_Translate& translate);
     void setGamemode(PlayerGamemode gamemode, int yEntry);
@@ -95,5 +104,3 @@ private:
     void setGravity(PlayerGravity gravity);
     void setRotation(float rotation);
 };
-
-#endif

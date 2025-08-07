@@ -1,5 +1,4 @@
-#ifndef MENU_H
-#define MENU_H
+#pragma once
 
 #include "data.h"
 class Game;
@@ -18,9 +17,15 @@ public:
     void openModal(ModalID id);
     void closeModal();
 
-    constexpr const MenuID getId() const { return id; }
-    inline Modal* getModal() const { return modal; }
-    inline bool isAModalOpened() const { return (modal != nullptr); }
+    constexpr const MenuID getId() const {
+        return id;
+    }
+    inline Modal* getModal() const {
+        return modal;
+    }
+    inline bool isAModalOpened() const {
+        return (modal != nullptr);
+    }
 
 protected:
     Game* game;
@@ -35,6 +40,7 @@ private:
 
     std::vector<H2DE_Object*> objects = {};
 
+    void initTransition();
     void initSong();
     void initObjects();
     void createObject(const Data::MenuObjectBuffer& objectBuffer);
@@ -48,8 +54,7 @@ private:
     void disableButtons();
 };
 
+#include "menu/menus/loading_screen_menu.h"
 #include "menu/menus/main_menu.h"
 #include "menu/menus/level_menu.h"
 #include "menu/menus/icon_menu.h"
-
-#endif

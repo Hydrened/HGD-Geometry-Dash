@@ -1,5 +1,4 @@
-#ifndef H2DE_BUTTON_OBJECT_H
-#define H2DE_BUTTON_OBJECT_H
+#pragma once
 
 /**
  * @file H2DE_button_object.h
@@ -101,17 +100,6 @@ public:
     void mouseBlur();
 
     /**
-     * @brief Stop the button's timeline animation.
-     * 
-     * This function stops the currently running timeline associated with the button.
-     * The timeline ID is provided in the button events to allow animation control
-     * when interacting with the button (e.g. press, hover).
-     * 
-     * @return true if the timeline was successfully stopped, false otherwise.
-     */
-    bool stopTimeline();
-
-    /**
      * @brief Get the data specific to the button object.
      * 
      * Returns a copy of the internal `H2DE_ButtonObjectData` structure
@@ -121,6 +109,17 @@ public:
      */
     inline H2DE_ButtonObjectData getButtonData() const {
         return buttonObjectData;
+    }
+    /**
+     * @brief Get the mouse button(s) configured to trigger this button.
+     * 
+     * Returns the `H2DE_MouseButton` value that defines which mouse button(s)
+     * can interact with this button (e.g., LEFT, RIGHT, MIDDLE, or combinations).
+     * 
+     * @return The configured mouse button(s) for this button.
+     */
+    constexpr H2DE_MouseButton getMouseButton() const {
+        return buttonObjectData.mouseButton;
     }
     /**
      * @brief Check if the button is sensitive to the game's pause state.
@@ -187,14 +186,24 @@ public:
     }
 
     /**
+     * @brief Set the mouse button(s) that can trigger this button.
+     * 
+     * Allows you to define which mouse button(s) should be detected
+     * for interaction with this button (e.g., LEFT, RIGHT, MIDDLE, or combined).
+     * 
+     * @param mouseButton The mouse button(s) to use for triggering the button.
+     */
+    inline void setMouseButton(H2DE_MouseButton mouseButton) noexcept {
+        buttonObjectData.mouseButton = mouseButton;
+    }
+    /**
      * @brief Set the callback function triggered when the button is pressed down.
      * 
-     * The function signature should be: void(H2DE_ButtonObject*, H2DE_TimelineID&).
      * This callback is called when the mouse button goes down on the button.
      * 
      * @param onMouseDown The function to call on mouse down event.
      */
-    inline void setMouseDown(const std::function<void(H2DE_ButtonObject*, H2DE_TimelineID&)>& onMouseDown) noexcept {
+    inline void setMouseDown(const std::function<void(H2DE_ButtonEventData)>& onMouseDown) noexcept {
         buttonObjectData.onMouseDown = onMouseDown;
     }
     /**
@@ -204,7 +213,7 @@ public:
      * 
      * @param onMouseUp The function to call on mouse up event.
      */
-    inline void setMouseUp(const std::function<void(H2DE_ButtonObject*, H2DE_TimelineID&)>& onMouseUp) noexcept {
+    inline void setMouseUp(const std::function<void(H2DE_ButtonEventData)>& onMouseUp) noexcept {
         buttonObjectData.onMouseUp = onMouseUp;
     }
     /**
@@ -214,7 +223,7 @@ public:
      * 
      * @param onHover The function to call on mouse hover event.
      */
-    inline void setMouseHover(const std::function<void(H2DE_ButtonObject*, H2DE_TimelineID&)>& onHover) noexcept {
+    inline void setMouseHover(const std::function<void(H2DE_ButtonEventData)>& onHover) noexcept {
         buttonObjectData.onHover = onHover;
     }
     /**
@@ -224,7 +233,7 @@ public:
      * 
      * @param onBlur The function to call on mouse blur event.
      */
-    inline void setMouseBlur(const std::function<void(H2DE_ButtonObject*, H2DE_TimelineID&)>& onBlur) noexcept {
+    inline void setMouseBlur(const std::function<void(H2DE_ButtonEventData)>& onBlur) noexcept {
         buttonObjectData.onBlur = onBlur;
     }
     /**
@@ -248,9 +257,9 @@ private:
 
     H2DE_TextObject* textObject = nullptr;
     std::unordered_map<std::string, H2DE_Surface*> surfaces = {};
+    H2DE_ButtonEventData eventData;
 
     bool disabled = false;
-    H2DE_TimelineID currentTimelineID = H2DE_INVALID_TIMELINE_ID;
 
     H2DE_ButtonObject(H2DE_Engine* engine, const H2DE_ObjectData& objectData, const H2DE_ButtonObjectData& buttonObjectData);
     ~H2DE_ButtonObject() override;
@@ -259,5 +268,3 @@ private:
     void refreshSurfaceBuffers() override;
     void refreshMaxRadius() override;
 };
-
-#endif

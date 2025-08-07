@@ -6,9 +6,18 @@
 
 // INIT
 Menu::Menu(Game* g, MenuID i) : game(g), id(i) {
-    Transition* transition = new Transition(game, TRANSITION_STATE_IN, nullptr);
+    initTransition();
     initSong();
     initObjects();
+}
+
+void Menu::initTransition() {
+    if (game->state == GAME_STATE_LOADING_SCREEN) {
+        game->inTransition = false;
+        return;
+    }
+
+    Transition* transition = new Transition(game, TRANSITION_STATE_IN, nullptr);
 }
 
 void Menu::setCameraTranslate(const H2DE_Translate& translate) {
@@ -19,7 +28,7 @@ void Menu::setCameraTranslate(const H2DE_Translate& translate) {
 void Menu::initSong() {
     static H2DE_Audio* audio = game->getEngine()->getAudio();
 
-    if (!audio->isSongPlaying()) {
+    if (!audio->isSongPlaying() && id != MENU_ID_LOADING_SCREEN_MENU) {
         audio->playSong("menu_loop.mp3", -1, false);
     }
 }

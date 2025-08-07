@@ -1,5 +1,4 @@
-#ifndef H2DE_SURFACE_TEXTURE_H
-#define H2DE_SURFACE_TEXTURE_H
+#pragma once
 
 /**
  * @file H2DE_texture.h
@@ -93,9 +92,9 @@ public:
      * @param easing Easing function to apply for interpolation.
      * @param completed Callback function called once the animation finishes.
      * @param pauseSensitive If true, animation pauses when the game is paused.
-     * @return H2DE_TimelineID ID of the timeline controlling this animation.
+     * @return Timeline controlling this animation.
      */
-    H2DE_TimelineID setColor(const H2DE_ColorRGB& color, H2DE_TimelineID duration, H2DE_Easing easing, const std::function<void()>& completed, bool pauseSensitive = true);
+    H2DE_Timeline* setColor(const H2DE_ColorRGB& color, uint32_t duration, H2DE_Easing easing = H2DE_EASING_LINEAR, const std::function<void()>& completed = nullptr, bool pauseSensitive = true);
 
     using H2DE_DataType = H2DE_TextureData;
     
@@ -105,12 +104,10 @@ public:
 private:
     H2DE_TextureData textureData;
 
-    H2DE_Texture(H2DE_Engine* engine, H2DE_Object* object, const H2DE_SurfaceData& surfaceData, const H2DE_TextureData& textureData) noexcept;
+    H2DE_Texture(H2DE_Engine* engine, H2DE_Object* object, const H2DE_SurfaceData& surfaceData, const H2DE_TextureData& textureData) noexcept : H2DE_Surface(engine, object, surfaceData), textureData(textureData) {};
     ~H2DE_Texture() override = default;
 
     inline bool isVisible() const noexcept override {
         return (!isHidden() && textureData.color.isVisible());
     }
 };
-
-#endif

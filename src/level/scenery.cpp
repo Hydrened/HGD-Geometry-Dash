@@ -1,7 +1,7 @@
 #include "level/scenery.h"
 
 // INIT
-Scenery::Scenery(Game* g, uint8_t bID, uint8_t gID) : game(g), backgroundID(bID), groundID(gID) {
+Scenery::Scenery(Game* g, BackgroundID bID, GroundID gID) : game(g), backgroundID(bID), groundID(gID) {
     initDefaultValues();
     initBackground();
     initGrounds();
@@ -98,6 +98,7 @@ H2DE_BasicObject* Scenery::createGroundHitbox(const H2DE_ObjectData& objectData)
 Scenery::~Scenery() {
     destroyBackground();
     destroyGrounds();
+    destroyTimelines();
 }
 
 void Scenery::destroyBackground() {
@@ -112,6 +113,13 @@ void Scenery::destroyGrounds() {
     for (H2DE_BasicObject* ground : groundsObjects) {
         engine->destroyObject(ground);
     }
+}
+
+void Scenery::destroyTimelines() {
+    stopTimeline(backgroundColorTimeline);
+    stopTimeline(botGroundColorTimeline);
+    stopTimeline(topGroundColorTimeline);
+    stopTimeline(lineColorTimeline);
 }
 
 // UPDATE
@@ -258,12 +266,12 @@ void Scenery::removeOutOfScreenTiles(H2DE_BasicObject* object, SceneryType type)
 }
 
 // ACTIONS
-void Scenery::stopTimeline(H2DE_TimelineID& id) {
+void Scenery::stopTimeline(H2DE_Timeline* timeline) {
     static H2DE_Engine* engine = game->getEngine();
 
-    if (id != H2DE_INVALID_TIMELINE_ID) {
-        engine->stopTimeline(id, false);
-        id = H2DE_INVALID_TIMELINE_ID;
+    if (timeline != nullptr) {
+        timeline->stop(false);
+        timeline = nullptr;
     }
 }
 
@@ -316,24 +324,24 @@ float Scenery::getLastTileTranslateX(const H2DE_BasicObject* object, SceneryType
 
 // SETTERS
 void Scenery::setBackgroundColor(const H2DE_ColorRGB& color, uint32_t duration, uint32_t start) {
-    stopTimeline(backgroundColorTimelineID);
-    backgroundColorTimelineID = setColor(displayedBackground, backgroundColor, color, duration, start, SCENERY_TYPE_BACKGROUND);
+    stopTimeline(backgroundColorTimeline);
+    backgroundColorTimeline = setColor(displayedBackground, backgroundColor, color, duration, start, SCENERY_TYPE_BACKGROUND);
 }
 
 void Scenery::setGroundColor(const H2DE_ColorRGB& color, uint32_t duration, uint32_t start) {
-    stopTimeline(botGroundColorTimelineID);
-    botGroundColorTimelineID = setColor(displayedBotGround, groundColor, color, duration, start, SCENERY_TYPE_GROUND);
+    stopTimeline(botGroundColorTimeline);
+    botGroundColorTimeline = setColor(displayedBotGround, groundColor, color, duration, start, SCENERY_TYPE_GROUND);
 
-    stopTimeline(topGroundColorTimelineID);
-    topGroundColorTimelineID = setColor(displayedTopGround, groundColor, color, duration, start, SCENERY_TYPE_GROUND);
+    stopTimeline(topGroundColorTimeline);
+    topGroundColorTimeline = setColor(displayedTopGround, groundColor, color, duration, start, SCENERY_TYPE_GROUND);
 }
 
 void Scenery::setLineColor(const H2DE_ColorRGB& color, uint32_t duration, uint32_t start) {
-    stopTimeline(botGroundColorTimelineID);
-    botGroundColorTimelineID = setColor(displayedBotGround, lineColor, color, duration, start, SCENERY_TYPE_LINE);
+    stopTimeline(botGroundColorTimeline);
+    botGroundColorTimeline = setColor(displayedBotGround, lineColor, color, duration, start, SCENERY_TYPE_LINE);
 
-    stopTimeline(topGroundColorTimelineID);
-    topGroundColorTimelineID = setColor(displayedTopGround, lineColor, color, duration, start, SCENERY_TYPE_LINE);
+    stopTimeline(topGroundColorTimeline);
+    topGroundColorTimeline = setColor(displayedTopGround, lineColor, color, duration, start, SCENERY_TYPE_LINE);
 }
 
 void Scenery::setColor(const H2DE_BasicObject* object, const H2DE_ColorRGB& color, SceneryType type) {
@@ -356,17 +364,42 @@ void Scenery::setColor(const H2DE_BasicObject* object, const H2DE_ColorRGB& colo
     }
 }
 
-H2DE_TimelineID Scenery::setColor(const H2DE_BasicObject* object, const H2DE_ColorRGB& defautlColor, const H2DE_ColorRGB& color, uint32_t duration, uint32_t start, SceneryType type) {
+H2DE_Timeline* Scenery::setColor(const H2DE_BasicObject* object, const H2DE_ColorRGB& defaultColor, const H2DE_ColorRGB& color, uint32_t duration, uint32_t start, SceneryType type) {
     static H2DE_Engine* engine = game->getEngine();
 
     if (duration == 0) {
         setColor(object, color, type);
-        return H2DE_INVALID_TIMELINE_ID;
+        return nullptr;
     }
+
+    float defaultBlend = (start != 0) ? static_cast<float>(start) / static_cast<float>(duration) : 0.0f;
+
+    H2DE_ColorRGB blendedDefaultColor = H2DE_ColorRGB();
+    blendedDefaultColor.r = static_cast<uint8_t>(defaultColor.r + (color.r - defaultColor.r) * defaultBlend);
+    blendedDefaultColor.g = static_cast<uint8_t>(defaultColor.g + (color.g - defaultColor.g) * defaultBlend);
+    blendedDefaultColor.b = static_cast<uint8_t>(defaultColor.b + (color.b - defaultColor.b) * defaultBlend);
+    blendedDefaultColor.a = static_cast<uint8_t>(defaultColor.a + (color.a - defaultColor.a) * defaultBlend);
 
     uint32_t durationFromStart = (duration > start) ? duration - start : 0;
 
-    return engine->createTimeline(durationFromStart, H2DE_EASING_LINEAR, [](float blend) {
-        // todo
+    if (defaultBlend != 0.0f) {
+        setColor(object, blendedDefaultColor, type);
+        // std::cout << "blendedDefaultColor: " << blendedDefaultColor << std::endl;
+    }
+
+    // std::cout << "start: " << start << std::endl;
+    // std::cout << "defaultBlend: " << defaultBlend << std::endl;
+    // std::cout << "durationFromStart: " << durationFromStart << std::endl;
+
+    return engine->createTimeline(durationFromStart, H2DE_EASING_LINEAR, [this, object, type, blendedDefaultColor, color](float blend) {
+        H2DE_ColorRGB interpoledColor = H2DE_ColorRGB();
+        interpoledColor.r = static_cast<uint8_t>(blendedDefaultColor.r + (color.r - blendedDefaultColor.r) * blend);
+        interpoledColor.g = static_cast<uint8_t>(blendedDefaultColor.g + (color.g - blendedDefaultColor.g) * blend);
+        interpoledColor.b = static_cast<uint8_t>(blendedDefaultColor.b + (color.b - blendedDefaultColor.b) * blend);
+        interpoledColor.a = static_cast<uint8_t>(blendedDefaultColor.a + (color.a - blendedDefaultColor.a) * blend);
+        // std::cout << "interpolated: " << interpoledColor << std::endl;
+        // std::cout << "i";
+
+        setColor(object, interpoledColor, type);
     }, nullptr, 0, true);
 }

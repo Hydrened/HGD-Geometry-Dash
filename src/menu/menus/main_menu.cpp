@@ -29,11 +29,11 @@ void MainMenu::initColorLoop() {
     colorLoop = engine->createTimeline(30000, H2DE_EASING_LINEAR, [this, defaultGroundColor, defaultBackgroundColor](float blend) {
 
         H2DE_ColorRGB interpolatedGroundColor = defaultGroundColor;
-        interpolatedGroundColor = interpolatedGroundColor.addHue(H2DE::lerp(0.0f, 360.0f, blend, H2DE_EASING_LINEAR));
+        interpolatedGroundColor = interpolatedGroundColor.addHue(H2DE::lerp(0.0f, 360.0f, blend));
         scenery->setGroundColor(interpolatedGroundColor);
 
         H2DE_ColorRGB interpolatedBackgroundColor = defaultBackgroundColor;
-        interpolatedBackgroundColor = interpolatedBackgroundColor.addHue(H2DE::lerp(0.0f, 360.0f, blend, H2DE_EASING_LINEAR));
+        interpolatedBackgroundColor = interpolatedBackgroundColor.addHue(H2DE::lerp(0.0f, 360.0f, blend));
         scenery->setBackgroundColor(interpolatedBackgroundColor);
 
     }, nullptr, -1, false);
@@ -63,12 +63,12 @@ void MainMenu::destroyPlayer() {
 
 void MainMenu::destroyColorLoop() {
     static H2DE_Engine* engine = game->getEngine();
-    engine->stopTimeline(colorLoop, false);
+    colorLoop->stop(false);
 }
 
 void MainMenu::destroyPlayerLoop() {
     static H2DE_Engine* engine = game->getEngine();
-    engine->stopDelay(playerLoop, false);
+    playerLoop->stop(false);
 }
 
 // UPDATE
@@ -105,7 +105,7 @@ void MainMenu::randomSpawnDelay() {
     spawnPlayer();
 
     // temp => 2300: temps pour la speed -1 de passer entierement (actuellment pareil maos pour la speed 1)
-    playerLoop = engine->delay(H2DE::randomIntegerInRange(2300, 5000), [this]() {
+    playerLoop = engine->createDelay(H2DE::randomIntegerInRange(2300, 5000), [this]() {
         randomSpawnDelay();
     }, false);
 }

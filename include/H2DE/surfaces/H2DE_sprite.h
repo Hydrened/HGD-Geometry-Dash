@@ -1,5 +1,4 @@
-#ifndef H2DE_SURFACE_SPRITE_H
-#define H2DE_SURFACE_SPRITE_H
+#pragma once
 
 /**
  * @file H2DE_sprite.h
@@ -15,6 +14,8 @@
  */
 
 #include <H2DE/surfaces/H2DE_surface.h>
+
+using H2DE_Delay = H2DE_Timeline;
 
 /**
  * @class H2DE_Sprite
@@ -170,9 +171,9 @@ public:
      * @param easing Easing function to apply for interpolation.
      * @param completed Callback function called once the animation finishes.
      * @param pauseSensitive If true, animation pauses when the game is paused.
-     * @return H2DE_TimelineID ID of the timeline controlling this animation.
+     * @return Timeline controlling this animation.
      */
-    H2DE_TimelineID setColor(const H2DE_ColorRGB& color, H2DE_TimelineID duration, H2DE_Easing easing, const std::function<void()>& completed, bool pauseSensitive = true);
+    H2DE_Timeline* setColor(const H2DE_ColorRGB& color, uint32_t duration, H2DE_Easing easing = H2DE_EASING_LINEAR, const std::function<void()>& completed = nullptr, bool pauseSensitive = true);
 
     using H2DE_DataType = H2DE_SpriteData;
 
@@ -181,7 +182,7 @@ public:
 private:
     H2DE_SpriteData spriteData;
 
-    int delayId = H2DE_INVALID_DELAY_ID;
+    H2DE_Delay* delay = nullptr;
     uint16_t currentFrame = 0;
 
     H2DE_Sprite(H2DE_Engine* engine, H2DE_Object* object, const H2DE_SurfaceData& surfaceData, const H2DE_SpriteData& spriteData);
@@ -195,5 +196,3 @@ private:
         return (!isHidden() && spriteData.color.isVisible()); 
     }
 };
-
-#endif

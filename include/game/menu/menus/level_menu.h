@@ -1,5 +1,4 @@
-#ifndef LEVEL_MENU_H
-#define LEVEL_MENU_H
+#pragma once
 
 #include "menu/menu.h"
 class Game;
@@ -15,7 +14,9 @@ public:
     inline void left() { incrementLevelID(-1); }
     inline void right() { incrementLevelID(1); }
 
-    constexpr uint32_t getLevelIndex() const { return levelIndex; }
+    constexpr LevelID getLevelIndex() const {
+        return levelIndex;
+    }
 
 private:
     Scenery* scenery = nullptr;
@@ -27,5 +28,3 @@ private:
 
     void incrementLevelID(int8_t increment);
 };
-
-#endif

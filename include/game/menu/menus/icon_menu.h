@@ -1,5 +1,4 @@
-#ifndef ICON_MENU_H
-#define ICON_MENU_H
+#pragma once
 
 #include "menu/menu.h"
 class Game;
@@ -42,5 +41,3 @@ private:
     void selectButton(const std::vector<H2DE_ButtonObject*>& buttons, int index) const;
     void selectLoadedPlayerIcons();
 };
-
-#endif

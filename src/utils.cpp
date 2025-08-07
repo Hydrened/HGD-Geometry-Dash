@@ -1,5 +1,6 @@
 #include "utils.h"
 
+#include <windows.h>
 #include <H2DE/H2DE.h>
 
 void callShortcut(SDL_Keycode keycode) {
@@ -28,5 +29,5 @@ void logLoadingTime(const std::function<void()>& loading, const std::string& nam
     loading();
 
     Uint32 elapsedTime = SDL_GetTicks() - startTime;
-    std::cout << "Loaded " << name << " in " << elapsedTime << " ms" << std::endl;
+    H2DE::print("Loaded " + name + " in " + std::to_string(elapsedTime) + " ms");
 }

@@ -1,5 +1,4 @@
-#ifndef LEVEL_H
-#define LEVEL_H
+#pragma once
 
 #include "game.h"
 #include "utils.h"
@@ -23,8 +22,8 @@ private:
     };
 
 public:
-    Level(Game* game, Level_ID id);
-    Level(Game* game, Level_ID id, const Checkpoint& checkpoint);
+    Level(Game* game, LevelID id);
+    Level(Game* game, LevelID id, const Checkpoint& checkpoint);
     ~Level();
 
     void close(const std::function<void()>& callback);
@@ -34,13 +33,22 @@ public:
     
     void update();
 
-    inline Player* getPlayer() const { return player; }
-    inline const std::vector<Block*>& getBlocks() const { return blocks; }
-    inline const std::vector<Trigger*>& getTriggers() const { return triggers; }
+    inline Player* getPlayer() const {
+        return player;
+    }
+    inline Scenery* getScenery() const {
+        return scenery;
+    }
+    inline const std::vector<Block*>& getBlocks() const {
+        return blocks;
+    }
+    inline const std::vector<Trigger*>& getTriggers() const {
+        return triggers;
+    }
 
 private:
     Game* game;
-    Level_ID id;
+    LevelID id;
     Checkpoint checkpoint;
 
     json data;
@@ -57,8 +65,8 @@ private:
     uint32_t blockBufferIndex = 0;
     uint32_t triggerBufferIndex = 0;
 
-    H2DE_DelayID startingDelayID = H2DE_INVALID_DELAY_ID;
-    H2DE_DelayID respawningDelayID = H2DE_INVALID_DELAY_ID;
+    H2DE_Delay* startingDelay = nullptr;
+    H2DE_Delay* respawningDelay = nullptr;
 
     void init();
     void initData();
@@ -81,6 +89,8 @@ private:
     void stopSong();
     void playCloseSfx();
 
+    void simulateTriggers(float translateX);
+
     void updatePlayer();
     void updateItemsBuffers();
     void updateBlocksBuffer();
@@ -89,5 +99,3 @@ private:
     void updateCamera();
     void updateScenery();
 };
-
-#endif

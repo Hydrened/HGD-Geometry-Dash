@@ -1,5 +1,4 @@
-#ifndef UTILS_H
-#define UTILS_H
+#pragma once
 
 #include <H2DE/utils/H2DE_utils.h>
 #include <SDL2/SDL_events.h>
@@ -8,19 +7,23 @@
 class H2DE_BasicObject;
 class H2DE_Texture;
 
-using Icon_ID = uint8_t;
-using Level_ID = uint32_t;
-using Color_ID = uint8_t;
+using IconID = uint8_t;
+using LevelID = uint32_t;
+using ColorID = uint8_t;
+using BackgroundID = uint8_t;
+using GroundID = uint8_t;
+
 using Speed = uint8_t;
 using H2DE_Velocity = H2DE_Vector2D<float>;
 
 enum GameState {
-    GAME_STATE_LOADING_ASSETS,
+    GAME_STATE_LOADING_SCREEN,
     GAME_STATE_MENU,
     GAME_STATE_LEVEL,
 };
 
 enum MenuID {
+    MENU_ID_LOADING_SCREEN_MENU,
     MENU_ID_MAIN_MENU,
     MENU_ID_LEVEL_MENU,
     MENU_ID_ICON_MENU,
@@ -96,10 +99,10 @@ struct PlayerHitbox {
 };
 
 struct PlayerIcons {
-    Icon_ID cubeID = 1;
-    Icon_ID shipID = 1;
-    Color_ID col1 = 1;
-    Color_ID col2 = 1;
+    IconID cubeID = 1;
+    IconID shipID = 1;
+    ColorID col1 = 1;
+    ColorID col2 = 1;
     bool glow = false;
 };
 
@@ -143,5 +146,3 @@ void openExternLink(const std::string& link);
 void callShortcut(SDL_Keycode keycode);
 
 void logLoadingTime(const std::function<void()>& loading, const std::string& name);
-
-#endif

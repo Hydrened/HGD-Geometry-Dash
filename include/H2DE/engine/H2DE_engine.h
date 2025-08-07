@@ -1,5 +1,4 @@
-#ifndef H2DE_ENGINE_H
-#define H2DE_ENGINE_H
+#pragma once
 
 /**
  * @file H2DE_Engine.h
@@ -12,18 +11,8 @@
  * camera, timeline animations, and object management to provide a flexible 2D game framework.
  */
 
-#include <algorithm>
-#include <array>
-#include <filesystem>
-#include <fstream>
-#include <functional>
-#include <iomanip>
-#include <iostream>
 #include <map>
-#include <optional>
-#include <sstream>
-#include <vector>
-#include <windows.h>
+#include <filesystem>
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
@@ -37,6 +26,7 @@
 #include <H2DE/engine/H2DE_renderer.h>
 #include <H2DE/engine/H2DE_audio.h>
 #include <H2DE/engine/H2DE_timeline_manager.h>
+#include <H2DE/engine/H2DE_chrono_manager.h>
 #include <H2DE/engine/H2DE_camera.h>
 #include <H2DE/engine/H2DE_object_manager.h>
 #include <H2DE/engine/H2DE_json.h>
@@ -49,8 +39,38 @@ class H2DE_AssetLoaderManager;
 class H2DE_Renderer;
 class H2DE_Audio;
 class H2DE_TimelineManager;
+class H2DE_ChronoManager;
+class H2DE_Chrono;
 class H2DE_Camera;
 class H2DE_ObjectManager;
+
+using H2DE_Delay = H2DE_Timeline;
+
+namespace H2DE {
+    /**
+     * @brief Creates and initializes the H2DE engine singleton instance using the provided configuration data.
+     * 
+     * This function can only be called once during the application lifetime. It initializes all core components of the engine,
+     * including the window, renderer, asset manager, camera, object manager, audio, timeline manager, and settings.
+     * 
+     * @param data Constant reference to H2DE_EngineData structure containing engine initialization parameters like window and camera settings.
+     * 
+     * @return Pointer to the created H2DE_Engine instance. Returns nullptr if creation fails or if the engine already exists.
+     * 
+     * @throws Throws a runtime error if an attempt is made to create more than one engine instance.
+     *         Exceptions are caught internally and reported via a MessageBox.
+     */
+    H2DE_Engine* createEngine(const H2DE_EngineData& data);
+    /**
+     * @brief Destroys the H2DE engine instance and releases all allocated resources.
+     * 
+     * Deletes all core components (window, renderer, asset loader, camera, timeline manager, etc.) 
+     * and clears all objects managed by the engine.
+     * 
+     * @param engine Pointer to the H2DE_Engine instance to destroy.
+     */
+    void destroyEngine(H2DE_Engine* engine);
+};
 
 /**
  * @class H2DE_Engine
@@ -72,8 +92,8 @@ class H2DE_ObjectManager;
  */
 class H2DE_Engine {
 public:
-    friend H2DE_Engine* H2DE_CreateEngine(const H2DE_EngineData& data);
-    friend void H2DE_DestroyEngine(H2DE_Engine* engine);
+    friend H2DE_Engine* H2DE::createEngine(const H2DE_EngineData& data);
+    friend void H2DE::destroyEngine(H2DE_Engine* engine);
 
     /**
      * @brief Starts the main loop of the engine, processing events, updating, and rendering frames.
@@ -91,15 +111,32 @@ public:
         isRunning = false;
     }
 
-    /**
-     * @brief Loads all assets (textures, sounds) from the specified directory into the engine.
+     /**
+     * @brief Loads all supported assets (textures and sounds) from a given directory.
      * 
-     * This function verifies that the directory exists and is valid, then imports files.
-     * It updates the engine's texture and sound caches, warning if any assets are overridden.
+     * This function scans the provided directory (recursively) and loads all valid image and audio files
+     * into the engine. It also updates the engine's internal caches for textures and sounds.
      * 
-     * @param directory Path to the folder containing assets to load.
+     * If a file with the same name already exists in the cache, it will be overridden (a warning is logged).
+     * 
+     * @param directory Path to the folder containing the assets to load.
+     * @param silentLoad If true, suppresses override warnings and disables the progress bar display.
      */
-    void loadAssets(const std::string& directory);
+    void loadAssetsSync(const std::string& directory, bool silentLoad = false);
+    /**
+     * @brief Loads all supported assets asynchronously from a given directory.
+     * 
+     * This function works the same as `loadAssetsSync` but performs the operation on a separate thread.
+     * It allows you to provide progress feedback (0.0f to 1.0f) and a callback when loading is complete.
+     * 
+     * The engine remains responsive during the loading process.
+     * 
+     * @param directory Path to the folder containing the assets to load.
+     * @param progress Callback function that receives the current progress as a float from 0.0f to 1.0f.
+     * @param completed Callback function called once all assets are loaded and stored in buffers.
+     * @param silentLoad If true, suppresses override warnings.
+     */
+    void loadAssetsAsync(const std::string& directory, const std::function<void(float)>& progress, const std::function<void()>& completed, bool silentLoad = false);
     /**
      * @brief Loads or overrides a font with the given name in the engine's font collection.
      * 
@@ -107,8 +144,9 @@ public:
      * 
      * @param name The unique identifier for the font.
      * @param font The font data to load.
+     * @param silentLoad If true, suppresses override warnings.
      */
-    void loadFont(const std::string& name, const H2DE_Font& font);
+    void loadFont(const std::string& name, const H2DE_Font& font, bool silentLoad = false);
 
     /**
      * @brief Enables or disables the debug mode of the engine.
@@ -180,46 +218,7 @@ public:
      * 
      * @return The unique ID of the created timeline.
      */
-    H2DE_TimelineID createTimeline(uint32_t duration, H2DE_Easing easing, const std::function<void(float)>& update, const std::function<void()>& completed, uint32_t loops, bool pauseSensitive = true);
-    /**
-     * @brief Pauses the timeline with the given ID.
-     * @param id The timeline's unique identifier.
-     */
-    void pauseTimeline(H2DE_TimelineID id);
-    /**
-     * @brief Resumes the timeline with the given ID.
-     * @param id The timeline's unique identifier.
-     */
-    void resumeTimeline(H2DE_TimelineID id);
-    /**
-     * @brief Toggles pause state of the timeline with the given ID.
-     * @param id The timeline's unique identifier.
-     */
-    void togglePauseTimeline(H2DE_TimelineID id);
-    /**
-     * @brief Resets the timeline with the given ID to its initial state.
-     * @param id The timeline's unique identifier.
-     */
-    void resetTimeline(H2DE_TimelineID id);
-    /**
-     * @brief Stops the timeline with the given ID.
-     * 
-     * @param id The timeline's unique identifier.
-     * @param callCompleted Whether to call the completed callback on stop.
-     */
-    void stopTimeline(H2DE_TimelineID id, bool callCompleted);
-    /**
-     * @brief Checks if the timeline with the given ID is currently paused.
-     * @param id The timeline's unique identifier.
-     * @return True if paused, false otherwise.
-     */
-    bool isTimelinePaused(H2DE_TimelineID id) const;
-    /**
-     * @brief Checks if the timeline with the given ID is currently stoped.
-     * @param id The timeline's unique identifier.
-     * @return True if stoped, false otherwise.
-     */
-    bool isTimelineStoped(H2DE_TimelineID id) const;
+    H2DE_Timeline* createTimeline(uint32_t duration, H2DE_Easing easing, const std::function<void(float)>& update, const std::function<void()>& completed, uint32_t loops, bool pauseSensitive = true);
 
     /**
      * @brief Creates a delay (a timeline without progress updates) for a specified duration.
@@ -229,95 +228,37 @@ public:
      * @param pauseSensitive Whether the delay respects the engine's pause state (default true).
      * @return The unique ID of the created delay.
      */
-    H2DE_DelayID delay(uint32_t duration, const std::function<void()>& callback, bool pauseSensitive = true);
+    H2DE_Delay* createDelay(uint32_t duration, const std::function<void()>& callback, bool pauseSensitive = true);
+
     /**
-     * @brief Pauses a delay by pausing its underlying timeline.
-     * @param id The delay's unique identifier.
-     */
-    inline void pauseDelay(H2DE_DelayID id) {
-        pauseTimeline(id);
-    }
-    /**
-     * @brief Resumes a delay by resuming its underlying timeline.
-     * @param id The delay's unique identifier.
-     */
-    inline void resumeDelay(H2DE_DelayID id) {
-        resumeTimeline(id);
-    }
-    /**
-     * @brief Toggles pause state of a delay by toggling its underlying timeline.
-     * @param id The delay's unique identifier.
-     */
-    inline void togglePauseDelay(H2DE_DelayID id) {
-        togglePauseTimeline(id);
-    }
-    /**
-     * @brief Resets a delay by resetting its underlying timeline.
-     * @param id The delay's unique identifier.
-     */
-    inline void resetDelay(H2DE_DelayID id) {
-        resetTimeline(id);
-    }
-    /**
-     * @brief Stops a delay by stopping its underlying timeline.
+     * @brief Creates a chrono with an optional start time and direction.
      * 
-     * @param id The delay's unique identifier.
-     * @param callCompleted Whether to call the completed callback on stop.
+     * @param start The initial time value of the chrono.
+     * @param increasing Whether the chrono counts up (`true`) or down (`false`). Default is `true`.
+     * @param pauseSensitive Whether the chrono respects the engine's pause state. Default is `true`.
+     * @return The unique ID of the created chrono.
      */
-    inline void stopDelay(H2DE_DelayID id,  bool callCompleted) {
-        stopTimeline(id, callCompleted);
-    }
-    /**
-     * @brief Checks if the delay with the given ID is currently paused.
-     * @param id The delay's unique identifier.
-     * @return True if paused, false otherwise.
-     */
-    inline bool isDelayPaused(H2DE_DelayID id) const {
-        return isTimelinePaused(id);
-    }
-    /**
-     * @brief Checks if the delay with the given ID is currently stoped.
-     * @param id The delay's unique identifier.
-     * @return True if stoped, false otherwise.
-     */
-    inline bool isDelayStoped(H2DE_DelayID id) const {
-        return isTimelinePaused(id);
-    }
+    H2DE_Chrono* createChrono(const H2DE_Time& start, bool increasing = true, bool pauseSensitive = true);
 
     /**
      * @brief Creates a new object of type H2DE_Object_T and adds it to the engine's object list.
      * 
-     * @tparam H2DE_Object_T The class type of the object to create.
-     * @param objectData Common initialization data for the object.
-     * @return Pointer to the newly created object.
-     */
-    template<typename H2DE_Object_T>
-    H2DE_Object_T* createObject(const H2DE_ObjectData& objectData) {
-        H2DE_Object_T* object = new H2DE_Object_T(this, objectData);
-        objects.push_back(object);
-        return object;
-    }
-    /**
-     * @brief Creates a new object of type H2DE_Object_T with specific additional data, and adds it to the engine's object list.
+     * This function supports both generic objects that require only `H2DE_ObjectData`, 
+     * and specialized objects that require an additional specific data parameter (usually a struct).
      * 
-     * @tparam H2DE_Object_T The class type of the object to create.
-     * @param objectData Common initialization data for the object.
-     * @param specificObjectData Additional data specific to the object type.
+     * @tparam H2DE_Object_T The type of the object to create.
+     * @tparam H2DE_SpecificObjectData_T Variadic template for additional object-specific data types (optional).
+     * 
+     * @param objectData Common initialization data for the object (shared among all object types).
+     * @param specificObjectData Optional object-specific data used only if the object type declares a nested `H2DE_DataType`.
+     * 
      * @return Pointer to the newly created object.
      * 
-     * @note If the created object is of type H2DE_ButtonObject, the object manager is refreshed.
+     * @warning Compilation will fail if `H2DE_Object_T` declares a `H2DE_DataType`, but no or more than one extra argument is provided.
      */
-    template<typename H2DE_Object_T>
-    H2DE_Object_T* createObject(const H2DE_ObjectData& objectData, const typename H2DE_Object_T::H2DE_DataType& specificObjectData) {
-        H2DE_Object_T* object = new H2DE_Object_T(this, objectData, specificObjectData);
-        objects.push_back(object);
+    template<typename H2DE_Object_T, typename... H2DE_SpecificObjectData_T>
+    H2DE_Object_T* createObject(const H2DE_ObjectData& objectData, H2DE_SpecificObjectData_T&&... specificObjectData);
 
-        if constexpr (std::is_same_v<H2DE_Object_T, H2DE_ButtonObject>) {
-            refreshObjectManager();
-        }
-
-        return object;
-    }
     /**
      * @brief Destroys and removes the specified object from the engine.
      * 
@@ -478,6 +419,12 @@ public:
     friend class H2DE_TextObject;
     
 private:
+    template<typename, typename = void>
+    struct has_H2DE_DataType : std::false_type {};
+
+    template<typename T>
+    struct has_H2DE_DataType<T, std::void_t<typename T::H2DE_DataType>> : std::true_type {};
+
     H2DE_EngineData data;
 
     H2DE_Settings* settings = nullptr;
@@ -486,6 +433,7 @@ private:
     H2DE_Renderer* renderer = nullptr;
     H2DE_Audio* audio = nullptr;
     H2DE_TimelineManager* timelineManager = nullptr;
+    H2DE_ChronoManager* chronoManager = nullptr;
     H2DE_Camera* camera = nullptr;
     H2DE_ObjectManager* objectManager = nullptr;
 
@@ -523,28 +471,4 @@ private:
     static bool isPositionGreater(H2DE_Object* a, H2DE_Object* b);
 };
 
-/**
- * @brief Creates and initializes the H2DE engine singleton instance using the provided configuration data.
- * 
- * This function can only be called once during the application lifetime. It initializes all core components of the engine,
- * including the window, renderer, asset manager, camera, object manager, audio, timeline manager, and settings.
- * 
- * @param data Constant reference to H2DE_EngineData structure containing engine initialization parameters like window and camera settings.
- * 
- * @return Pointer to the created H2DE_Engine instance. Returns nullptr if creation fails or if the engine already exists.
- * 
- * @throws Throws a runtime error if an attempt is made to create more than one engine instance.
- *         Exceptions are caught internally and reported via a MessageBox.
- */
-H2DE_Engine* H2DE_CreateEngine(const H2DE_EngineData& data);
-/**
- * @brief Destroys the H2DE engine instance and releases all allocated resources.
- * 
- * Deletes all core components (window, renderer, asset loader, camera, timeline manager, etc.) 
- * and clears all objects managed by the engine.
- * 
- * @param engine Pointer to the H2DE_Engine instance to destroy.
- */
-void H2DE_DestroyEngine(H2DE_Engine* engine);
-
-#endif
+#include <H2DE/engine/H2DE_engine.inl>

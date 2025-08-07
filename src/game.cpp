@@ -9,8 +9,7 @@ Game::Game() : save(new Save()) {
     initEngine();
     initEvents();
     initData();
-
-    openMenu(MENU_ID_MAIN_MENU);
+    initLoadingScreen();
 }
 
 void Game::initEngine() {
@@ -21,7 +20,7 @@ void Game::initEngine() {
     engineData.window.pos = { 10, 30 };
     engineData.window.size = { 1520, 855 };
     engineData.window.ratio = H2DE_WINDOW_RATIO_16_9;
-    engineData.window.resizable = true;
+    engineData.window.resizable = false;
     engineData.window.saveState = true;
     engineData.window.fullscreen = false;
 
@@ -31,7 +30,7 @@ void Game::initEngine() {
     engineData.camera.yOrigin = H2DE_FACE_BOTTOM;
     engineData.camera.grid = false;
 
-    engine = H2DE_CreateEngine(engineData);
+    engine = H2DE::createEngine(engineData);
 
     engine->setHandleEventCall([this](SDL_Event event) {
         events->handle(event);
@@ -42,8 +41,6 @@ void Game::initEngine() {
     });
 
     engine->getWindow()->setIcon("game-icon.png");
-    engine->loadAssets("assets");
-
     engine->debugObjects(false);
 }
 
@@ -55,8 +52,16 @@ void Game::initData() {
     data = new Data(this);
 }
 
+void Game::initLoadingScreen() {
+    loadingScreen = new LoadingScreenMenu(this, MENU_ID_LOADING_SCREEN_MENU);
+}
+
 // CLEANUP
 Game::~Game() {
+    if (loadingScreen != nullptr) {
+        delete loadingScreen;
+    }
+
     if (menu != nullptr) {
         delete menu;
     }
@@ -69,7 +74,7 @@ Game::~Game() {
     delete events;
     delete save;
 
-    H2DE_DestroyEngine(engine);
+    H2DE::destroyEngine(engine);
 }
 
 // RUN
@@ -83,11 +88,10 @@ void Game::stop() {
 
 // UPDATE
 void Game::update() {
-    if (menu != nullptr) {
-        menu->update();
-
-    } else if (level != nullptr) {
-        level->update();
+    switch (state) {
+        case GAME_STATE_MENU: menu->update(); break;
+        case GAME_STATE_LEVEL: level->update(); break;
+        default: break;
     }
 }
 
@@ -130,7 +134,7 @@ Menu* Game::createMenu(MenuID id) {
     }
 }
 
-void Game::openLevel(uint32_t id) {
+void Game::openLevel(LevelID id) {
     static H2DE_Audio* audio = engine->getAudio();
 
     bool isALevelOpened = (level != nullptr);
@@ -147,7 +151,7 @@ void Game::openLevel(uint32_t id) {
         menu->close([this, id]() {
             // temp
             Checkpoint checkpoint = Checkpoint();
-            checkpoint.translate = { 130.0f, 0.0f };
+            checkpoint.translate = { 0.0f, 0.0f };
             
             menu = nullptr;
             level = new Level(this, id);

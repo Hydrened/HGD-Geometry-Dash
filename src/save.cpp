@@ -53,22 +53,22 @@ void Save::reload() {
 }
 
 // SETTER
-void Save::setPlayerCubeID(Icon_ID id) {
+void Save::setPlayerCubeID(IconID id) {
     data["player"]["icons"]["cube"] = static_cast<int>(id);
     reload();
 }
 
-void Save::setPlayerShipID(Icon_ID id) {
+void Save::setPlayerShipID(IconID id) {
     data["player"]["icons"]["ship"] = static_cast<int>(id);
     reload();
 }
 
-void Save::setPlayerCol1(Color_ID id) {
+void Save::setPlayerCol1(ColorID id) {
     data["player"]["colors"]["col1"] = static_cast<int>(id);
     reload();
 }
 
-void Save::setPlayerCol2(Color_ID id) {
+void Save::setPlayerCol2(ColorID id) {
     data["player"]["colors"]["col2"] = static_cast<int>(id);
     reload();
 }

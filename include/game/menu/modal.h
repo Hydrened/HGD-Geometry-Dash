@@ -1,5 +1,4 @@
-#ifndef MODAL_H
-#define MODAL_H
+#pragma once
 
 #include "game.h"
 class Game;
@@ -11,7 +10,9 @@ public:
     
     void close();
 
-    constexpr const Data::ModalBuffer& getBuffer() const { return buffer; }
+    constexpr const Data::ModalBuffer& getBuffer() const {
+        return buffer;
+    }
 
 private:
     Game* game;
@@ -25,5 +26,3 @@ private:
 
     void destroyObjects();
 };
-
-#endif

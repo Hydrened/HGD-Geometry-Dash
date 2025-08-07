@@ -1,5 +1,4 @@
-#ifndef H2DE_OBJECT_MANAGER_H
-#define H2DE_OBJECT_MANAGER_H
+#pragma once
 
 #include <H2DE/engine/H2DE_engine.h>
 class H2DE_Engine;
@@ -25,8 +24,7 @@ private:
     void refreshButtonBuffer(const std::vector<H2DE_Object*>& objects);
 
     const std::vector<H2DE_ButtonObject*> getValidButtons() const;
+    static H2DE_MouseButton getH2DEButton(Uint8 sdlButton);
 
     friend class H2DE_Engine;
 };
-
-#endif

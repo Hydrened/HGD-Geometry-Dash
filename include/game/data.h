@@ -1,5 +1,4 @@
-#ifndef DATA_H
-#define DATA_H
+#pragma once
 
 #include "game.h"
 class Game;
@@ -59,16 +58,21 @@ public:
         int index = 0;
     };
 
+    struct TriggerBuffer {
+        TriggerType type = TRIGGER_TYPE_BACKGROUND_COLOR;
+    };
+
 public:
     Data(Game* game);
     ~Data() = default;
 
     const Data::SurfaceBuffer& getSurfaceBuffer(const std::string& name) const;
-    const Data::SurfaceBuffer getBackgroundTileSurfaceBuffer(uint8_t backgroundID, float translateX) const;
-    const Data::SurfaceBuffer getGroundTileSurfaceBuffer(uint8_t groundID, float translateX) const;
+    const Data::SurfaceBuffer getBackgroundTileSurfaceBuffer(BackgroundID backgroundID, float translateX) const;
+    const Data::SurfaceBuffer getGroundTileSurfaceBuffer(GroundID groundID, float translateX) const;
     const std::vector<Data::MenuObjectBuffer>& getMenuObjects(MenuID id) const;
     const Data::ModalBuffer& getModalBuffer(ModalID id) const;
     const Data::BlockBuffer& getBlockBuffer(const std::string& id) const;
+    const Data::TriggerBuffer& getTriggerBuffer(const std::string& id) const;
     const std::vector<Data::IconSurfaceBuffer> getIconSurfacesBuffer(PlayerGamemode gamemode, PlayerSize size, const PlayerIcons& playerIcons, bool gray) const;
     const float& getGravity(PlayerGamemode gamemode, PlayerSize size) const;
     const float& getMaxGravity(PlayerGamemode gamemode, PlayerSize size) const;
@@ -81,7 +85,7 @@ public:
     const float& getSpeedVelocityX(Speed speed) const;
     const Speed getSpeedFromVelocityX(float vx) const;
     const H2DE_ColorRGB& getHitboxColor(const std::string& color) const;
-    const H2DE_ColorRGB& getIconColor(Color_ID id) const;
+    const H2DE_ColorRGB& getIconColor(ColorID id) const;
 
     const PlayerIcons getRandomPlayerIcons() const;
     const std::tuple<Speed, PlayerGamemode, PlayerSize> getRandomPlayerState() const;
@@ -104,6 +108,7 @@ public:
     constexpr const H2DE_Scale& getIconMenuIconButtonScale() const { return iconMenuIconButtonScale; }
     constexpr const H2DE_Scale& getIconMenuColorButtonScale() const { return iconMenuColorButtonScale; }
     constexpr const H2DE_Scale& getBlockScale() const { return blockScale; }
+    constexpr const H2DE_Scale& getTriggerScale() const { return triggerScale; }
 
     constexpr const H2DE_ColorRGB& getDefaultBackgroundColor() const { return defaultBackgroundColor; }
     constexpr const H2DE_ColorRGB& getDefaultGroundColor() const { return defaultGroundColor; }
@@ -121,34 +126,17 @@ public:
     constexpr const uint8_t getNbIconColors() const { return iconsColors.size(); }
     constexpr const uint32_t& getStartingLevelDelayDuration() const { return startingLevelDelayDuration; }
 
-    inline static const Speed getLevelSpeed(const json& levelData) {
-        return static_cast<Speed>(levelData["config"]["speed"]);
-    }
-    inline static const uint8_t getLevelBackgroundID(const json& levelData) {
-        return static_cast<uint8_t>(levelData["config"]["background"]["id"]);
-    }
-    inline static const uint8_t getLevelGroundID(const json& levelData) {
-        return static_cast<uint8_t>(levelData["config"]["ground"]["id"]);
-    }
-    inline static PlayerGamemode getLevelPlayerGamemode(const json& levelData) {
-        return static_cast<PlayerGamemode>(static_cast<int>(levelData["config"]["gamemode"]));
-    }
-    inline static PlayerSize getLevelPlayerSize(const json& levelData) {
-        return static_cast<PlayerSize>(static_cast<int>(levelData["config"]["size"]));
-    }
-    inline static PlayerGravity getLevelPlayerGravity(const json& levelData) {
-        return static_cast<PlayerGravity>(static_cast<int>(levelData["config"]["gravity"]));
-    }
-    inline static std::string getLevelSong(const json& levelData) {
-        return levelData["config"]["song"];
-    }
+    inline static const Speed getLevelSpeed(const json& levelData) { return static_cast<Speed>(levelData["config"]["speed"]); }
+    inline static const BackgroundID getLevelBackgroundID(const json& levelData) { return static_cast<BackgroundID>(levelData["config"]["background"]["id"]); }
+    inline static const GroundID getLevelGroundID(const json& levelData) { return static_cast<GroundID>(levelData["config"]["ground"]["id"]); }
+    inline static PlayerGamemode getLevelPlayerGamemode(const json& levelData) { return static_cast<PlayerGamemode>(static_cast<int>(levelData["config"]["gamemode"])); }
+    inline static PlayerSize getLevelPlayerSize(const json& levelData) { return static_cast<PlayerSize>(static_cast<int>(levelData["config"]["size"])); }
+    inline static PlayerGravity getLevelPlayerGravity(const json& levelData) { return static_cast<PlayerGravity>(static_cast<int>(levelData["config"]["gravity"])); }
+    inline static std::string getLevelSong(const json& levelData) { return levelData["config"]["song"]; }
 
-    inline static BlockType getBlockType(const json& blockData) {
-        return static_cast<BlockType>(static_cast<int>(blockData["type"]));
-    }
-    inline static int getBlockIndex(const json& blockData) {
-        return Data::getIndex(static_cast<Layer>(static_cast<int>(blockData["index"]["layer"])), static_cast<int>(blockData["index"]["order"]));
-    }
+    inline static BlockType getBlockType(const json& blockData) { return static_cast<BlockType>(static_cast<int>(blockData["type"])); }
+    inline static int getBlockIndex(const json& blockData) { return Data::getIndex(static_cast<Layer>(static_cast<int>(blockData["index"]["layer"])), static_cast<int>(blockData["index"]["order"])); }
+    inline static TriggerType getTriggerType(const json& triggerData) { return static_cast<TriggerType>(static_cast<int>(triggerData["type"])); }
 
     constexpr static const int getIndex(Layer layer, int order) {
         constexpr int RANGE = 100;
@@ -166,7 +154,8 @@ private:
     std::unordered_map<MenuID, std::vector<Data::MenuObjectBuffer>> menuObjects = {};
     std::unordered_map<ModalID, Data::ModalBuffer> modalBuffers = {};
     std::unordered_map<std::string, Data::BlockBuffer> blockBuffers = {};
-    std::unordered_map<PlayerGamemode, std::unordered_map<Icon_ID, std::vector<Data::IconSurfaceBuffer>>> iconSurfacesBuffers = {};
+    std::unordered_map<std::string, Data::TriggerBuffer> triggerBuffers = {};
+    std::unordered_map<PlayerGamemode, std::unordered_map<IconID, std::vector<Data::IconSurfaceBuffer>>> iconSurfacesBuffers = {};
     std::unordered_map<PlayerGamemode, std::unordered_map<PlayerSize, float>> gravities = {};
     std::unordered_map<PlayerGamemode, std::unordered_map<PlayerSize, float>> maxGravities = {};
     std::unordered_map<PlayerGamemode, std::unordered_map<PlayerSize, float>> clicks = {};
@@ -194,6 +183,9 @@ private:
     const H2DE_PixelRect lineTextureSrcRect = { 1, 13, 1803, 6 };
     const H2DE_PixelRect grayLockerSrcRect = { 3002, 1908, 86, 104 };
 
+    // -- loading screen
+    const H2DE_PixelRect loadingScreenRobtopLogoSrcRect = { 1381, 197, 582, 204 };
+
     // -- main menu
     const H2DE_PixelRect mainMenuGameTitleTextureSrcRect = { 197, 1, 1700, 192 };
     const H2DE_PixelRect mainMenuLevelButtonTextureSrcRect = { 461, 78, 415, 415 };
@@ -215,6 +207,11 @@ private:
     const H2DE_Translate defaultBackgroundTranslate = { 2.5f, 5.0f };
     const H2DE_Translate defaultBotGroundTranslate = { 2.5f, -2.5f };
     const H2DE_Translate defaultTopGroundTranslate = { 2.5f, 77.5f };
+
+    // -- loading screen
+    const H2DE_Translate loadingScreenRobtopLogoTranslate = { 0.0f, 2.657f };
+    const H2DE_Translate loadingScreenGameTitleTranslate = { 0.0f, 0.0f };
+    const H2DE_Translate loadingScreenLoadingBarTranslate = { 0.0f, 2.657f };
 
     // -- main menu
     const H2DE_Translate mainMenuGameTitleTranslate = { 0.059f, 3.622f };
@@ -252,6 +249,12 @@ private:
     const H2DE_Scale groundTileScale = { 4.0f, 4.0f };
     const H2DE_Scale grayLockerScale = { 0.762f, 0.891f };
     const H2DE_Scale blockScale = { 1.0f, 1.0f };
+    const H2DE_Scale triggerScale = { 1.0f, 1.0f };
+
+    // -- loading screen
+    const H2DE_Scale loadingScreenRobtopLogoScale = { 4.849f, 1.672f };
+    const H2DE_Scale loadingScreenGameTitleScale = { 14.191f, 1.603f };
+    const H2DE_Scale loadingScreenLoadingBarScale = { 7.0f, 0.534f };
 
     // -- main menu
     const H2DE_Scale mainMenuGameTitleScale = { 14.191f, 1.613f };
@@ -312,6 +315,11 @@ private:
     const H2DE_SurfaceData line_surfaceData = Data::makeSurfaceData(lineOffset, lineScale, 1);
     const H2DE_SurfaceData grayLocker_surfaceData = Data::makeSurfaceData(grayLockerScale, 1);
 
+    // -- loading screen
+    const H2DE_SurfaceData loadingScreenRobtopLogo_surfaceData = Data::makeSurfaceData(loadingScreenRobtopLogoScale);
+    const H2DE_SurfaceData loadingScreenGameTitle_surfaceData = Data::makeSurfaceData(loadingScreenGameTitleScale);
+    const H2DE_SurfaceData loadingScreenLoadingBar_surfaceData = Data::makeSurfaceData(loadingScreenLoadingBarScale);
+
     // -- main menu
     const H2DE_SurfaceData mainMenuGameTitle_surfaceData = Data::makeSurfaceData(mainMenuGameTitleScale);
     const H2DE_SurfaceData mainMenuLevelButton_surfaceData = Data::makeSurfaceData(mainMenuLevelButtonScale);
@@ -336,6 +344,11 @@ private:
     const H2DE_TextureData groundTile_textureData = Data::makeTextureData("groundSquare_[ID]_001-uhd.png");
     const H2DE_TextureData line_textureData = Data::makeTextureData("GJ_GameSheet02-uhd.png", lineTextureSrcRect);
     const H2DE_TextureData grayLocker_textureData = Data::makeTextureData("GJ_GameSheet03-uhd.png", grayLockerSrcRect);
+
+    // -- loading screen
+    const H2DE_TextureData loadingScreenRobtopLogo_textureData = Data::makeTextureData("GJ_LaunchSheet-uhd.png", loadingScreenRobtopLogoSrcRect);
+    const H2DE_TextureData loadingScreenGameTitle_textureData = Data::makeTextureData("GJ_LaunchSheet-uhd.png", mainMenuGameTitleTextureSrcRect);
+    // const H2DE_TextureData loadingScreenLoadingBar_textureData = Data::makeTextureData();
 
     // -- main menu
     const H2DE_TextureData mainMenuGameTitle_textureData = Data::makeTextureData("GJ_LaunchSheet-uhd.png", mainMenuGameTitleTextureSrcRect);
@@ -374,6 +387,9 @@ private:
 
         { "gray-locker", { grayLocker_surfaceData, grayLocker_textureData } },
 
+        { "loading-screen-robtop-logo", { loadingScreenRobtopLogo_surfaceData, loadingScreenRobtopLogo_textureData } },
+        { "loading-screen-game-title", { loadingScreenGameTitle_surfaceData, loadingScreenGameTitle_textureData } },
+
         { "main-menu-game-title", { mainMenuGameTitle_surfaceData, mainMenuGameTitle_textureData } },
         { "main-menu-level-button", { mainMenuLevelButton_surfaceData, mainMenuLevelButton_textureData } },
         { "main-menu-creator-button", { mainMenuCreatorButton_surfaceData, mainMenuCreatorButton_textureData } },
@@ -393,6 +409,7 @@ private:
 
 
     void initMenuObjects();
+    void initLoadingScreenMenuObjects();
     void initMainMenuObjects();
     void initLevelMenuObjects();
     void initIconMenuObjects();
@@ -412,6 +429,8 @@ private:
     const Data::SurfaceBuffers initBlockBufferSurfaces(const json& blockData) const;
     const H2DE_Hitbox initBlockBufferHitbox(const json& blockData, BlockType type) const;
 
+    void initTriggerBuffers();
+
     void initPhysics();
     void initGravities();
     void initMaxGravities();
@@ -420,14 +439,26 @@ private:
     void initPlayerHitboxes();
     void initPlayerSnaps();
 
-    inline static const H2DE_SurfaceData makeSurfaceData(const H2DE_Scale& scale) { return Data::makeSurfaceData({ 0.0f, 0.0f }, scale, 0.0f, 0); }
-    inline static const H2DE_SurfaceData makeSurfaceData(const H2DE_Scale& scale, float rotation) { return Data::makeSurfaceData({ 0.0f, 0.0f }, scale, rotation, 0); }
-    inline static const H2DE_SurfaceData makeSurfaceData(const H2DE_Scale& scale, int index) { return Data::makeSurfaceData({ 0.0f, 0.0f }, scale, 0.0f, index); }
-    inline static const H2DE_SurfaceData makeSurfaceData(const H2DE_Translate& translate, const H2DE_Scale& scale) { return Data::makeSurfaceData(translate, scale, 0.0f, 0); }
-    inline static const H2DE_SurfaceData makeSurfaceData(const H2DE_Translate& translate, const H2DE_Scale& scale, int index) { return Data::makeSurfaceData(translate, scale, 0.0f, index); }
+    inline static const H2DE_SurfaceData makeSurfaceData(const H2DE_Scale& scale) { 
+        return Data::makeSurfaceData({ 0.0f, 0.0f }, scale, 0.0f, 0);
+    }
+    inline static const H2DE_SurfaceData makeSurfaceData(const H2DE_Scale& scale, float rotation) { 
+        return Data::makeSurfaceData({ 0.0f, 0.0f }, scale, rotation, 0);
+    }
+    inline static const H2DE_SurfaceData makeSurfaceData(const H2DE_Scale& scale, int index) { 
+        return Data::makeSurfaceData({ 0.0f, 0.0f }, scale, 0.0f, index);
+    }
+    inline static const H2DE_SurfaceData makeSurfaceData(const H2DE_Translate& translate, const H2DE_Scale& scale) { 
+        return Data::makeSurfaceData(translate, scale, 0.0f, 0);
+    }
+    inline static const H2DE_SurfaceData makeSurfaceData(const H2DE_Translate& translate, const H2DE_Scale& scale, int index) { 
+        return Data::makeSurfaceData(translate, scale, 0.0f, index);
+    }
     static const H2DE_SurfaceData makeSurfaceData(const H2DE_Translate& translate, const H2DE_Scale& scale, float rotation, int index);
 
-    inline static const H2DE_TextureData makeTextureData(const std::string& textureName) { return Data::makeTextureData(textureName, std::nullopt); }
+    inline static const H2DE_TextureData makeTextureData(const std::string& textureName) { 
+        return Data::makeTextureData(textureName, std::nullopt);
+    }
     static const H2DE_TextureData makeTextureData(const std::string& textureName, const std::optional<H2DE_PixelRect>& srcRect);
 
     static const H2DE_Hitbox makeHitbox(const H2DE_Scale& scale, const H2DE_ColorRGB& color);
@@ -440,5 +471,3 @@ private:
     template<typename Physic_T>
     static const Physic_T& getPhysic(const std::unordered_map<PlayerGamemode, std::unordered_map<PlayerSize, Physic_T>>& physics, PlayerGamemode gamemode, PlayerSize size);
 };
-
-#endif

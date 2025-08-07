@@ -1,5 +1,4 @@
-#ifndef MAIN_MENU_H
-#define MAIN_MENU_H
+#pragma once
 
 #include "menu/menu.h"
 class Game;
@@ -18,8 +17,8 @@ public:
 private:
     Scenery* scenery = nullptr;
     Player* player = nullptr;
-    H2DE_TimelineID colorLoop = H2DE_INVALID_TIMELINE_ID;
-    H2DE_DelayID playerLoop = H2DE_INVALID_DELAY_ID;
+    H2DE_Timeline* colorLoop = nullptr;
+    H2DE_Delay* playerLoop = nullptr;
 
     void initCamera() override;
     void initScenery();
@@ -38,5 +37,3 @@ private:
     void randomSpawnDelay();
     void spawnPlayer();
 };
-
-#endif

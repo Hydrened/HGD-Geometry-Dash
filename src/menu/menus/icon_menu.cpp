@@ -77,7 +77,7 @@ void IconMenu::createIconButtons() {
 
         H2DE_ButtonObject* iconButton = createButton(iconButtons, i, unlocked, iconMenuFirstIconButtonTranslate, iconMenuIconButtonScale, [this](int index, bool unlocked) {
             if (unlocked) {
-                icons.cubeID = static_cast<Icon_ID>(index + 1);
+                icons.cubeID = static_cast<IconID>(index + 1);
                 refreshMainIcon();
                 selectButton(iconButtons, index);
 
@@ -96,7 +96,7 @@ void IconMenu::createIconButtons_applyTextures(H2DE_ButtonObject* icon, int inde
 
     if (unlocked) {
         PlayerIcons playerIcons = PlayerIcons();
-        playerIcons.cubeID = static_cast<Icon_ID>(index);
+        playerIcons.cubeID = static_cast<IconID>(index);
 
         for (const Data::IconSurfaceBuffer& iconSurfaceBuffer : gameData->getIconSurfacesBuffer(PLAYER_GAMEMODE_CUBE, PLAYER_SIZE_NORMAL, playerIcons, true)) {
             H2DE_SurfaceData sd = H2DE_SurfaceData();
@@ -136,7 +136,7 @@ void IconMenu::createColorButtons() {
 
         H2DE_ButtonObject* col1Button = createButton(col1Buttons, i, unlocked, iconMenuFirstCol1ButtonTranslate, iconMenuColorButtonScale, [this](int index, bool unlocked) {
             if (unlocked) {
-                icons.col1 = static_cast<Color_ID>(index);
+                icons.col1 = static_cast<ColorID>(index);
                 refreshMainIcon();
                 selectButton(col1Buttons, index);
 
@@ -152,7 +152,7 @@ void IconMenu::createColorButtons() {
 
         H2DE_ButtonObject* col2Button = createButton(col2Buttons, i, unlocked, iconMenuFirstCol2ButtonTranslate, iconMenuColorButtonScale, [this](int index, bool unlocked) {
             if (unlocked) {
-                icons.col2 = static_cast<Color_ID>(index);
+                icons.col2 = static_cast<ColorID>(index);
                 refreshMainIcon();
                 selectButton(col2Buttons, index);
 
@@ -170,7 +170,7 @@ void IconMenu::createColorButtons_applyTextures(H2DE_ButtonObject* button, int i
     static const Data* gameData = game->getData();
 
     H2DE_ColorData cd = H2DE_ColorData();
-    cd.color = gameData->getIconColor(static_cast<Color_ID>(index));
+    cd.color = gameData->getIconColor(static_cast<ColorID>(index));
     button->addSurface<H2DE_Color>("color", H2DE_SurfaceData(), cd);
 
     if (!unlocked) {

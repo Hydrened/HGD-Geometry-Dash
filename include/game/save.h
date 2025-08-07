@@ -1,5 +1,4 @@
-#ifndef SAVE_H
-#define SAVE_H
+#pragma once
 
 #include <H2DE/engine/H2DE_json.h>
 #include "utils.h"
@@ -15,18 +14,18 @@ public:
 
     inline const PlayerIcons getPlayerIcons() const {
         return PlayerIcons{
-            static_cast<Icon_ID>(data.at("player").at("icons").at("cube")),
-            static_cast<Icon_ID>(data.at("player").at("icons").at("ship")),
-            static_cast<Color_ID>(data.at("player").at("colors").at("col1")),
-            static_cast<Color_ID>(data.at("player").at("colors").at("col2")),
+            static_cast<IconID>(data.at("player").at("icons").at("cube")),
+            static_cast<IconID>(data.at("player").at("icons").at("ship")),
+            static_cast<ColorID>(data.at("player").at("colors").at("col1")),
+            static_cast<ColorID>(data.at("player").at("colors").at("col2")),
             static_cast<bool>(data.at("player").at("glow")),
         };
     }
 
-    void setPlayerCubeID(Icon_ID id);
-    void setPlayerShipID(Icon_ID id);
-    void setPlayerCol1(Color_ID id);
-    void setPlayerCol2(Color_ID id);
+    void setPlayerCubeID(IconID id);
+    void setPlayerShipID(IconID id);
+    void setPlayerCol1(ColorID id);
+    void setPlayerCol2(ColorID id);
     void setPlayerGlow(bool glow);
 
 private:
@@ -41,5 +40,3 @@ private:
     void loadData();
     void reload();
 };
-
-#endif

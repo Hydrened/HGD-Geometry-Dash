@@ -1,5 +1,4 @@
-#ifndef TRANSITION_H
-#define TRANSITION_H
+#pragma once
 
 #include "utils.h"
 class Game;
@@ -14,5 +13,3 @@ private:
     TransitionState state;
     std::function<void()> completed = nullptr;
 };
-
-#endif

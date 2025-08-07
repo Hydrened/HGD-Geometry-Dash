@@ -1,5 +1,4 @@
-#ifndef GAME_H
-#define GAME_H
+#pragma once
 
 #include <H2DE/H2DE.h>
 #include "utils.h"
@@ -8,6 +7,7 @@
 class Data;
 class Events;
 class Save;
+class LoadingScreenMenu;
 class Menu;
 class Level;
 
@@ -20,14 +20,22 @@ public:
     void stop();
 
     void openMenu(MenuID id);
-    void openLevel(uint32_t id);
+    void openLevel(LevelID id);
     
-    inline H2DE_Engine* getEngine() const { return engine; }
-    inline const Data* getData() const { return data; }
-    inline Save* getSave() const { return save; }
+    inline H2DE_Engine* getEngine() const {
+        return engine;
+    }
+    inline const Data* getData() const {
+        return data;
+    }
+    inline Save* getSave() const {
+        return save;
+    }
 
+    friend class LoadingScreenMenu;
     friend class Transition;
     friend class Events;
+    friend class Menu;
 
 private:
     H2DE_Engine* engine = nullptr;
@@ -36,19 +44,19 @@ private:
     Events* events = nullptr;
     Save* save = nullptr;
 
+    LoadingScreenMenu* loadingScreen = nullptr;
     Menu* menu = nullptr;
     Level* level = nullptr;
 
-    GameState state = GAME_STATE_LOADING_ASSETS;
+    GameState state = GAME_STATE_LOADING_SCREEN;
     bool inTransition = true;
 
     void initEngine();
     void initEvents();
     void initData();
+    void initLoadingScreen();
 
     void update();
 
     Menu* createMenu(MenuID id);
 };
-
-#endif

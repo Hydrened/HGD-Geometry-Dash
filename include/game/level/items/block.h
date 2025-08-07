@@ -1,5 +1,4 @@
-#ifndef BLOCK_H
-#define BLOCK_H
+#pragma once
 
 #include "level/items/item.h"
 class Game;
@@ -9,8 +8,12 @@ public:
     Block(Game* game, Level* level, const ItemData& itemData, const BlockData& blockData);
     ~Block() override;
 
-    constexpr const BlockType& getType() const { return type; }
-    constexpr const H2DE_LevelRect& getHitboxWorldRect() const { return hitboxRect; }
+    constexpr const BlockType& getType() const {
+        return type;
+    }
+    constexpr const H2DE_LevelRect& getHitboxWorldRect() const {
+        return hitboxRect;
+    }
     bool hasToBeRemoved(const H2DE_LevelRect& camRect, const H2DE_Translate& playerTranslate) const override;
 
 private:
@@ -26,5 +29,3 @@ private:
 
     void destroyObject();
 };
-
-#endif
